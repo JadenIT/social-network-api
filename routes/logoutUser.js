@@ -2,7 +2,7 @@ const router = require('express').Router()
 const cookie = require('cookie')
 
 router.post('/logout', (req, res, next) => {
-    res.setHeader('Set-Cookie', cookie.serialize('jwt', null, {
+    res.setHeader('Set-Cookie', cookie.serialize('token', null, {
                 expires: new Date()
             }))
         if(req.cookies.jwt){
@@ -12,7 +12,7 @@ router.post('/logout', (req, res, next) => {
         }
         else{
             res.send({
-                error: ''
+                error: null
             })
         }
 })

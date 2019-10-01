@@ -14,7 +14,7 @@ router.post('/login', (req, res, next) => {
             }
             else {
                 jwt.sign({ username: username }, 'Some key', (err, token) => {
-                    res.setHeader('Set-Cookie', cookie.serialize('jwt', token, {
+                    res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                         maxAge: 60 * 60 * 24 * 7 // 1 week
                     }))
                     res.send({

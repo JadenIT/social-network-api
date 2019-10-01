@@ -1,4 +1,5 @@
 const userModel = require('../models/userModel')
+const jwt = require('jsonwebtoken')
 
 class userController {
     static usernameIsFree(username, callback) {
@@ -18,6 +19,22 @@ class userController {
         userModel.findOne({ username: username, password: password }, function (err, doc) {
             if (err) throw err
             doc ? callback(true) : callback(false)
+        })
+    }
+
+    static isAuthorized(token, callback) {
+        try {
+            jwt.verify(token, 'Some key', (err, decoded) => {
+                decoded == null || decoded == undefined ? callback(false) : callback(true)
+            })
+        }
+        catch (err) {
+            throw err
+        }
+    }
+    static savePost(username, filename, callback) {
+        userModel.updateOne({ username: username }, { $push: { posts: { filename: filename } } }, function(err) {
+            callback(err)
         })
     }
 }
