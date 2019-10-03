@@ -8,8 +8,8 @@ class userController {
             docs.length > 0 ? callback(false) : callback(true)
         })
     }
-    static save(fullname, username, password, callback) {
-        const userModelInstance = new userModel({ fullname: fullname, username: username, password: password })
+    static save(fullname, username, password, avatar, callback) {
+        const userModelInstance = new userModel({ fullname: fullname, username: username, password: password, avatar: avatar })
         userModelInstance.save((err) => {
             callback(err)
         })
@@ -32,9 +32,17 @@ class userController {
             throw err
         }
     }
-    static savePost(username, filename, callback) {
-        userModel.updateOne({ username: username }, { $push: { posts: { filename: filename } } }, function(err) {
-            callback(err)
+    static savePost(username, filename, text, avatar, callback) {
+        userModel.updateOne({ username: username },
+            { $push: { posts: { filename: filename, text: text, likes: 0, username: username, avatar: avatar } } }, function (err) {
+                callback(err)
+            })
+    }
+
+    static getPublicUser(username, callback) {
+        userModel.findOne({ username: username }, { username: 1, fullname: 1, posts: 1, avatar: 1 }, function (err, doc) {
+            if (err) throw err
+            callback(doc)
         })
     }
 }

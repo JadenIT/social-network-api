@@ -13,7 +13,7 @@ router.post('/user', (req, res, next) => {
                 })
             }
             else {
-                userController.save(fullname, username, password, (err) => {
+                userController.save(fullname, username, password, null, (err) => {
                     if (err) throw err
                     jwt.sign({ username: username }, 'Some key', (err, token) => {
                         res.setHeader('Set-Cookie', cookie.serialize('token', token, {
