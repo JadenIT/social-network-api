@@ -26,19 +26,13 @@ const checkFileType = (file, cb) => {
 }
 
 router.post('/post', upload, (req, res, next) => {
-    const avatar = req.body.avatar
-    const username = req.body.username
-    const text = req.body.text
-    const filename = req.files[0].filename || null
-    if (!filename) res.send({ error: 'Error' }).end()
+    const { text, avatar, username } = req.body
+    const file = req.files[0] || null
+    const filename = file ? file.filename : null
     if (req.authorized) {
         if (username == req.username) {
-            /*  
-                     *  req.username comes 
-                     *  from  middleware jwt.js
-                    */
-
-            userController.savePost(username, filename, text, avatar, (err) => {
+            const timestamp = Date.now()
+            userController.savePost(username, filename, text, avatar, timestamp, (err) => {
                 if (err) throw err
             })
         }
@@ -46,9 +40,8 @@ router.post('/post', upload, (req, res, next) => {
     res.send({ Error: '' }).end()
 })
 
-router.get('/posts/:username', (req, res, next) => {
-    const username = req.params.username
-    userController.getPublicUser(username, (response) => {
+router.post('/removePost', (req, res, next) => {
+    userController.removePost(req.body.username, req.body.postID, (response) => {
         res.send(response)
     })
 })

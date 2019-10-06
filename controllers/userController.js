@@ -1,5 +1,6 @@
 const userModel = require('../models/userModel')
 const jwt = require('jsonwebtoken')
+var uniqid = require('uniqid');
 
 class userController {
     static usernameIsFree(username, callback) {
@@ -9,7 +10,12 @@ class userController {
         })
     }
     static save(fullname, username, password, avatar, callback) {
-        const userModelInstance = new userModel({ fullname: fullname, username: username, password: password, avatar: avatar })
+        const userModelInstance = new userModel({
+            fullname: fullname,
+            username: username,
+            password: password,
+            avatar: avatar
+        })
         userModelInstance.save((err) => {
             callback(err)
         })
@@ -32,19 +38,96 @@ class userController {
             throw err
         }
     }
-    static savePost(username, filename, text, avatar, callback) {
+    static savePost(username, filename, text, avatar, timestamp, callback) {
         userModel.updateOne({ username: username },
-            { $push: { posts: { filename: filename, text: text, likes: 0, username: username, avatar: avatar } } }, function (err) {
+            {
+                $push: {
+                    posts: {
+                        id: uniqid(),
+                        filename: filename,
+                        text: text,
+                        likes: 0,
+                        username: username,
+                        avatar: avatar,
+                        timestamp: timestamp
+                    }
+                }
+            }, function (err) {
                 callback(err)
             })
     }
 
+    static async removePost(username, postID, callback) {
+        const up = await userModel.updateOne({ username: username }, { $pull: { posts: { id: postID } } })
+        up.nModified == 1 ? callback(true) : callback(false)
+    }
+
     static getPublicUser(username, callback) {
-        userModel.findOne({ username: username }, { username: 1, fullname: 1, posts: 1, avatar: 1 }, function (err, doc) {
+        userModel.findOne({ username: username }, {
+            username: 1,
+            fullname: 1,
+            posts: 1,
+            avatar: 1,
+            subscribers: 1,
+            subscriptions: 1
+        }, function (err, doc) {
             if (err) throw err
             callback(doc)
         })
     }
+
+    static subscribe(username, usernameToSubscribe, callback) {
+        userModel.findOne({ username: username }, function (err, doc) {
+            const { subscriptions } = doc
+            if (subscriptions.some(el => el.username == usernameToSubscribe)) {
+                callback(false)
+            }
+            else {
+                userModel.updateOne({ username: username }, {
+                    $push: {
+                        subscriptions: {
+                            username: usernameToSubscribe
+                        }
+                    }
+                }, function (err) {
+                    if (err) throw err
+                    userModel.updateOne({ username: usernameToSubscribe }, {
+                        $push: {
+                            subscribers: {
+                                username: username
+                            }
+                        }
+                    }, function (err) {
+                        if (err) throw err
+                        callback(true)
+                    })
+                })
+            }
+        })
+    }
+
+    static unSubscribe(username, usernameToUnSubscribe, callback) {
+        userModel.updateOne({ username: username }, {
+            $pull: {
+                subscriptions: {
+                    username: usernameToUnSubscribe
+                }
+            }
+        }, function (err) {
+            if (err) throw err
+            userModel.updateOne({ username: usernameToUnSubscribe }, {
+                $pull: {
+                    subscribers: {
+                        username: username
+                    }
+                }
+            }, function (err) {
+                if (err) throw err
+                callback(true)
+            })
+        })
+    }
+
 }
 
 module.exports = userController

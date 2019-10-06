@@ -9,7 +9,13 @@ const userSchema = new mongoose.Schema({
     username: String,
     password: String,
     posts: Array,
-    avatar: String
+    avatar: String,
+    subscribers: {
+        type: Array
+    },
+    subscriptions: {
+        type: Array
+    }
 })
 const userModel = mongoose.model('users', userSchema)
 
