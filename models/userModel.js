@@ -15,7 +15,8 @@ const userSchema = new mongoose.Schema({
     },
     subscriptions: {
         type: Array
-    }
+    },
+    news: Array
 })
 const userModel = mongoose.model('users', userSchema)
 

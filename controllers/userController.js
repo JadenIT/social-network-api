@@ -62,6 +62,16 @@ class userController {
         up.nModified == 1 ? callback(true) : callback(false)
     }
 
+    static getNewsByUsername(username, callback) {
+        userModel.findOne({ username: username }, { subscriptions: 1 }, function (err, doc) {
+            if (err) throw err
+            const { subscriptions } = doc || []
+            userController.getNewsByArrOfSUbscriptions(subscriptions, (response) => {
+                callback({ news: response })
+            })
+        })
+    }
+
     static getPublicUser(username, callback) {
         userModel.findOne({ username: username }, {
             username: 1,
@@ -69,11 +79,29 @@ class userController {
             posts: 1,
             avatar: 1,
             subscribers: 1,
-            subscriptions: 1
+            subscriptions: 1,
+            news: 1
         }, function (err, doc) {
             if (err) throw err
             callback(doc)
         })
+    }
+
+    static getNewsByArrOfSUbscriptions(arr, callback) {
+        let newsArr = []
+        if (arr) {
+            arr.map((el, i) => {
+                userModel.findOne({ username: el.username }, { posts: 1 }, function (err, response) {
+                    newsArr = newsArr.concat(response.posts)
+                    if (i + 1 == arr.length) {
+                        callback(newsArr)
+                    }
+                })
+            })
+        }
+        else {
+            callback([])
+        }
     }
 
     static subscribe(username, usernameToSubscribe, callback) {
