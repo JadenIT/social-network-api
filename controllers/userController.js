@@ -180,12 +180,12 @@ class userController {
                 callback('ALready liked')
             }
             else {
-                userModel.updateOne(
-                    {
-                        'posts.id': {
-                            $eq: postID
-                        }
-                    },
+                userModel.updateOne({
+                    username: { $eq: usernamePostedPost },
+                    'posts.id': {
+                        $eq: postID
+                    }
+                },
                     {
                         $push: {
                             'posts.$.likedBy': {
@@ -198,6 +198,25 @@ class userController {
                     })
             }
         })
+    }
+
+    static removeLike(likedUsername, usernamePostedPost, postID, callback) {
+        userModel.updateOne({
+            username: { $eq: usernamePostedPost },
+            'posts.id': {
+                $eq: postID
+            }
+        },
+            {
+                $pull: {
+                    'posts.$.likedBy': {
+                        username: likedUsername
+                    }
+                }
+            }, function (err, doc) {
+                if (err) throw err
+                callback('')
+            })
     }
 }
 
