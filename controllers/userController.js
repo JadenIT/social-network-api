@@ -62,12 +62,24 @@ class userController {
         up.nModified == 1 ? callback(true) : callback(false)
     }
 
-    static getNewsByUsername(username, callback) {
+    static getNewsByUsername(username, page, perpage, callback) {
+        let end = page * perpage
+        let start = end - (perpage - 1) - 1
+
         userModel.findOne({ username: username }, { subscriptions: 1 }, function (err, doc) {
             if (err) throw err
             const { subscriptions } = doc || []
             userController.getNewsByArrOfSUbscriptions(subscriptions, (response) => {
-                callback({ news: response })
+                response.sort(function (a, b) {
+                    if (a.timestamp > b.timestamp) {
+                        return -1
+                    }
+                    else {
+                        return 1
+                    }
+                })
+                const newArr = response.splice(start, perpage)
+                callback({ news: newArr })
             })
         })
     }

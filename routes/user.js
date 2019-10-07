@@ -9,8 +9,8 @@ Router.get('/user/:username', (req, res, next) => {
 })
 
 Router.get('/news', (req, res, next) => {
-    const { username } = req.query
-    userController.getNewsByUsername(username, (response) => {
+    const { username, page, perpage } = req.query
+    userController.getNewsByUsername(username, page, perpage, (response) => {
         res.send(response)
     })
 })
