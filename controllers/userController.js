@@ -49,7 +49,8 @@ class userController {
                         likes: 0,
                         username: username,
                         avatar: avatar,
-                        timestamp: timestamp
+                        timestamp: timestamp,
+                        likedBy: []
                     }
                 }
             }, function (err) {
@@ -168,6 +169,36 @@ class userController {
         })
     }
 
+    static addLike(likedUsername, usernamePostedPost, postID, callback) {
+
+        userModel.findOne({
+            username: usernamePostedPost,
+            'posts.id': { $eq: postID },
+            'posts.likedBy.username': { $eq: likedUsername }
+        }, { posts: 1 }, (err, doc) => {
+            if (doc) {
+                callback('ALready liked')
+            }
+            else {
+                userModel.updateOne(
+                    {
+                        'posts.id': {
+                            $eq: postID
+                        }
+                    },
+                    {
+                        $push: {
+                            'posts.$.likedBy': {
+                                username: likedUsername
+                            }
+                        }
+                    }, function (err, doc) {
+                        if (err) throw err
+                        callback('Successfuly liked')
+                    })
+            }
+        })
+    }
 }
 
 module.exports = userController

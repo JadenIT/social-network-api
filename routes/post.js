@@ -46,4 +46,14 @@ router.post('/removePost', (req, res, next) => {
     })
 })
 
+router.post('/addLike', (req, res, next) => {
+    const { likedUsername, usernamePostedPost, postID } = req.body
+    userController.addLike(likedUsername, usernamePostedPost, postID, (err) => {
+        res.send({
+            error: err
+        })
+    })
+
+})
+
 module.exports = router
