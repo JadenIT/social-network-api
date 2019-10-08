@@ -6,6 +6,7 @@ const authorize = require('./authorize')
 const post = require('./post')
 const user = require('./user')
 const news = require('./news')
+const suggestion = require('./suggestion')
 
 router.use('/', saveUser)
 router.use('/', authUser)
@@ -14,5 +15,6 @@ router.use('/', authorize)
 router.use('/', post)
 router.use('/', user)
 router.use('/', news)
+router.use('/', suggestion)
 
 module.exports = router

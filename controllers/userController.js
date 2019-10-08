@@ -250,6 +250,24 @@ class userController {
                 callback('')
             })
     }
+
+    static suggestion(username, callback) {
+        userModel.find({
+            $or: [
+                { $where: "this.subscribers.length >= 1" },
+                { $where: 'this.posts.length >= 1' }
+            ]
+
+        }, (err, docs) => {
+            const newArr = []
+            docs.map((el, i) => {
+                newArr.push({ username: el.username, fullname: el.fullname, avatar: el.avatar })
+                if (i + 1 == docs.length) {
+                    callback(newArr)
+                }
+            })
+        })
+    }
 }
 
 module.exports = userController
