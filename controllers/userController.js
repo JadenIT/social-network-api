@@ -177,10 +177,19 @@ class userController {
 
     static addLike(likedUsername, usernamePostedPost, postID, callback) {
 
-        userModel.findOne({
-            username: usernamePostedPost,
-            'posts.id': { $eq: postID },
-            'posts.likedBy.username': { $eq: likedUsername }
+        /* Query an Array of Embedded Documents
+         * https://docs.mongodb.com/manual/tutorial/query-array-of-documents/
+         * If you do not know the index position of the document nested in the array,
+         * concatenate the name of the array field, with a dot (.) and the name of 
+         * the field in the nested document.
+        */
+
+        userModel.find({
+            $and: [
+                { 'username': { $eq: { usernamePostedPost } } },
+                { 'posts.id': { $eq: postID } },
+                { 'posts.likedBy.username': { $eq: likedUsername } }
+            ]
         }, { posts: 1 }, (err, doc) => {
             if (doc) {
                 callback('ALready liked')
