@@ -196,13 +196,30 @@ class userController {
             }
             else {
                 userModel.updateOne({
-                    username: { $eq: usernamePostedPost },
-                    'posts.id': {
-                        $eq: postID
-                    }
+                    $and: [
+                        { 'username': { $eq: usernamePostedPost } },
+                        {
+                            'posts.id': {
+                                $eq: postID
+                            }
+                        }
+                    ]
                 },
                     {
                         $push: {
+
+                            /* Dollar sign is the number of
+                             *  position of element that has been
+                             * found in query (posts.id)
+                             * without posts.id there would be an error
+                             * because with only 'username' operator $ 
+                             * could not find one number for position
+                             * the ID of post must be uniq for every field
+                             * because if it would not be uniq
+                             * the sign of DOLLAR will be equal to 0
+                             * so this query will update only the first field of array
+                            */
+
                             'posts.$.likedBy': {
                                 username: likedUsername
                             }
