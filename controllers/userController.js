@@ -170,7 +170,7 @@ class userController {
     }
 
     static addLike(likedUsername, usernamePostedPost, postID, callback) {
-
+        
         userModel.findOne({
             username: usernamePostedPost,
             'posts.id': { $eq: postID },

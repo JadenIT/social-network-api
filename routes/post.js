@@ -47,8 +47,8 @@ router.post('/removePost', (req, res, next) => {
 })
 
 router.post('/addLike', (req, res, next) => {
-    const { likedUsername, usernamePostedPost, postID } = req.body
-    userController.addLike(likedUsername, usernamePostedPost, postID, (err) => {
+    const { authUsername, username, postID } = req.body
+    userController.addLike(authUsername, username, postID, (err) => {
         res.send({
             error: err
         })
@@ -57,8 +57,8 @@ router.post('/addLike', (req, res, next) => {
 })
 
 router.post('/removeLike', (req, res, next) => {
-    const { likedUsername, usernamePostedPost, postID } = req.body
-    userController.removeLike(likedUsername, usernamePostedPost, postID, (err) => {
+    const { authUsername, username, postID } = req.body
+    userController.removeLike(authUsername, username, postID, (err) => {
         res.send({
             error: err
         })
