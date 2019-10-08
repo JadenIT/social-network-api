@@ -63,6 +63,31 @@ class userController {
         up.nModified == 1 ? callback(true) : callback(false)
     }
 
+    static getNewsByArrOfSUbscriptions(arr, callback) {
+        let newsArr = []
+        if (arr.length > 0) {
+            arr.map((el, i) => {
+                userModel.findOne({ username: el.username }, { posts: 1 }, function (err, response) {
+                    newsArr = newsArr.concat(response.posts)
+                    if (i + 1 == arr.length) {
+                        newsArr.sort((a, b) => {
+                            if (a.timestamp > b.timestamp) {
+                                return -1
+                            }
+                            else {
+                                return 1
+                            }
+                        })
+                        callback(newsArr)
+                    }
+                })
+            })
+        }
+        else {
+            callback([])
+        }
+    }
+
     static getNewsByUsername(username, page, perpage, callback) {
         let end = page * perpage
         let start = end - (perpage - 1) - 1
@@ -70,18 +95,16 @@ class userController {
         userModel.findOne({ username: username }, { subscriptions: 1 }, function (err, doc) {
             if (err) throw err
             const { subscriptions } = doc || []
-            userController.getNewsByArrOfSUbscriptions(subscriptions, (response) => {
-                response.sort(function (a, b) {
-                    if (a.timestamp > b.timestamp) {
-                        return -1
-                    }
-                    else {
-                        return 1
-                    }
+
+            if (!subscriptions) {
+                callback([])
+            }
+            else {
+                userController.getNewsByArrOfSUbscriptions(subscriptions, (response) => {
+                    const newArr = response.splice(start, perpage)
+                    callback(newArr)
                 })
-                const newArr = response.splice(start, perpage)
-                callback({ news: newArr })
-            })
+            }
         })
     }
 
@@ -98,23 +121,6 @@ class userController {
             if (err) throw err
             callback(doc)
         })
-    }
-
-    static getNewsByArrOfSUbscriptions(arr, callback) {
-        let newsArr = []
-        if (arr) {
-            arr.map((el, i) => {
-                userModel.findOne({ username: el.username }, { posts: 1 }, function (err, response) {
-                    newsArr = newsArr.concat(response.posts)
-                    if (i + 1 == arr.length) {
-                        callback(newsArr)
-                    }
-                })
-            })
-        }
-        else {
-            callback([])
-        }
     }
 
     static subscribe(username, usernameToSubscribe, callback) {
@@ -170,7 +176,7 @@ class userController {
     }
 
     static addLike(likedUsername, usernamePostedPost, postID, callback) {
-        
+
         userModel.findOne({
             username: usernamePostedPost,
             'posts.id': { $eq: postID },

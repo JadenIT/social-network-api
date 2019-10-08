@@ -8,13 +8,6 @@ Router.get('/user/:username', (req, res, next) => {
     })
 })
 
-Router.get('/news', (req, res, next) => {
-    const { username, page, perpage } = req.query
-    userController.getNewsByUsername(username, page, perpage, (response) => {
-        res.send(response)
-    })
-})
-
 Router.post('/subscribe', (req, res, next) => {
     const { username, usernameToSubscribe } = req.body
     userController.subscribe(username, usernameToSubscribe, (response) => {
