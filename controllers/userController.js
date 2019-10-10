@@ -270,6 +270,33 @@ class userController {
         })
     }
 
+    static createDialog(users, callback) {
+
+        messageModel.findOne({
+            users: { $in: users }
+        }, (err, doc) => {
+            if (err) throw err
+            if (doc) {
+                callback('Dialog already exists', doc.id)
+            }
+            else {
+                const dialogID = uniqid()
+                const messageModelInstance = new messageModel({
+                    id: dialogID,
+                    users: users,
+                    messages: []
+                }).save((err) => {
+                    if (err) throw err
+                    userModel.updateMany({
+                        username: { $in: users }
+                    }, { $push: { messages: dialogID } }, (err, resp) => {
+                        callback('', dialogID)
+                    })
+                })
+            }
+        })
+    }
+
     static addMessage(username, message, roomID, callback) {
         messageModel.findOne({ id: roomID }, (err, doc) => {
             if (doc) {
@@ -283,27 +310,6 @@ class userController {
             }
             else {
                 callback('no such room')
-                // const messageID = uniqid()
-                // const messageModelInstance = new messageModel({
-                //     id: messageID,
-                //     users: [usernameFrom, usernameTo],
-                //     messages: [
-                //         {
-                //             username: usernameFrom,
-                //             message: message
-                //         }
-                //     ]
-                // }).save((err) => {
-                //     if (err) throw err
-                //     userModel.updateMany({
-                //         $or: [
-                //             { username: usernameFrom },
-                //             { username: usernameTo }
-                //         ]
-                //     }, { $push: { messages: messageID } }, (err, resp) => {
-                //         callback('')
-                //     })
-                // })
             }
         })
     }

@@ -23,6 +23,19 @@ const port = 5000;
 
 io.listen(port);
 
+Router.post('/dialog', (req, res, next) => {
+    /*  users is an array
+     *
+    */
+    const { users } = req.body
+    userController.createDialog(users, (err, dialogID) => {
+        res.send({
+            error: err,
+            dialogID: dialogID
+        })
+    })
+})
+
 Router.post('/addMessage', (req, res, next) => {
     const { usernameFrom, usernameTo, message, roomID } = req.body
     userController.addMessage(usernameFrom, usernameTo, message, roomID, (err) => {
