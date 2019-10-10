@@ -270,45 +270,40 @@ class userController {
         })
     }
 
-    static addMessage(usernameFrom, usernameTo, message, callback) {
-        messageModel.find({
-            $and: [
-                { users: { $in: [usernameFrom] } },
-                { users: { $in: [usernameTo] } }
-            ]
-        }, (err, docs) => {
-            if (docs.length == 0) {
-                const messageID = uniqid()
-                const messageModelInstance = new messageModel({
-                    id: messageID,
-                    users: [usernameFrom, usernameTo],
-                    messages: [
-                        {
-                            username: usernameFrom,
-                            message: message
-                        }
-                    ]
-                }).save((err) => {
-                    if (err) throw err
-                    userModel.updateMany({
-                        $or: [
-                            { username: usernameFrom },
-                            { username: usernameTo }
-                        ]
-                    }, { $push: { messages: messageID } }, (err, resp) => {
-                        callback('')
-                    })
+    static addMessage(username, message, roomID, callback) {
+        messageModel.findOne({ id: roomID }, (err, doc) => {
+            if (doc) {
+                messageModel.updateOne({ id: roomID }, {
+                    $push: {
+                        messages: { username, message }
+                    }
+                }, (err, result) => {
+                    callback('')
                 })
             }
             else {
-                messageModel.updateOne({
-                    $and: [
-                        { users: { $in: [usernameFrom] } },
-                        { users: { $in: [usernameTo] } }
-                    ]
-                }, { $push: { messages: { username: usernameFrom, message: message } } }, (err, respon) => {
-                    callback('')
-                })
+                callback('no such room')
+                // const messageID = uniqid()
+                // const messageModelInstance = new messageModel({
+                //     id: messageID,
+                //     users: [usernameFrom, usernameTo],
+                //     messages: [
+                //         {
+                //             username: usernameFrom,
+                //             message: message
+                //         }
+                //     ]
+                // }).save((err) => {
+                //     if (err) throw err
+                //     userModel.updateMany({
+                //         $or: [
+                //             { username: usernameFrom },
+                //             { username: usernameTo }
+                //         ]
+                //     }, { $push: { messages: messageID } }, (err, resp) => {
+                //         callback('')
+                //     })
+                // })
             }
         })
     }

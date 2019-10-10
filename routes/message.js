@@ -5,43 +5,27 @@ const io = require('socket.io')();
 
 io.on('connection', (client) => {
 
-    console.log('User connected');
-
     client.on('joinRoom', (room) => {
-        socket.join(room);
+        client.join(room);
     })
 
-    client.on('msg', (msg) => {
-        client.to(room).emit('msgEvent', msg);
+    client.on('msgToServer', (msgObj) => {
+        const { username, message, roomID } = msgObj
+        userController.addMessage(username, message, roomID, (response) => {
+            io.to(roomID).emit('msgToClient', msgObj);
+        })
     })
 
-    client.on('subscribeToTimer', () => {
-        console.log('emitted subscribeToTimer');
-    });
-
-    io.on('disconnect', function () {
-
-    });
+    client.on('disconnect', () => { })
 
 });
 const port = 5000;
 
 io.listen(port);
 
-
-
-
-
-
-
-
-
-
-
-
 Router.post('/addMessage', (req, res, next) => {
-    const { usernameFrom, usernameTo, message } = req.body
-    userController.addMessage(usernameFrom, usernameTo, message, (err) => {
+    const { usernameFrom, usernameTo, message, roomID } = req.body
+    userController.addMessage(usernameFrom, usernameTo, message, roomID, (err) => {
         res.send({
             error: err
         })
