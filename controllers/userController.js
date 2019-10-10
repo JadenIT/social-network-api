@@ -1,6 +1,7 @@
 const userModel = require('../models/userModel')
 const jwt = require('jsonwebtoken')
 var uniqid = require('uniqid');
+const messageModel = require('../models/messages')
 
 class userController {
     static usernameIsFree(username, callback) {
@@ -268,6 +269,64 @@ class userController {
             })
         })
     }
+
+    static addMessage(usernameFrom, usernameTo, message, callback) {
+        messageModel.find({
+            $and: [
+                { users: { $in: [usernameFrom] } },
+                { users: { $in: [usernameTo] } }
+            ]
+        }, (err, docs) => {
+            if (docs.length == 0) {
+                const messageID = uniqid()
+                const messageModelInstance = new messageModel({
+                    id: messageID,
+                    users: [usernameFrom, usernameTo],
+                    messages: [
+                        {
+                            username: usernameFrom,
+                            message: message
+                        }
+                    ]
+                }).save((err) => {
+                    if (err) throw err
+                    userModel.updateMany({
+                        $or: [
+                            { username: usernameFrom },
+                            { username: usernameTo }
+                        ]
+                    }, { $push: { messages: messageID } }, (err, resp) => {
+                        callback('')
+                    })
+                })
+            }
+            else {
+                messageModel.updateOne({
+                    $and: [
+                        { users: { $in: [usernameFrom] } },
+                        { users: { $in: [usernameTo] } }
+                    ]
+                }, { $push: { messages: { username: usernameFrom, message: message } } }, (err, respon) => {
+                    callback('')
+                })
+            }
+        })
+    }
+
+    static getMessages(username, callback) {
+        userModel.findOne({ username: username }, { messages: 1 }, (err, doc) => {
+            messageModel.find({ id: { $in: doc.messages } }, (err, res) => {
+                callback(res)
+            })
+        })
+    }
+
+    static getDialog(dialogID, callback) {
+        messageModel.findOne({ id: dialogID }, (err, doc) => {
+            callback(doc)
+        })
+    }
+
 }
 
 module.exports = userController

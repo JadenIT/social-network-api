@@ -16,7 +16,10 @@ const userSchema = new mongoose.Schema({
     subscriptions: {
         type: Array
     },
-    news: Array
+    news: Array,
+    messages: {
+        type: Array
+    }
 })
 const userModel = mongoose.model('users', userSchema)
 
