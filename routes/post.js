@@ -26,18 +26,15 @@ const checkFileType = (file, cb) => {
 }
 
 router.post('/post', upload, (req, res, next) => {
-    const { text, avatar, username } = req.body
+    const { text, avatar, username, token } = req.body
     const file = req.files[0] || null
     const filename = file ? file.filename : null
-    if (req.authorized) {
-        if (username == req.username) {
-            const timestamp = Date.now()
-            userController.savePost(username, filename, text, avatar, timestamp, (err) => {
-                if (err) throw err
-            })
-        }
-    }
-    res.send({ Error: '' }).end()
+    const timestamp = Date.now()
+    userController.savePost(username, filename, text, avatar, timestamp, token, (error) => {
+        res.send({
+            error: error
+        })
+    })
 })
 
 router.post('/removePost', (req, res, next) => {
@@ -47,20 +44,20 @@ router.post('/removePost', (req, res, next) => {
 })
 
 router.post('/addLike', (req, res, next) => {
-    const { authUsername, username, postID } = req.body
-    userController.addLike(authUsername, username, postID, (err) => {
+    const { authUsername, username, postID, token } = req.body
+    userController.addLike(authUsername, username, postID, token, (error) => {
         res.send({
-            error: err
+            error: error
         })
     })
 
 })
 
 router.post('/removeLike', (req, res, next) => {
-    const { authUsername, username, postID } = req.body
-    userController.removeLike(authUsername, username, postID, (err) => {
+    const { authUsername, username, postID, token } = req.body
+    userController.removeLike(authUsername, username, postID, token, (error) => {
         res.send({
-            error: err
+            error: error
         })
     })
 

@@ -17,73 +17,51 @@ io.on('connection', (client) => {
                 io.to(roomID).emit('error', 'incorrect jwt')
             }
             else {
-                userController.addMessage(username, message, roomID, (response) => {
-                    io.to(roomID).emit('msgToClient', msgObj);
+                userController.addMessage(username, message, roomID, token, (error) => {
+                    if (error) {
+                        io.to(roomID).emit('error', error)
+                    }
+                    else {
+                        io.to(roomID).emit('msgToClient', msgObj)
+                    }
                 })
             }
         })
     })
-
     client.on('disconnect', () => { })
-
-});
-const port = 5000;
-
-io.listen(port);
-
-Router.post('/dialog', (req, res, next) => {
-    const { users, token } = req.body
-    jwt.verify(token, 'Some key', (err, decoded) => {
-        if (decoded == null || decoded == undefined) {
-            res.send({
-                error: 'Incorrect JWT',
-                dialogID: null
-            })
-        }
-        else {
-            userController.createDialog(users, (err, dialogID) => {
-                res.send({
-                    error: err,
-                    dialogID: dialogID
-                })
-            })
-        }
-    })
 })
 
-Router.post('/addMessage', (req, res, next) => {
-    const { usernameFrom, usernameTo, message, roomID } = req.body
-    userController.addMessage(usernameFrom, usernameTo, message, roomID, (err) => {
+const port = 5000
+
+io.listen(port)
+
+Router.post('/dialog', (req, res) => {
+    const { users, token } = req.body
+    userController.createDialog(users, token, (err, dialogID) => {
         res.send({
-            error: err
+            error: err,
+            dialogID: dialogID
         })
     })
 })
 
-Router.get('/messages', (req, res, next) => {
-    const { username } = req.query
-    userController.getMessages(username, (response) => {
-        res.send(response)
+Router.get('/messages', (req, res) => {
+    const { username, token } = req.query
+    userController.getMessages(username, token, (error, dialogs) => {
+        res.send({
+            error: error,
+            dialogs: dialogs
+        })
     })
 })
 
-Router.get('/dialog', (req, res, next) => {
+Router.get('/dialog', (req, res) => {
     const { dialogID, token } = req.query
-    jwt.verify(token, 'Some key', (err, decoded) => {
-        if (decoded == null || decoded == undefined) {
-            res.send({
-                error: 'Incorrect JWT',
-                dialog: []
-            })
-        }
-        else {
-            userController.getDialog(dialogID, decoded.username, (error, response) => {
-                res.send({
-                    error: error,
-                    dialog: response
-                })
-            })
-        }
+    userController.getDialog(dialogID, token, (error, response) => {
+        res.send({
+            error: error,
+            dialog: response
+        })
     })
 })
 

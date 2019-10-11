@@ -39,24 +39,37 @@ class userController {
             throw err
         }
     }
-    static savePost(username, filename, text, avatar, timestamp, callback) {
-        userModel.updateOne({ username: username },
-            {
-                $push: {
-                    posts: {
-                        id: uniqid(),
-                        filename: filename,
-                        text: text,
-                        likes: 0,
-                        username: username,
-                        avatar: avatar,
-                        timestamp: timestamp,
-                        likedBy: []
-                    }
+    static savePost(username, filename, text, avatar, timestamp, token, callback) {
+
+        jwt.verify(token, 'Some key', (err, decoded) => {
+            if (decoded == null || decoded == undefined) {
+                callback('Not authorized')
+            }
+            else {
+                if (decoded.username == username) {
+                    userModel.updateOne({ username: username },
+                        {
+                            $push: {
+                                posts: {
+                                    id: uniqid(),
+                                    filename: filename,
+                                    text: text,
+                                    likes: 0,
+                                    username: username,
+                                    avatar: avatar,
+                                    timestamp: timestamp,
+                                    likedBy: []
+                                }
+                            }
+                        }, function (err) {
+                            callback(err)
+                        })
                 }
-            }, function (err) {
-                callback(err)
-            })
+                else {
+                    callback("Token username doesn't match username from req")
+                }
+            }
+        })
     }
 
     static async removePost(username, postID, callback) {
@@ -89,22 +102,34 @@ class userController {
         }
     }
 
-    static getNewsByUsername(username, page, perpage, callback) {
-        let end = page * perpage
-        let start = end - (perpage - 1) - 1
-
-        userModel.findOne({ username: username }, { subscriptions: 1 }, function (err, doc) {
-            if (err) throw err
-            const { subscriptions } = doc || []
-
-            if (!subscriptions) {
-                callback([])
+    static getNewsByUsername(username, page, perpage, token, callback) {
+        jwt.verify(token, 'Some key', (err, decoded) => {
+            if (decoded == null || decoded == undefined) {
+                callback('Not authorized', [])
             }
             else {
-                userController.getNewsByArrOfSUbscriptions(subscriptions, (response) => {
-                    const newArr = response.splice(start, perpage)
-                    callback(newArr)
-                })
+                if (decoded.username == username) {
+                    let end = page * perpage
+                    let start = end - (perpage - 1) - 1
+
+                    userModel.findOne({ username: username }, { subscriptions: 1 }, function (err, doc) {
+                        if (err) throw err
+                        const { subscriptions } = doc || []
+
+                        if (!subscriptions) {
+                            callback('', [])
+                        }
+                        else {
+                            userController.getNewsByArrOfSUbscriptions(subscriptions, (response) => {
+                                const newArr = response.splice(start, perpage)
+                                callback('', newArr)
+                            })
+                        }
+                    })
+                }
+                else {
+                    callback("Token username doesn't match username from req", [])
+                }
             }
         })
     }
@@ -176,7 +201,7 @@ class userController {
         })
     }
 
-    static addLike(likedUsername, usernamePostedPost, postID, callback) {
+    static addLike(likedUsername, usernamePostedPost, postID, token, callback) {
 
         /* Query an Array of Embedded Documents
          * https://docs.mongodb.com/manual/tutorial/query-array-of-documents/
@@ -185,71 +210,95 @@ class userController {
          * the field in the nested document.
         */
 
-        userModel.find({
-            $and: [
-                { 'username': { $eq: { usernamePostedPost } } },
-                { 'posts.id': { $eq: postID } },
-                { 'posts.likedBy.username': { $eq: likedUsername } }
-            ]
-        }, { posts: 1 }, (err, doc) => {
-            if (doc) {
-                callback('ALready liked')
+        jwt.verify(token, 'Some key', (err, decoded) => {
+            if (decoded == null || decoded == undefined) {
+                callback('Not authorized')
             }
             else {
-                userModel.updateOne({
-                    $and: [
-                        { 'username': { $eq: usernamePostedPost } },
-                        {
-                            'posts.id': {
-                                $eq: postID
-                            }
+                if (likedUsername == decoded.username) {
+                    userModel.find({
+                        $and: [
+                            { 'username': { $eq: { usernamePostedPost } } },
+                            { 'posts.id': { $eq: postID } },
+                            { 'posts.likedBy.username': { $eq: likedUsername } }
+                        ]
+                    }, { posts: 1 }, (err, doc) => {
+                        if (doc) {
+                            callback('ALready liked')
                         }
-                    ]
-                },
-                    {
-                        $push: {
+                        else {
+                            userModel.updateOne({
+                                $and: [
+                                    { 'username': { $eq: usernamePostedPost } },
+                                    {
+                                        'posts.id': {
+                                            $eq: postID
+                                        }
+                                    }
+                                ]
+                            },
+                                {
+                                    $push: {
 
-                            /* Dollar sign is the number of
-                             *  position of element that has been
-                             * found in query (posts.id)
-                             * without posts.id there would be an error
-                             * because with only 'username' operator $ 
-                             * could not find one number for position
-                             * the ID of post must be uniq for every field
-                             * because if it would not be uniq
-                             * the sign of DOLLAR will be equal to 0
-                             * so this query will update only the first field of array
-                            */
+                                        /* Dollar sign is the number of
+                                         *  position of element that has been
+                                         * found in query (posts.id)
+                                         * without posts.id there would be an error
+                                         * because with only 'username' operator $ 
+                                         * could not find one number for position
+                                         * the ID of post must be uniq for every field
+                                         * because if it would not be uniq
+                                         * the sign of DOLLAR will be equal to 0
+                                         * so this query will update only the first field of array
+                                        */
 
-                            'posts.$.likedBy': {
-                                username: likedUsername
-                            }
+                                        'posts.$.likedBy': {
+                                            username: likedUsername
+                                        }
+                                    }
+                                }, function (err, doc) {
+                                    if (err) throw err
+                                    callback('Successfuly liked')
+                                })
                         }
-                    }, function (err, doc) {
-                        if (err) throw err
-                        callback('Successfuly liked')
                     })
+                }
+                else {
+                    callback("Token username doesn't match username from req")
+                }
             }
         })
     }
 
-    static removeLike(likedUsername, usernamePostedPost, postID, callback) {
-        userModel.updateOne({
-            username: { $eq: usernamePostedPost },
-            'posts.id': {
-                $eq: postID
+    static removeLike(likedUsername, usernamePostedPost, postID, token, callback) {
+        jwt.verify(token, 'Some key', (err, decoded) => {
+            if (decoded == null || decoded == undefined) {
+                callback('Not authorized')
             }
-        },
-            {
-                $pull: {
-                    'posts.$.likedBy': {
-                        username: likedUsername
-                    }
+            else {
+                if (likedUsername == decoded.username) {
+                    userModel.updateOne({
+                        username: { $eq: usernamePostedPost },
+                        'posts.id': {
+                            $eq: postID
+                        }
+                    },
+                        {
+                            $pull: {
+                                'posts.$.likedBy': {
+                                    username: likedUsername
+                                }
+                            }
+                        }, function (err, doc) {
+                            if (err) throw err
+                            callback('')
+                        })
                 }
-            }, function (err, doc) {
-                if (err) throw err
-                callback('')
-            })
+                else {
+                    callback("Token username doesn't match username from req")
+                }
+            }
+        })
     }
 
     static suggestion(username, callback) {
@@ -270,82 +319,124 @@ class userController {
         })
     }
 
-    static createDialog(users, callback) {
-        messageModel.findOne({
-            users: { $eq: users }
-        }, (err, doc) => {
-            if (err) throw err
-            if (doc) {
-                callback('Dialog already exists', doc.id)
+    static createDialog(users, token, callback) {
+        jwt.verify(token, 'Some key', (err, decoded) => {
+            if (decoded == null || decoded == undefined) {
+                callback('Not authorized', [])
             }
             else {
-                const dialogID = uniqid()
-                new messageModel({
-                    id: dialogID,
-                    users: users,
-                    messages: []
-                }).save((err) => {
-                    if (err) throw err
-                    let pureUsersArr = []
-                    users.map(el => {
-                        pureUsersArr.push(el.username)
+                if (users.some(el => el.username == decoded.username)) {
+                    messageModel.findOne({
+                        users: { $eq: users }
+                    }, (err, doc) => {
+                        if (err) throw err
+                        if (doc) {
+                            callback('Dialog already exists', doc.id)
+                        }
+                        else {
+                            const dialogID = uniqid()
+                            new messageModel({
+                                id: dialogID,
+                                users: users,
+                                messages: []
+                            }).save((err) => {
+                                if (err) throw err
+                                let pureUsersArr = []
+                                users.map(el => {
+                                    pureUsersArr.push(el.username)
+                                })
+                                userModel.updateMany({
+                                    username: { $in: pureUsersArr }
+                                }, { $push: { messages: dialogID } }, (err, resp) => {
+                                    callback('', dialogID)
+                                })
+                            })
+                        }
                     })
-                    userModel.updateMany({
-                        username: { $in: pureUsersArr }
-                    }, { $push: { messages: dialogID } }, (err, resp) => {
-                        callback('', dialogID)
-                    })
-                })
+                }
+                else {
+                    callback("Token username doesn't match username from req")
+                }
             }
         })
     }
 
-    static addMessage(username, message, roomID, callback) {
-        messageModel.findOne({ id: roomID }, (err, doc) => {
-            if (doc) {
-                messageModel.updateOne({ id: roomID }, {
-                    $push: {
-                        messages: { username, message }
-                    }
-                }, (err, result) => {
-                    callback('')
-                })
+    static addMessage(username, message, roomID, token, callback) {
+        jwt.verify(token, 'Some key', (err, decoded) => {
+            if (decoded == null || decoded == undefined) {
+                callback('Not authorized')
             }
             else {
-                callback('no such room')
+                if (username == decoded.username) {
+                    messageModel.findOne({ id: roomID }, (err, doc) => {
+                        if (doc) {
+                            messageModel.updateOne({ id: roomID }, {
+                                $push: {
+                                    messages: { username, message }
+                                }
+                            }, (err, result) => {
+                                callback('')
+                            })
+                        }
+                        else {
+                            callback('no such room')
+                        }
+                    })
+                }
+                else {
+                    callback("Token username doesn't match username from req")
+                }
             }
         })
     }
 
-    static getMessages(username, callback) {
-        userModel.findOne({ username: username }, { messages: 1 }, (err, doc) => {
-            messageModel.find({ id: { $in: doc.messages } }, (err, res) => {
-                res.map((el1, i) => {
-                    el1.users.map((el, j) => {
-                        userModel.findOne({ username: el.username }, { username: 1, avatar: 1, _id: 0 }, (err, doc) => {
-                            el.avatar = doc.avatar
-                            if (j + 1 == el1.users.length) {
-                                let obj = {}
-                                obj.dialogs = res
-                                callback(obj)
-                            }
+    static getMessages(username, token, callback) {
+        jwt.verify(token, 'Some key', (error, decoded) => {
+            if (decoded == null || decoded == undefined) {
+                callback('Not authorized', [])
+            }
+            else {
+                if (decoded.username == username) {
+                    userModel.findOne({ username: username }, { messages: 1 }, (err, doc) => {
+                        messageModel.find({ id: { $in: doc.messages } }, (err, res) => {
+                            res.map((el1, i) => {
+                                el1.users.map((el, j) => {
+                                    userModel.findOne({ username: el.username }, { username: 1, avatar: 1, _id: 0 }, (err, doc) => {
+                                        el.avatar = doc.avatar
+                                        if (j + 1 == el1.users.length) {
+                                            callback('', res)
+                                        }
+                                    })
+                                })
+                            })
                         })
                     })
-                })
-            })
+                }
+                else {
+                    callback("Token username doesn't match username from req")
+                }
+            }
         })
     }
 
-    static getDialog(dialogID, loggedUsername, callback) {
+    static getDialog(dialogID, token, callback) {
         /* Checking if logged username is in the users array
          *  Because if not then if is abuser
         */
-        messageModel.findOne({ id: dialogID }, (err, doc) => {
-            if (doc.users.some(el => el.username == loggedUsername)) {
-                callback('', doc)
+
+        jwt.verify(token, 'Some key', (err, decoded) => {
+            if (decoded == null || decoded == undefined) {
+                callback('', [])
             }
             else {
-                callback('Not user dialog')
+                messageModel.findOne({ id: dialogID }, (err, doc) => {
+                    if (doc.users.some(el => el.username == decoded.username)) {
+                        callback('', doc)
+                    }
+                    else {
+                        callback('Not user dialog')
+                    }
+                })
             }
         })
     }
