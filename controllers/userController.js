@@ -255,8 +255,8 @@ class userController {
     static suggestion(username, callback) {
         userModel.find({
             $or: [
-                { $where: "this.subscribers.length >= 1" },
-                { $where: 'this.posts.length >= 1' }
+                { $where: "this.subscribers.length >= 0" },
+                { $where: 'this.posts.length >= 0' }
             ]
 
         }, (err, docs) => {
@@ -271,9 +271,8 @@ class userController {
     }
 
     static createDialog(users, callback) {
-
         messageModel.findOne({
-            users: { $in: users }
+            users: { $eq: users }
         }, (err, doc) => {
             if (err) throw err
             if (doc) {
@@ -281,14 +280,18 @@ class userController {
             }
             else {
                 const dialogID = uniqid()
-                const messageModelInstance = new messageModel({
+                new messageModel({
                     id: dialogID,
                     users: users,
                     messages: []
                 }).save((err) => {
                     if (err) throw err
+                    let pureUsersArr = []
+                    users.map(el => {
+                        pureUsersArr.push(el.username)
+                    })
                     userModel.updateMany({
-                        username: { $in: users }
+                        username: { $in: pureUsersArr }
                     }, { $push: { messages: dialogID } }, (err, resp) => {
                         callback('', dialogID)
                     })
@@ -317,14 +320,33 @@ class userController {
     static getMessages(username, callback) {
         userModel.findOne({ username: username }, { messages: 1 }, (err, doc) => {
             messageModel.find({ id: { $in: doc.messages } }, (err, res) => {
-                callback(res)
+                res.map((el1, i) => {
+                    el1.users.map((el, j) => {
+                        userModel.findOne({ username: el.username }, { username: 1, avatar: 1, _id: 0 }, (err, doc) => {
+                            el.avatar = doc.avatar
+                            if (j + 1 == el1.users.length) {
+                                let obj = {}
+                                obj.dialogs = res
+                                callback(obj)
+                            }
+                        })
+                    })
+                })
             })
         })
     }
 
-    static getDialog(dialogID, callback) {
+    static getDialog(dialogID, loggedUsername, callback) {
+        /* Checking if logged username is in the users array
+         *  Because if not then if is abuser
+        */
         messageModel.findOne({ id: dialogID }, (err, doc) => {
-            callback(doc)
+            if (doc.users.some(el => el.username == loggedUsername)) {
+                callback('', doc)
+            }
+            else {
+                callback('Not user dialog')
+            }
         })
     }
 
