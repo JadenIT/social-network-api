@@ -18,9 +18,8 @@ Router.post('/subscribe', (req, res, next) => {
 Router.post('/unSubscribe', (req, res, next) => {
     const { username, usernameToUnSubscribe } = req.body
     userController.unSubscribe(username, usernameToUnSubscribe, (response) => {
-        console.log(response)
+        res.send(response)
     })
-    res.send('1')
 })
 
 module.exports = Router
