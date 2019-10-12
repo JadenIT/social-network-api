@@ -316,6 +316,9 @@ class userController {
             if (decoded.username != username) return callback("Token username doesn't match username from req", [])
 
             userModel.findOne({ username: username }, { messages: 1 }, (error, doc) => {
+                if (error) throw error
+                if (doc.messages.length == 0) return callback('', [])
+
                 messageModel.find({ id: { $in: doc.messages } }, (error, res) => {
                     res.map((el1, i) => {
                         el1.users.map((el, j) => {
@@ -337,6 +340,21 @@ class userController {
                 if (doc.users.some(el => el.username == decoded.username)) return callback('', doc)
                 callback('Not user dialog')
             })
+        })
+    }
+
+    static search(query, callback) {
+        const q = new RegExp(query)
+        console.log(q)
+        userModel.find({
+            $or: [
+                { username: q },
+                { fullname: q }
+            ]
+        }, {
+            username: 1, fullname: 1, avatar: 1
+        }, (error, docs) => {
+            callback('', docs)
         })
     }
 }
