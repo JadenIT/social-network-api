@@ -20,8 +20,8 @@ class userController {
                 password: hash,
                 avatar: avatar
             })
-            userModelInstance.save((error) => {
-                callback(error)
+            userModelInstance.save((error, doc) => {
+                callback(error, doc)
             })
         });
     }

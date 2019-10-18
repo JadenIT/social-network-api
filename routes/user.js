@@ -6,23 +6,18 @@ const upload = require('../middlewares/storage')
 
 Router.get('/user/:username', (req, res, next) => {
     const username = req.params.username
-    userController.getPublicUser(username, (response) => {
-        res.send(response)
-    })
+    userController.getPublicUser(username, (response) => res.send(response))
 })
+
 
 Router.post('/subscribe', (req, res, next) => {
     const { username, usernameToSubscribe } = req.body
-    userController.subscribe(username, usernameToSubscribe, (response) => {
-        res.send(response)
-    })
+    userController.subscribe(username, usernameToSubscribe, (response) => res.send(response))
 })
 
 Router.post('/unSubscribe', (req, res, next) => {
     const { username, usernameToUnSubscribe } = req.body
-    userController.unSubscribe(username, usernameToUnSubscribe, (response) => {
-        res.send(response)
-    })
+    userController.unSubscribe(username, usernameToUnSubscribe, (response) => res.send(response))
 })
 
 Router.post('/update', upload, (req, res, next) => {
@@ -38,12 +33,13 @@ Router.post('/update', upload, (req, res, next) => {
                 res.send('{}')
             })
         }
-        else{
+        else {
             res.send({
                 error: error
             })
         }
     })
 })
+
 
 module.exports = Router
