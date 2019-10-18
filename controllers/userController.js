@@ -269,18 +269,22 @@ class userController {
 
     static suggestion(username, callback) {
         userModel.find({
-            $or: [
-                { $where: "this.subscribers.length >= 0" },
-                { $where: 'this.posts.length >= 0' }
+            $and: [
+                {
+                    $or: [
+                        { $where: "this.subscribers.length >= 0" },
+                        { $where: 'this.posts.length >= 0' }
+                    ]
+                },
+                { username: { $not: { $eq: username } } }
             ]
-
         }, (error, docs) => {
             const newArr = []
             docs.map((el, i) => {
                 newArr.push({ username: el.username, fullname: el.fullname, avatar: el.avatar })
                 if (i + 1 == docs.length) callback(newArr)
             })
-        }).limit(15)
+        }).limit(10)
     }
 
     static createDialog(users, token, callback) {
@@ -337,7 +341,7 @@ class userController {
                     res.map((el1, i) => {
                         el1.users.map((el, j) => {
                             userModel.findOne({ username: el.username }, { username: 1, avatar: 1, _id: 0 }, (error, doc) => {
-                                if(doc && doc.avatar) el.avatar = doc.avatar
+                                if (doc && doc.avatar) el.avatar = doc.avatar
                                 if (j + 1 == el1.users.length && res.length == i + 1) callback('', res)
                             })
                         })
