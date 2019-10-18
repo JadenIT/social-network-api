@@ -1,29 +1,6 @@
 const router = require('express').Router()
-const multer = require('multer')
 const userController = require('../controllers/userController')
-
-var storage = multer.diskStorage({
-    destination: './uploads',
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + file.originalname)
-    }
-})
-
-const upload = multer({
-    storage: storage,
-    fileFilter: function (req, file, cb) {
-        checkFileType(file, cb)
-    }
-}).any()
-
-const checkFileType = (file, cb) => {
-    if (file.mimetype == 'image/png' || file.mimetype == 'image/jpg' || file.mimetype == 'image/jpeg') {
-        cb(null, true)
-    }
-    else {
-        cb('Error incorrect type of file')
-    }
-}
+const upload = require('../middlewares/storage')
 
 router.post('/post', upload, (req, res, next) => {
     const { text, avatar, username, token } = req.body

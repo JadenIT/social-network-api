@@ -376,23 +376,41 @@ class userController {
         })
     }
 
+    static isNull(a) {
+        if (a == null || a == undefined) { return true }
+        else { return false }
+    }
+
     static updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatar, callback) {
+
+        /* 
+         * If fiels is equal to 0 =>
+         * It will not be updated
+        */
+
         let query = {}
-        if (newAvatar) query.avatar = newAvatar
-        if (newFullname) query.fullname = newFullname
-        if (newAbout) query.about = newAbout
-        if (newUsername) query.username = newUsername
-        if (newPassword) {
+        if (!this.isNull(newAvatar)) query.avatar = newAvatar
+        if (!this.isNull(newFullname)) query.fullname = newFullname
+        if (!this.isNull(newAbout)) query.about = newAbout
+
+        if (!this.isNull(newUsername)) {
+            this.usernameIsFree(newUsername, (isFree) => {
+                if (isFree) { query.username = newUsername }
+                else { return callback('Имя занято', false) }
+            })
+        }
+
+        if (!this.isNull(newPassword)) {
             bcrypt.hash(newPassword, 10, (err, hash) => {
                 query.password = hash
                 userModel.updateOne({ username: oldUsername }, query, (err, doc) => {
-                    callback(true)
+                    return callback('', true)
                 })
             })
         }
         else {
             userModel.updateOne({ username: oldUsername }, query, (err, doc) => {
-                callback(true)
+                return callback('', true)
             })
         }
     }
