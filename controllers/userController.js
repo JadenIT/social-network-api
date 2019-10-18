@@ -2,6 +2,7 @@ const userModel = require('../models/userModel')
 const jwt = require('jsonwebtoken')
 var uniqid = require('uniqid');
 const messageModel = require('../models/messages')
+const bcrypt = require('bcrypt')
 
 class userController {
 
@@ -12,21 +13,26 @@ class userController {
         })
     }
     static save(fullname, username, password, avatar, callback) {
-        const userModelInstance = new userModel({
-            fullname: fullname,
-            username: username,
-            password: password,
-            avatar: avatar
-        })
-        userModelInstance.save((error) => {
-            callback(error)
-        })
+        bcrypt.hash(password, 10, function (err, hash) {
+            const userModelInstance = new userModel({
+                fullname: fullname,
+                username: username,
+                password: hash,
+                avatar: avatar
+            })
+            userModelInstance.save((error) => {
+                callback(error)
+            })
+        });
     }
 
     static login(username, password, callback) {
-        userModel.findOne({ username: username, password: password }, (error, doc) => {
+        userModel.findOne({ username: username }, (error, doc) => {
             if (error) throw error
-            doc ? callback(true) : callback(false)
+            if (!doc) return callback(false)
+            bcrypt.compare(password, doc.password, function (err, res) {
+                res ? callback(true) : callback(false)
+            })
         })
     }
 
@@ -115,6 +121,14 @@ class userController {
             news: 1
         }, (err, doc) => {
             if (err) throw err
+            doc.posts.sort((a, b) => {
+                if (a.timestamp > b.timestamp) {
+                    return -1
+                }
+                else {
+                    return 1
+                }
+            })
             callback(doc)
         })
     }
@@ -266,7 +280,7 @@ class userController {
                 newArr.push({ username: el.username, fullname: el.fullname, avatar: el.avatar })
                 if (i + 1 == docs.length) callback(newArr)
             })
-        })
+        }).limit(15)
     }
 
     static createDialog(users, token, callback) {
@@ -303,7 +317,7 @@ class userController {
                 if (!doc) return callback('no such room')
                 messageModel.updateOne({ id: roomID }, {
                     $push: {
-                        messages: { username, message }
+                        messages: { username, message, timestamp: Date.now() }
                     }
                 }, (error, result) => callback(''))
             })
@@ -323,7 +337,7 @@ class userController {
                     res.map((el1, i) => {
                         el1.users.map((el, j) => {
                             userModel.findOne({ username: el.username }, { username: 1, avatar: 1, _id: 0 }, (error, doc) => {
-                                el.avatar = doc.avatar
+                                if(doc && doc.avatar) el.avatar = doc.avatar
                                 if (j + 1 == el1.users.length && res.length == i + 1) callback('', res)
                             })
                         })
@@ -345,7 +359,6 @@ class userController {
 
     static search(query, callback) {
         const q = new RegExp(query)
-        console.log(q)
         userModel.find({
             $or: [
                 { username: q },
