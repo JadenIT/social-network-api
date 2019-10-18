@@ -5,6 +5,7 @@ mongoose.connect('mongodb://localhost:27017/social-network', { useNewUrlParser: 
 })
 
 const userSchema = new mongoose.Schema({
+    about: String,
     fullname: String,
     username: String,
     password: String,

@@ -118,17 +118,18 @@ class userController {
             avatar: 1,
             subscribers: 1,
             subscriptions: 1,
-            news: 1
+            news: 1,
+            about: 1
         }, (err, doc) => {
             if (err) throw err
-            doc.posts.sort((a, b) => {
+            doc ? doc.posts.sort((a, b) => {
                 if (a.timestamp > b.timestamp) {
                     return -1
                 }
                 else {
                     return 1
                 }
-            })
+            }) : null
             callback(doc)
         })
     }
@@ -373,6 +374,27 @@ class userController {
         }, (error, docs) => {
             callback('', docs)
         })
+    }
+
+    static updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatar, callback) {
+        let query = {}
+        if (newAvatar) query.avatar = newAvatar
+        if (newFullname) query.fullname = newFullname
+        if (newAbout) query.about = newAbout
+        if (newUsername) query.username = newUsername
+        if (newPassword) {
+            bcrypt.hash(newPassword, 10, (err, hash) => {
+                query.password = hash
+                userModel.updateOne({ username: oldUsername }, query, (err, doc) => {
+                    callback(true)
+                })
+            })
+        }
+        else {
+            userModel.updateOne({ username: oldUsername }, query, (err, doc) => {
+                callback(true)
+            })
+        }
     }
 }
 
