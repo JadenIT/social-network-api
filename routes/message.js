@@ -17,14 +17,13 @@ io.on('connection', (client) => {
                 io.to(roomID).emit('error', 'incorrect jwt')
             }
             else {
-                userController.addMessage(username, message, roomID, token, (error) => {
-                    if (error) {
-                        io.to(roomID).emit('error', error)
-                    }
-                    else {
+                userController.addMessage(username, message, roomID, token)
+                    .then(resolved => {
                         io.to(roomID).emit('msgToClient', msgObj)
-                    }
-                })
+                    })
+                    .catch(error => {
+                        io.to(roomID).emit('error', error)
+                    })
             }
         })
     })
@@ -57,12 +56,9 @@ Router.get('/messages', (req, res) => {
 
 Router.get('/dialog', (req, res) => {
     const { dialogID, token } = req.query
-    userController.getDialog(dialogID, token, (error, response) => {
-        res.send({
-            error: error,
-            dialog: response
-        })
-    })
+    userController.getDialog(dialogID, token)
+        .then(dialog => res.send({ dialog }))
+        .catch(error => res.send({ error }))
 })
 
 module.exports = Router

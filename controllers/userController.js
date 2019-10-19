@@ -315,17 +315,24 @@ class userController {
         })
     }
 
-    static addMessage(username, message, roomID, token, callback) {
-        jwt.verify(token, 'Some key', (error, decoded) => {
-            if (!decoded) return callback('Not authorized')
-            if (username != decoded.username) return callback("Token username doesn't match username from req")
-            messageModel.findOne({ id: roomID }, (error, doc) => {
-                if (!doc) return callback('no such room')
-                messageModel.updateOne({ id: roomID }, {
-                    $push: {
-                        messages: { username, message, timestamp: Date.now() }
-                    }
-                }, (error, result) => callback(''))
+    static addMessage(username, message, roomID, token) {
+        return new Promise((resolve, reject) => {
+            jwt.verify(token, 'Some key', (error, decoded) => {
+
+                if (error) reject(error)
+                if (!decoded) reject('Not authorized')
+                if (username != decoded.username) reject("Token username doesn't match username from req")
+
+                messageModel.findOne({ id: roomID }, (error, doc) => {
+                    if (error) reject(error)
+                    if (!doc) reject('no such room')
+
+                    messageModel.updateOne({ id: roomID }, {
+                        $push: {
+                            messages: { username, message, timestamp: Date.now() }
+                        }
+                    }, (error, result) => resolve())
+                })
             })
         })
     }
@@ -353,57 +360,64 @@ class userController {
         })
     }
 
-    static getDialog(dialogID, token, callback) {
-        jwt.verify(token, 'Some key', (error, decoded) => {
-            if (!decoded) { return callback('', []) }
-            messageModel.findOne({ id: dialogID }, (error, doc) => {
-                if (doc.users.some(el => el.username == decoded.username)) return callback('', doc)
-                callback('Not user dialog')
+    static getDialog(dialogID, token) {
+        return new Promise((resolve, reject) => {
+            jwt.verify(token, 'Some key', (error, decoded) => {
+                if (error) reject(error)
+                if (!decoded) reject('!decoded')
+                messageModel.findOne({ id: dialogID }, (error, doc) => {
+                    if (error) reject(error)
+
+                    if (doc.users.some(el => el.username == decoded.username)) {
+                        resolve(doc)
+                    }
+                    else {
+                        reject('Not user dialog')
+                    }
+                })
             })
         })
     }
 
-    static search(query, callback) {
-        const q = new RegExp(query)
-        userModel.find({
-            $or: [
-                { username: q },
-                { fullname: q }
-            ]
-        }, {
-            username: 1, fullname: 1, avatar: 1
-        }, (error, docs) => {
-            callback('', docs)
+    static search(query) {
+        return new Promise((resolve, reject) => {
+            const q = new RegExp(query)
+            userModel.find({
+                $or: [
+                    { username: q },
+                    { fullname: q }
+                ]
+            }, {
+                username: 1, fullname: 1, avatar: 1
+            }, (error, docs) => {
+                if (error) reject(error)
+                resolve(docs)
+            })
         })
     }
 
-    static isNull(a) {
-        if (a == null || a == undefined) { return true }
-        else { return false }
-    }
+    static updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatar) {
+        return new Promise(async (resolve, reject) => {
+            let query = {}
+            if (newAvatar) query.avatar = newAvatar
+            if (newFullname) query.fullname = newFullname
+            query.about = newAbout
 
-    static async updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatar, callback) {
-        let query = {}
+            if (newUsername) {
+                await this.usernameIsFree(newUsername).then((onResolved) => {
+                    if (!onResolved) reject('Имя занято')
+                    query.username = newUsername
+                }).catch((err) => reject('Произошла ошибка'))
+            }
 
-        if (!this.isNull(newAvatar)) query.avatar = newAvatar
-        if (!this.isNull(newFullname)) query.fullname = newFullname
+            if (newPassword) {
+                await bcrypt.hash(newPassword, 10).then(hash => query.password = hash, error => reject('Произошла ошибка'))
+            }
 
-        query.about = newAbout
-
-        if (newUsername) {
-            await this.usernameIsFree(newUsername).then((onResolved) => {
-                if (!onResolved) return callback('Имя занято')
-                query.username = newUsername
-            }).catch((err) => (callback('Произошла ошибка')))
-        }
-
-        if (!this.isNull(newPassword)) {
-            await bcrypt.hash(newPassword, 10).then(hash => query.password = hash, error => callback('Error'))
-        }
-
-        userModel.updateOne({ username: oldUsername }, query)
-            .then(onResolved => callback(null))
-            .catch(error => callback('Произошла ошибка'))
+            userModel.updateOne({ username: oldUsername }, query)
+                .then(onResolved => resolve(null))
+                .catch(error => reject('Произошла ошибка'))
+        })
     }
 }
 

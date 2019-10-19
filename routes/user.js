@@ -24,22 +24,15 @@ Router.post('/update', upload, (req, res, next) => {
     const { oldUsername, newUsername, newPassword, newAbout, newFullname } = req.body
     const newAvatar = req.files[0] || null
     const newAvatarFileName = newAvatar ? newAvatar.filename : null
-    userController.updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatarFileName, (error) => {
-        if (!error) {
+    userController.updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatarFileName)
+        .then(onResolved => {
             jwt.sign({ username: newUsername ? newUsername : oldUsername }, 'Some key', (err, token) => {
                 res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                     maxAge: 60 * 60 * 24 * 7 // 1 week
                 }))
-                res.send('{}')
+                res.send({})
             })
-        }
-        else {
-            res.send({
-                error: error
-            })
-        }
-    })
+        }).catch(error => res.send({ error }))
 })
-
 
 module.exports = Router
