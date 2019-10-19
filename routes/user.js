@@ -11,21 +11,6 @@ Router.get('/user/:username', (req, res, next) => {
         .catch(error => res.send({ error }))
 })
 
-
-Router.post('/subscribe', (req, res, next) => {
-    const { username, usernameToSubscribe } = req.body
-    userController.subscribe(username, usernameToSubscribe)
-        .then(response => res.send({ response }))
-        .catch(error => res.send({ error }))
-})
-
-Router.post('/unSubscribe', (req, res, next) => {
-    const { username, usernameToUnSubscribe } = req.body
-    userController.unSubscribe(username, usernameToUnSubscribe)
-        .then(response => res.send({ response }))
-        .catch(error => res.send({ error }))
-})
-
 Router.post('/update', upload, (req, res, next) => {
     const { oldUsername, newUsername, newPassword, newAbout, newFullname } = req.body
     const newAvatar = req.files[0] || null

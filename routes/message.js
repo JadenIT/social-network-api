@@ -1,38 +1,5 @@
 const Router = require('express').Router()
 const userController = require('../controllers/userController')
-const jwt = require('jsonwebtoken')
-
-const io = require('socket.io')();
-
-io.on('connection', (client) => {
-
-    client.on('joinRoom', (room) => {
-        client.join(room);
-    })
-
-    client.on('msgToServer', (msgObj) => {
-        const { username, message, roomID, token } = msgObj
-        jwt.verify(token, 'Some key', (err, decoded) => {
-            if (decoded == null || decoded == undefined) {
-                io.to(roomID).emit('error', 'incorrect jwt')
-            }
-            else {
-                userController.addMessage(username, message, roomID, token)
-                    .then(resolved => {
-                        io.to(roomID).emit('msgToClient', msgObj)
-                    })
-                    .catch(error => {
-                        io.to(roomID).emit('error', error)
-                    })
-            }
-        })
-    })
-    client.on('disconnect', () => { })
-})
-
-const port = 5000
-
-io.listen(port)
 
 Router.post('/dialog', (req, res) => {
     const { users, token } = req.body

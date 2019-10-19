@@ -3,6 +3,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const router = require('./routes/index')
 const cookies = require('./middlewares/cookies')
+const sockets = require('./sockets/index')
 
 let app = express()
 

@@ -13,19 +13,4 @@ router.post('/post', upload, (req, res, next) => {
         .catch(error => res.send({ error }))
 })
 
-router.post('/addLike', (req, res, next) => {
-    const { authUsername, username, postID, token } = req.body
-    userController.addLike(authUsername, username, postID, token)
-        .then(Response => res.send(Response))
-        .catch(cerror => res.send({ error }))
-})
-
-router.post('/removeLike', (req, res, next) => {
-    const { authUsername, username, postID, token } = req.body
-    userController.removeLike(authUsername, username, postID, token)
-        .then(response => res.send(response))
-        .catch(error => res.send({ error: error }))
-})
-
-
 module.exports = router
