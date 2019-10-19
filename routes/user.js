@@ -24,9 +24,9 @@ Router.post('/update', upload, (req, res, next) => {
     const { oldUsername, newUsername, newPassword, newAbout, newFullname } = req.body
     const newAvatar = req.files[0] || null
     const newAvatarFileName = newAvatar ? newAvatar.filename : null
-    userController.updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatarFileName, (error, response) => {
-        if (response) {
-            jwt.sign({ username: newUsername }, 'Some key', (err, token) => {
+    userController.updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatarFileName, (error) => {
+        if (!error) {
+            jwt.sign({ username: newUsername ? newUsername : oldUsername }, 'Some key', (err, token) => {
                 res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                     maxAge: 60 * 60 * 24 * 7 // 1 week
                 }))

@@ -6,24 +6,24 @@ const bcrypt = require('bcrypt')
 
 class userController {
 
-    static usernameIsFree(username, callback) {
-        userModel.find({ username: username }, (error, docs) => {
-            if (error) throw error
-            docs.length > 0 ? callback(false) : callback(true)
+    static usernameIsFree(username) {
+        return new Promise((resolve, reject) => {
+            userModel.find({ username }, (error, docs) => {
+                if (error) reject(error)
+                if (docs.length > 0) resolve(false)
+                else resolve(true)
+            })
         })
     }
-    static save(fullname, username, password, avatar, callback) {
-        bcrypt.hash(password, 10, function (err, hash) {
-            const userModelInstance = new userModel({
-                fullname: fullname,
-                username: username,
-                password: hash,
-                avatar: avatar
-            })
-            userModelInstance.save((error, doc) => {
-                callback(error, doc)
-            })
-        });
+
+    static async save(fullname, username, password, avatar, callback) {
+        await this.usernameIsFree(username).then(isFree => {
+            if (!isFree) return callback('Имя занято')
+            bcrypt.hash(password, 10, (error, hash) => {
+                const userModelInstance = new userModel({ fullname, username, avatar, password: hash })
+                userModelInstance.save((error, doc) => callback(error))
+            });
+        }).catch(error => (callback('Произошла ошибка')))
     }
 
     static login(username, password, callback) {
@@ -280,10 +280,11 @@ class userController {
                 { username: { $not: { $eq: username } } }
             ]
         }, (error, docs) => {
+            if (docs.length === 0) return callback('No suggestions', [])
             const newArr = []
             docs.map((el, i) => {
                 newArr.push({ username: el.username, fullname: el.fullname, avatar: el.avatar })
-                if (i + 1 == docs.length) callback(newArr)
+                if (i + 1 == docs.length) return callback('', newArr)
             })
         }).limit(10)
     }
@@ -381,38 +382,28 @@ class userController {
         else { return false }
     }
 
-    static updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatar, callback) {
-
-        /* 
-         * If fiels is equal to 0 =>
-         * It will not be updated
-        */
-
+    static async updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatar, callback) {
         let query = {}
+
         if (!this.isNull(newAvatar)) query.avatar = newAvatar
         if (!this.isNull(newFullname)) query.fullname = newFullname
-        if (!this.isNull(newAbout)) query.about = newAbout
 
-        if (!this.isNull(newUsername)) {
-            this.usernameIsFree(newUsername, (isFree) => {
-                if (isFree) { query.username = newUsername }
-                else { return callback('Имя занято', false) }
-            })
+        query.about = newAbout
+
+        if (newUsername) {
+            await this.usernameIsFree(newUsername).then((onResolved) => {
+                if (!onResolved) return callback('Имя занято')
+                query.username = newUsername
+            }).catch((err) => (callback('Произошла ошибка')))
         }
 
         if (!this.isNull(newPassword)) {
-            bcrypt.hash(newPassword, 10, (err, hash) => {
-                query.password = hash
-                userModel.updateOne({ username: oldUsername }, query, (err, doc) => {
-                    return callback('', true)
-                })
-            })
+            await bcrypt.hash(newPassword, 10).then(hash => query.password = hash, error => callback('Error'))
         }
-        else {
-            userModel.updateOne({ username: oldUsername }, query, (err, doc) => {
-                return callback('', true)
-            })
-        }
+
+        userModel.updateOne({ username: oldUsername }, query)
+            .then(onResolved => callback(null))
+            .catch(error => callback('Произошла ошибка'))
     }
 }
 
