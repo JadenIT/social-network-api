@@ -8,7 +8,7 @@ router.post('/login', (req, res, next) => {
 
     userController.isUserIsset(username, password)
         .then(onResolved => {
-            jwt.sign({ username: username }, 'Some key', (err, token) => {
+            jwt.sign({ username: username }, process.env.JWT_KEY, (err, token) => {
                 res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                     maxAge: 60 * 60 * 24 * 7
                 }))

@@ -4,24 +4,50 @@ var uniqid = require('uniqid');
 const messageModel = require('../models/messages')
 const bcrypt = require('bcrypt')
 
+// let a = new Promise((resolve, reject) => {
+//     setTimeout(() => resolve("done!"), 1000)
+// })
+
+// async function f() {
+//     await a.then(res => console.log(res))
+//     console.log(1)
+// }
+
+// f();
+
+/* If promise has been rejected 
+ * before  resolved =>
+ * it will not call resolve function
+ * 
+ * new Promise((resolve, reject) => {
+ *     reject('1')
+ *     resolve('2')
+ * })
+ * 
+ * .then(res => console.log(res))
+   .catch(error => console.log(error))
+ * 
+ * will out put 1
+ */
+
 class userController {
 
     static usernameIsFree(username) {
         return new Promise((resolve, reject) => {
             userModel.find({ username }, (error, docs) => {
-                if (error) reject(error)
+                if (error) return reject(error)
                 if (docs.length > 0) resolve(false)
                 else resolve(true)
             })
         })
     }
 
-    static save(fullname, username, password, avatar) {
+    static save(fullname, username, password) {
         return new Promise((resolve, reject) => {
             this.usernameIsFree(username).then(isFree => {
-                if (!isFree) reject('Имя занято')
+                if (!isFree) return reject('Имя занято')
                 bcrypt.hash(password, 10).then(hash => {
-                    const userModelInstance = new userModel({ fullname, username, avatar, password: hash })
+                    const userModelInstance = new userModel({ fullname, username, password: hash })
                     userModelInstance.save().then(doc => resolve()).catch(error => reject(error))
                 }).catch(error => reject(error))
             }).catch(error => reject(error))
@@ -32,14 +58,11 @@ class userController {
         return new Promise((resolve, reject) => {
             userModel.findOne({ username })
                 .then(doc => {
-                    if (!doc) { reject('Incorrect username') }
-                    else {
-                        bcrypt.compare(password, doc.password).then(hash => {
-                            if (!hash) { reject('Incorrect password') }
-                            if (hash) { resolve() }
-                        }).catch(error => reject(error))
-                    }
-
+                    if (!doc) return reject('Incorrect username')
+                    bcrypt.compare(password, doc.password).then(hash => {
+                        if (!hash) return reject('Incorrect password')
+                        if (hash) { resolve() }
+                    }).catch(error => reject(error))
                 })
                 .catch(error => reject(error))
         })
@@ -47,11 +70,11 @@ class userController {
 
     static savePost(username, filename, text, avatar, timestamp, token, callback) {
         return new Promise((resolve, reject) => {
-            jwt.verify(token, 'Some key', (error, decoded) => {
+            jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
 
-                if (error) reject(error)
-                if (!decoded) reject('Not authorized')
-                if (decoded.username != username) reject("Token username doesn't match username from req")
+                if (error) return reject(error)
+                if (!decoded) return reject('Not authorized')
+                if (decoded.username != username) return reject("Token username doesn't match username from req")
 
                 userModel.updateOne({ username: username },
                     {
@@ -98,9 +121,9 @@ class userController {
 
     static getNewsByUsername(username, page, perpage, token) {
         return new Promise((resolve, reject) => {
-            jwt.verify(token, 'Some key', (error, decoded) => {
+            jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
                 if (!decoded) return callback('Not authorized', [])
-                if (decoded.username != username) reject("Token username doesn't match username from req", [])
+                if (decoded.username != username) return reject("Token username doesn't match username from req", [])
 
                 let end = page * perpage
                 let start = end - (perpage - 1) - 1
@@ -131,7 +154,7 @@ class userController {
                 news: 1,
                 about: 1
             }, (error, doc) => {
-                if (error) reject(error)
+                if (error) return reject(error)
                 doc ? doc.posts.sort((a, b) => {
                     if (a.timestamp > b.timestamp) {
                         return -1
@@ -149,30 +172,27 @@ class userController {
         return new Promise((resolve, reject) => {
             userModel.findOne({ username: username }, function (error, doc) {
                 const { subscriptions } = doc
-                if (subscriptions.some(el => el.username == usernameToSubscribe)) {
-                    reject('Already subscribed')
-                }
-                else {
-                    userModel.updateOne({ username: username }, {
+                if (subscriptions.some(el => el.username == usernameToSubscribe)) return reject('Already subscribed')
+
+                userModel.updateOne({ username: username }, {
+                    $push: {
+                        subscriptions: {
+                            username: usernameToSubscribe
+                        }
+                    }
+                }, (error) => {
+                    if (error) return reject(error)
+                    userModel.updateOne({ username: usernameToSubscribe }, {
                         $push: {
-                            subscriptions: {
-                                username: usernameToSubscribe
+                            subscribers: {
+                                username: username
                             }
                         }
                     }, (error) => {
-                        if (error) reject(error)
-                        userModel.updateOne({ username: usernameToSubscribe }, {
-                            $push: {
-                                subscribers: {
-                                    username: username
-                                }
-                            }
-                        }, (error) => {
-                            if (error) reject(error)
-                            resolve()
-                        })
+                        if (error) return reject(error)
+                        resolve()
                     })
-                }
+                })
             })
         })
     }
@@ -186,7 +206,7 @@ class userController {
                     }
                 }
             }, (error) => {
-                if (error) reject(error)
+                if (error) return reject(error)
                 userModel.updateOne({ username: usernameToUnSubscribe }, {
                     $pull: {
                         subscribers: {
@@ -211,9 +231,9 @@ class userController {
         */
 
         return new Promise((resolve, reject) => {
-            jwt.verify(token, 'Some key', (error, decoded) => {
-                if (!decoded) reject('Not authorized')
-                if (likedUsername != decoded.username) reject("Token username doesn't match username from req")
+            jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
+                if (!decoded) return reject('Not authorized')
+                if (likedUsername != decoded.username) return reject("Token username doesn't match username from req")
 
                 userModel.find({
                     $and: [
@@ -222,7 +242,7 @@ class userController {
                         { 'posts.likedBy.username': { $eq: likedUsername } }
                     ]
                 }, { posts: 1 }, (error, doc) => {
-                    if (doc) reject('Already liked')
+                    if (doc) return reject('Already liked')
 
                     userModel.updateOne({
                         $and: [
@@ -263,9 +283,9 @@ class userController {
 
     static removeLike(likedUsername, usernamePostedPost, postID, token) {
         return new Promise((resolve, reject) => {
-            jwt.verify(token, 'Some key', (error, decoded) => {
-                if (!decoded) reject('Not authorized')
-                if (likedUsername != decoded.username) reject("Token username doesn't match username from req")
+            jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
+                if (!decoded) return reject('Not authorized')
+                if (likedUsername != decoded.username) return reject("Token username doesn't match username from req")
 
                 userModel.updateOne({
                     username: { $eq: usernamePostedPost },
@@ -280,7 +300,7 @@ class userController {
                             }
                         }
                     }, (error, doc) => {
-                        if (error) reject(error)
+                        if (error) return reject(error)
                         resolve()
                     })
             })
@@ -300,7 +320,7 @@ class userController {
                     { username: { $not: { $eq: username } } }
                 ]
             }, (error, docs) => {
-                if (error) reject(error)
+                if (error) return reject(error)
                 if (docs.length === 0) resolve([])
                 const newArr = []
                 docs.map((el, i) => {
@@ -313,10 +333,10 @@ class userController {
 
     static createDialog(users, token) {
         return new Promise((resolve, reject) => {
-            jwt.verify(token, 'Some key', (error, decoded) => {
-                if (error) reject(error)
-                if (!decoded) reject('Not authorized')
-                if (users.some(el => { el.username != decoded.username })) reject("Token username doesn't match username from req")
+            jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
+                if (error) return reject(error)
+                if (!decoded) return reject('Not authorized')
+                if (users.some(el => { el.username != decoded.username })) return reject("Token username doesn't match username from req")
 
                 messageModel.findOne({
                     users: { $eq: users }
@@ -330,7 +350,7 @@ class userController {
                         users: users,
                         messages: []
                     }).save((error) => {
-                        if (error) reject(error)
+                        if (error) return reject(error)
                         let pureUsersArr = []
                         users.map(el => pureUsersArr.push(el.username))
                         userModel.updateMany({ username: { $in: pureUsersArr } }, { $push: { messages: dialogID } })
@@ -344,15 +364,15 @@ class userController {
 
     static addMessage(username, message, roomID, token) {
         return new Promise((resolve, reject) => {
-            jwt.verify(token, 'Some key', (error, decoded) => {
+            jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
 
-                if (error) reject(error)
-                if (!decoded) reject('Not authorized')
-                if (username != decoded.username) reject("Token username doesn't match username from req")
+                if (error) return reject(error)
+                if (!decoded) return reject('Not authorized')
+                if (username != decoded.username) return reject("Token username doesn't match username from req")
 
                 messageModel.findOne({ id: roomID }, (error, doc) => {
-                    if (error) reject(error)
-                    if (!doc) reject('no such room')
+                    if (error) return reject(error)
+                    if (!doc) return reject('no such room')
 
                     messageModel.updateOne({ id: roomID }, {
                         $push: {
@@ -366,10 +386,10 @@ class userController {
 
     static getMessages(username, token) {
         return new Promise((resolve, reject) => {
-            jwt.verify(token, 'Some key', (error, decoded) => {
-                if (error) reject(error)
-                if (!decoded) reject('Not authorized')
-                if (decoded.username != username) reject("Token username doesn't match username from req")
+            jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
+                if (error) return reject(error)
+                if (!decoded) return reject('Not authorized')
+                if (decoded.username != username) return reject("Token username doesn't match username from req")
 
                 userModel.findOne({ username: username }, { messages: 1 })
                     .then(doc => {
@@ -396,15 +416,13 @@ class userController {
 
     static getDialog(dialogID, token) {
         return new Promise((resolve, reject) => {
-            jwt.verify(token, 'Some key', (error, decoded) => {
-                if (error) reject(error)
-                if (!decoded) reject('!decoded')
+            jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
+                if (error) return reject(error)
+                if (!decoded) return reject('!decoded')
                 messageModel.findOne({ id: dialogID }, (error, doc) => {
-                    if (error) reject(error)
+                    if (error) return reject(error)
 
-                    if (doc.users.some(el => el.username == decoded.username)) {
-                        resolve(doc)
-                    }
+                    if (doc.users.some(el => el.username == decoded.username)) { resolve(doc) }
                     else {
                         reject('Not user dialog')
                     }
@@ -424,14 +442,14 @@ class userController {
             }, {
                 username: 1, fullname: 1, avatar: 1
             }, (error, docs) => {
-                if (error) reject(error)
+                if (error) return reject(error)
                 resolve(docs)
             })
         })
     }
 
-    static updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatar) {
-        return new Promise(async (resolve, reject) => {
+    static async updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatar) {
+        await new Promise(async (resolve, reject) => {
             let query = {}
             if (newAvatar) query.avatar = newAvatar
             if (newFullname) query.fullname = newFullname
@@ -448,10 +466,20 @@ class userController {
                 await bcrypt.hash(newPassword, 10).then(hash => query.password = hash, error => reject('Произошла ошибка'))
             }
 
-            userModel.updateOne({ username: oldUsername }, query)
-                .then(onResolved => resolve(null))
-                .catch(error => reject('Произошла ошибка'))
+            resolve(query)
         })
+            .then(query => {
+                return new Promise((resolve, reject) => {
+                    userModel.updateOne({ username: oldUsername }, query)
+                        .then(onResolved => resolve())
+                        .catch(error => reject('Произошла ошибка'))
+                })
+            })
+            .catch(error => {
+                return new Promise((resolve, reject) => {
+                    reject(error)
+                })
+            })
     }
 }
 
