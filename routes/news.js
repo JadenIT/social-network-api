@@ -3,12 +3,9 @@ const userController = require('../controllers/userController')
 
 Router.get('/news', (req, res) => {
     const { username, page, perpage, token } = req.query
-    userController.getNewsByUsername(username, page, perpage, token, (error, news) => {
-        res.send({
-            error: error,
-            news: news
-        })
-    })
+    userController.getNewsByUsername(username, page, perpage, token)
+        .then(news => res.send({ news }))
+        .catch(error => res.send({ error }))
 })
 
 module.exports = Router

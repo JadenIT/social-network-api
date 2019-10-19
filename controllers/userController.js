@@ -16,177 +16,192 @@ class userController {
         })
     }
 
-    static async save(fullname, username, password, avatar, callback) {
-        await this.usernameIsFree(username).then(isFree => {
-            if (!isFree) return callback('Имя занято')
-            bcrypt.hash(password, 10, (error, hash) => {
-                const userModelInstance = new userModel({ fullname, username, avatar, password: hash })
-                userModelInstance.save((error, doc) => callback(error))
-            });
-        }).catch(error => (callback('Произошла ошибка')))
+    static save(fullname, username, password, avatar) {
+        return new Promise((resolve, reject) => {
+            this.usernameIsFree(username).then(isFree => {
+                if (!isFree) reject('Имя занято')
+                bcrypt.hash(password, 10).then(hash => {
+                    const userModelInstance = new userModel({ fullname, username, avatar, password: hash })
+                    userModelInstance.save().then(doc => resolve()).catch(error => reject(error))
+                }).catch(error => reject(error))
+            }).catch(error => reject(error))
+        })
     }
 
-    static login(username, password, callback) {
-        userModel.findOne({ username: username }, (error, doc) => {
-            if (error) throw error
-            if (!doc) return callback(false)
-            bcrypt.compare(password, doc.password, function (err, res) {
-                res ? callback(true) : callback(false)
-            })
+    static isUserIsset(username, password, callback) {
+        return new Promise((resolve, reject) => {
+            userModel.findOne({ username })
+                .then(doc => {
+                    if (!doc) { reject('Incorrect username') }
+                    else {
+                        bcrypt.compare(password, doc.password).then(hash => {
+                            if (!hash) { reject('Incorrect password') }
+                            if (hash) { resolve() }
+                        }).catch(error => reject(error))
+                    }
+
+                })
+                .catch(error => reject(error))
         })
     }
 
     static savePost(username, filename, text, avatar, timestamp, token, callback) {
-        jwt.verify(token, 'Some key', (err, decoded) => {
-            if (!decoded) { return callback('Not authorized') }
-            if (decoded.username != username) { return callback("Token username doesn't match username from req") }
+        return new Promise((resolve, reject) => {
+            jwt.verify(token, 'Some key', (error, decoded) => {
 
-            userModel.updateOne({ username: username },
-                {
-                    $push: {
-                        posts: {
-                            id: uniqid(),
-                            filename: filename,
-                            text: text,
-                            likes: 0,
-                            username: username,
-                            avatar: avatar,
-                            timestamp: timestamp,
-                            likedBy: []
+                if (error) reject(error)
+                if (!decoded) reject('Not authorized')
+                if (decoded.username != username) reject("Token username doesn't match username from req")
+
+                userModel.updateOne({ username: username },
+                    {
+                        $push: {
+                            posts: {
+                                id: uniqid(),
+                                filename: filename,
+                                text: text,
+                                likes: 0,
+                                username: username,
+                                avatar: avatar,
+                                timestamp: timestamp,
+                                likedBy: []
+                            }
                         }
+                    }).then(doc => { resolve() })
+                    .catch(error => reject(error))
+            })
+        })
+    }
+
+    static getNewsByArrOfSUbscriptions(arr) {
+        return new Promise((resolve, reject) => {
+            let newsArr = []
+            if (arr.length <= 0) resolve([])
+            arr.map((el, i) => {
+                userModel.findOne({ username: el.username }, { posts: 1 }, (err, response) => {
+                    newsArr = newsArr.concat(response.posts)
+                    if (i + 1 == arr.length) {
+                        newsArr.sort((a, b) => {
+                            if (a.timestamp > b.timestamp) {
+                                return -1
+                            }
+                            else {
+                                return 1
+                            }
+                        })
+                        resolve(newsArr)
                     }
-                }, (error) => {
-                    callback(error)
-                })
-        })
-    }
-
-    static async removePost(username, postID, callback) {
-        const up = await userModel.updateOne({ username: username }, { $pull: { posts: { id: postID } } })
-        up.nModified == 1 ? callback(true) : callback(false)
-    }
-
-    static getNewsByArrOfSUbscriptions(arr, callback) {
-        let newsArr = []
-        if (arr.length <= 0) { return callback([]) }
-        arr.map((el, i) => {
-            userModel.findOne({ username: el.username }, { posts: 1 }, (err, response) => {
-                newsArr = newsArr.concat(response.posts)
-                if (i + 1 == arr.length) {
-                    newsArr.sort((a, b) => {
-                        if (a.timestamp > b.timestamp) {
-                            return -1
-                        }
-                        else {
-                            return 1
-                        }
-                    })
-                    callback(newsArr)
-                }
-            })
-        })
-
-    }
-
-    static getNewsByUsername(username, page, perpage, token, callback) {
-        jwt.verify(token, 'Some key', (error, decoded) => {
-            if (!decoded) return callback('Not authorized', [])
-            if (decoded.username != username) return callback("Token username doesn't match username from req", [])
-
-            let end = page * perpage
-            let start = end - (perpage - 1) - 1
-
-            userModel.findOne({ username: username }, { subscriptions: 1 }, function (error, doc) {
-                if (error) throw error
-                const { subscriptions } = doc || []
-
-                if (!subscriptions) return callback('', [])
-
-                userController.getNewsByArrOfSUbscriptions(subscriptions, (response) => {
-                    const newArr = response.splice(start, perpage)
-                    callback('', newArr)
                 })
             })
         })
     }
 
-    static getPublicUser(username, callback) {
-        userModel.findOne({ username: username }, {
-            username: 1,
-            fullname: 1,
-            posts: 1,
-            avatar: 1,
-            subscribers: 1,
-            subscriptions: 1,
-            news: 1,
-            about: 1
-        }, (err, doc) => {
-            if (err) throw err
-            doc ? doc.posts.sort((a, b) => {
-                if (a.timestamp > b.timestamp) {
-                    return -1
+    static getNewsByUsername(username, page, perpage, token) {
+        return new Promise((resolve, reject) => {
+            jwt.verify(token, 'Some key', (error, decoded) => {
+                if (!decoded) return callback('Not authorized', [])
+                if (decoded.username != username) reject("Token username doesn't match username from req", [])
+
+                let end = page * perpage
+                let start = end - (perpage - 1) - 1
+
+                userModel.findOne({ username: username }, { subscriptions: 1 }, function (error, doc) {
+                    if (error) throw error
+                    const { subscriptions } = doc || []
+
+                    if (!subscriptions) resolve([])
+
+                    userController.getNewsByArrOfSUbscriptions(subscriptions)
+                        .then(news => resolve(news.splice(start, perpage)))
+                        .catch(error => reject(error))
+                })
+            })
+        })
+    }
+
+    static getPublicUser(username) {
+        return new Promise((resolve, reject) => {
+            userModel.findOne({ username: username }, {
+                username: 1,
+                fullname: 1,
+                posts: 1,
+                avatar: 1,
+                subscribers: 1,
+                subscriptions: 1,
+                news: 1,
+                about: 1
+            }, (error, doc) => {
+                if (error) reject(error)
+                doc ? doc.posts.sort((a, b) => {
+                    if (a.timestamp > b.timestamp) {
+                        return -1
+                    }
+                    else {
+                        return 1
+                    }
+                }) : null
+                resolve(doc)
+            })
+        })
+    }
+
+    static subscribe(username, usernameToSubscribe) {
+        return new Promise((resolve, reject) => {
+            userModel.findOne({ username: username }, function (error, doc) {
+                const { subscriptions } = doc
+                if (subscriptions.some(el => el.username == usernameToSubscribe)) {
+                    reject('Already subscribed')
                 }
                 else {
-                    return 1
+                    userModel.updateOne({ username: username }, {
+                        $push: {
+                            subscriptions: {
+                                username: usernameToSubscribe
+                            }
+                        }
+                    }, (error) => {
+                        if (error) reject(error)
+                        userModel.updateOne({ username: usernameToSubscribe }, {
+                            $push: {
+                                subscribers: {
+                                    username: username
+                                }
+                            }
+                        }, (error) => {
+                            if (error) reject(error)
+                            resolve()
+                        })
+                    })
                 }
-            }) : null
-            callback(doc)
+            })
         })
     }
 
-    static subscribe(username, usernameToSubscribe, callback) {
-        userModel.findOne({ username: username }, function (error, doc) {
-            const { subscriptions } = doc
-            if (subscriptions.some(el => el.username == usernameToSubscribe)) {
-                callback(false)
-            }
-            else {
-                userModel.updateOne({ username: username }, {
-                    $push: {
-                        subscriptions: {
-                            username: usernameToSubscribe
+    static unSubscribe(username, usernameToUnSubscribe) {
+        return new Promise((resolve, reject) => {
+            userModel.updateOne({ username: username }, {
+                $pull: {
+                    subscriptions: {
+                        username: usernameToUnSubscribe
+                    }
+                }
+            }, (error) => {
+                if (error) reject(error)
+                userModel.updateOne({ username: usernameToUnSubscribe }, {
+                    $pull: {
+                        subscribers: {
+                            username: username
                         }
                     }
                 }, (error) => {
                     if (error) throw error
-                    userModel.updateOne({ username: usernameToSubscribe }, {
-                        $push: {
-                            subscribers: {
-                                username: username
-                            }
-                        }
-                    }, (error) => {
-                        if (error) throw error
-                        callback(true)
-                    })
+                    resolve(true)
                 })
-            }
-        })
-    }
-
-    static unSubscribe(username, usernameToUnSubscribe, callback) {
-        userModel.updateOne({ username: username }, {
-            $pull: {
-                subscriptions: {
-                    username: usernameToUnSubscribe
-                }
-            }
-        }, (error) => {
-            if (error) throw error
-            userModel.updateOne({ username: usernameToUnSubscribe }, {
-                $pull: {
-                    subscribers: {
-                        username: username
-                    }
-                }
-            }, (error) => {
-                if (error) throw error
-                callback(true)
             })
         })
     }
 
-    static addLike(likedUsername, usernamePostedPost, postID, token, callback) {
+    static addLike(likedUsername, usernamePostedPost, postID, token) {
 
         /* Query an Array of Embedded Documents
          * https://docs.mongodb.com/manual/tutorial/query-array-of-documents/
@@ -195,121 +210,133 @@ class userController {
          * the field in the nested document.
         */
 
-        jwt.verify(token, 'Some key', (error, decoded) => {
-            if (!decoded) return callback('Not authorized')
-            if (likedUsername != decoded.username) return callback("Token username doesn't match username from req")
+        return new Promise((resolve, reject) => {
+            jwt.verify(token, 'Some key', (error, decoded) => {
+                if (!decoded) reject('Not authorized')
+                if (likedUsername != decoded.username) reject("Token username doesn't match username from req")
 
-            userModel.find({
-                $and: [
-                    { 'username': { $eq: { usernamePostedPost } } },
-                    { 'posts.id': { $eq: postID } },
-                    { 'posts.likedBy.username': { $eq: likedUsername } }
-                ]
-            }, { posts: 1 }, (error, doc) => {
-                if (doc) return callback('ALready liked')
+                userModel.find({
+                    $and: [
+                        { 'username': { $eq: { usernamePostedPost } } },
+                        { 'posts.id': { $eq: postID } },
+                        { 'posts.likedBy.username': { $eq: likedUsername } }
+                    ]
+                }, { posts: 1 }, (error, doc) => {
+                    if (doc) reject('Already liked')
+
+                    userModel.updateOne({
+                        $and: [
+                            { 'username': { $eq: usernamePostedPost } },
+                            {
+                                'posts.id': {
+                                    $eq: postID
+                                }
+                            }
+                        ]
+                    },
+                        {
+                            $push: {
+                                /* Dollar sign is the number of
+                                 * position of element that has been
+                                 * found in query (posts.id)
+                                 * without posts.id there would be an error
+                                 * because with only 'username' operator $ 
+                                 * could not find one number for position
+                                 * the ID of post must be uniq for every field
+                                 * because if it would not be uniq
+                                 * the sign of DOLLAR will be equal to 0
+                                 * so this query will update only the first field of array
+                                */
+                                'posts.$.likedBy': {
+                                    username: likedUsername
+                                }
+                            }
+                        }, (error, doc) => {
+                            if (error) throw error
+                            resolve('Successfuly liked')
+                        })
+
+                })
+            })
+        })
+    }
+
+    static removeLike(likedUsername, usernamePostedPost, postID, token) {
+        return new Promise((resolve, reject) => {
+            jwt.verify(token, 'Some key', (error, decoded) => {
+                if (!decoded) reject('Not authorized')
+                if (likedUsername != decoded.username) reject("Token username doesn't match username from req")
 
                 userModel.updateOne({
-                    $and: [
-                        { 'username': { $eq: usernamePostedPost } },
-                        {
-                            'posts.id': {
-                                $eq: postID
-                            }
-                        }
-                    ]
+                    username: { $eq: usernamePostedPost },
+                    'posts.id': {
+                        $eq: postID
+                    }
                 },
                     {
-                        $push: {
-                            /* Dollar sign is the number of
-                             * position of element that has been
-                             * found in query (posts.id)
-                             * without posts.id there would be an error
-                             * because with only 'username' operator $ 
-                             * could not find one number for position
-                             * the ID of post must be uniq for every field
-                             * because if it would not be uniq
-                             * the sign of DOLLAR will be equal to 0
-                             * so this query will update only the first field of array
-                            */
+                        $pull: {
                             'posts.$.likedBy': {
                                 username: likedUsername
                             }
                         }
                     }, (error, doc) => {
-                        if (error) throw error
-                        callback('Successfuly liked')
+                        if (error) reject(error)
+                        resolve()
                     })
-
             })
         })
     }
 
-    static removeLike(likedUsername, usernamePostedPost, postID, token, callback) {
-        jwt.verify(token, 'Some key', (error, decoded) => {
-            if (!decoded) return callback('Not authorized')
-            if (likedUsername != decoded.username) return callback("Token username doesn't match username from req")
+    static suggestion(username) {
+        return new Promise((resolve, reject) => {
+            userModel.find({
+                $and: [
+                    {
+                        $or: [
+                            { $where: "this.subscribers.length >= 0" },
+                            { $where: 'this.posts.length >= 0' }
+                        ]
+                    },
+                    { username: { $not: { $eq: username } } }
+                ]
+            }, (error, docs) => {
+                if (error) reject(error)
+                if (docs.length === 0) resolve([])
+                const newArr = []
+                docs.map((el, i) => {
+                    newArr.push({ username: el.username, fullname: el.fullname, avatar: el.avatar })
+                    if (i + 1 == docs.length) resolve(newArr)
+                })
+            }).limit(10)
+        })
+    }
 
-            userModel.updateOne({
-                username: { $eq: usernamePostedPost },
-                'posts.id': {
-                    $eq: postID
-                }
-            },
-                {
-                    $pull: {
-                        'posts.$.likedBy': {
-                            username: likedUsername
-                        }
-                    }
+    static createDialog(users, token) {
+        return new Promise((resolve, reject) => {
+            jwt.verify(token, 'Some key', (error, decoded) => {
+                if (error) reject(error)
+                if (!decoded) reject('Not authorized')
+                if (users.some(el => { el.username != decoded.username })) reject("Token username doesn't match username from req")
+
+                messageModel.findOne({
+                    users: { $eq: users }
                 }, (error, doc) => {
                     if (error) throw error
-                    callback('')
-                })
-        })
-    }
+                    if (doc) resolve(doc.id)
 
-    static suggestion(username, callback) {
-        userModel.find({
-            $and: [
-                {
-                    $or: [
-                        { $where: "this.subscribers.length >= 0" },
-                        { $where: 'this.posts.length >= 0' }
-                    ]
-                },
-                { username: { $not: { $eq: username } } }
-            ]
-        }, (error, docs) => {
-            if (docs.length === 0) return callback('No suggestions', [])
-            const newArr = []
-            docs.map((el, i) => {
-                newArr.push({ username: el.username, fullname: el.fullname, avatar: el.avatar })
-                if (i + 1 == docs.length) return callback('', newArr)
-            })
-        }).limit(10)
-    }
-
-    static createDialog(users, token, callback) {
-        jwt.verify(token, 'Some key', (error, decoded) => {
-            if (!decoded) return callback('Not authorized', [])
-            if (users.some(el => { el.username != decoded.username })) return callback("Token username doesn't match username from req")
-
-            messageModel.findOne({
-                users: { $eq: users }
-            }, (error, doc) => {
-                if (error) throw error
-                if (doc) return callback('Dialog already exists', doc.id)
-
-                const dialogID = uniqid()
-                new messageModel({
-                    id: dialogID,
-                    users: users,
-                    messages: []
-                }).save((error) => {
-                    if (error) throw error
-                    let pureUsersArr = []
-                    users.map(el => pureUsersArr.push(el.username))
-                    userModel.updateMany({ username: { $in: pureUsersArr } }, { $push: { messages: dialogID } }, (error, resp) => callback('', dialogID))
+                    const dialogID = uniqid()
+                    new messageModel({
+                        id: dialogID,
+                        users: users,
+                        messages: []
+                    }).save((error) => {
+                        if (error) reject(error)
+                        let pureUsersArr = []
+                        users.map(el => pureUsersArr.push(el.username))
+                        userModel.updateMany({ username: { $in: pureUsersArr } }, { $push: { messages: dialogID } })
+                            .then(res => resolve(dialogID))
+                            .catch(error => reject(error))
+                    })
                 })
             })
         })
@@ -337,25 +364,32 @@ class userController {
         })
     }
 
-    static getMessages(username, token, callback) {
-        jwt.verify(token, 'Some key', (error, decoded) => {
-            if (!decoded) return callback('Not authorized', [])
-            if (decoded.username != username) return callback("Token username doesn't match username from req", [])
+    static getMessages(username, token) {
+        return new Promise((resolve, reject) => {
+            jwt.verify(token, 'Some key', (error, decoded) => {
+                if (error) reject(error)
+                if (!decoded) reject('Not authorized')
+                if (decoded.username != username) reject("Token username doesn't match username from req")
 
-            userModel.findOne({ username: username }, { messages: 1 }, (error, doc) => {
-                if (error) throw error
-                if (doc.messages.length == 0) return callback('', [])
-
-                messageModel.find({ id: { $in: doc.messages } }, (error, res) => {
-                    res.map((el1, i) => {
-                        el1.users.map((el, j) => {
-                            userModel.findOne({ username: el.username }, { username: 1, avatar: 1, _id: 0 }, (error, doc) => {
-                                if (doc && doc.avatar) el.avatar = doc.avatar
-                                if (j + 1 == el1.users.length && res.length == i + 1) callback('', res)
+                userModel.findOne({ username: username }, { messages: 1 })
+                    .then(doc => {
+                        if (doc.messages.length == 0) resolve([])
+                        messageModel.find({ id: { $in: doc.messages } })
+                            .then(res => {
+                                res.map((el1, i) => {
+                                    el1.users.map((el, j) => {
+                                        userModel.findOne({ username: el.username }, { username: 1, avatar: 1, _id: 0 })
+                                            .then(doc => {
+                                                if (doc && doc.avatar) el.avatar = doc.avatar
+                                                if (j + 1 == el1.users.length && res.length == i + 1) resolve(res)
+                                            })
+                                            .catch(error => reject(error))
+                                    })
+                                })
                             })
-                        })
+                            .catch(error => reject(error))
                     })
-                })
+                    .catch(error => reject(error))
             })
         })
     }

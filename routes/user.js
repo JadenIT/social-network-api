@@ -6,18 +6,24 @@ const upload = require('../middlewares/storage')
 
 Router.get('/user/:username', (req, res, next) => {
     const username = req.params.username
-    userController.getPublicUser(username, (response) => res.send(response))
+    userController.getPublicUser(username)
+        .then(response => res.send({ user: response }))
+        .catch(error => res.send({ error }))
 })
 
 
 Router.post('/subscribe', (req, res, next) => {
     const { username, usernameToSubscribe } = req.body
-    userController.subscribe(username, usernameToSubscribe, (response) => res.send(response))
+    userController.subscribe(username, usernameToSubscribe)
+        .then(response => res.send({ response }))
+        .catch(error => res.send({ error }))
 })
 
 Router.post('/unSubscribe', (req, res, next) => {
     const { username, usernameToUnSubscribe } = req.body
-    userController.unSubscribe(username, usernameToUnSubscribe, (response) => res.send(response))
+    userController.unSubscribe(username, usernameToUnSubscribe)
+        .then(response => res.send({ response }))
+        .catch(error => res.send({ error }))
 })
 
 Router.post('/update', upload, (req, res, next) => {
@@ -27,6 +33,19 @@ Router.post('/update', upload, (req, res, next) => {
     userController.updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatarFileName)
         .then(onResolved => {
             jwt.sign({ username: newUsername ? newUsername : oldUsername }, 'Some key', (err, token) => {
+                res.setHeader('Set-Cookie', cookie.serialize('token', token, {
+                    maxAge: 60 * 60 * 24 * 7 // 1 week
+                }))
+                res.send({})
+            })
+        }).catch(error => res.send({ error }))
+})
+
+Router.post('/user', (req, res, next) => {
+    const { fullname, username, password } = req.body
+    userController.save(fullname, username, password, 'defaultLogo.png')
+        .then(onResolved => {
+            jwt.sign({ username: username }, 'Some key', (err, token) => {
                 res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                     maxAge: 60 * 60 * 24 * 7 // 1 week
                 }))

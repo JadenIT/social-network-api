@@ -36,22 +36,16 @@ io.listen(port)
 
 Router.post('/dialog', (req, res) => {
     const { users, token } = req.body
-    userController.createDialog(users, token, (err, dialogID) => {
-        res.send({
-            error: err,
-            dialogID: dialogID
-        })
-    })
+    userController.createDialog(users, token)
+        .then(dialogID => res.send({ dialogID }))
+        .catch(error => res.send({ error }))
 })
 
 Router.get('/messages', (req, res) => {
     const { username, token } = req.query
-    userController.getMessages(username, token, (error, dialogs) => {
-        res.send({
-            error: error,
-            dialogs: dialogs
-        })
-    })
+    userController.getMessages(username, token)
+        .then(dialogs => res.send({ dialogs }))
+        .catch(error => res.send({ error }))
 })
 
 Router.get('/dialog', (req, res) => {

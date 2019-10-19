@@ -9,6 +9,10 @@ Router.get('/suggestion', (req, res, next) => {
             suggestions: response
         })
     })
+
+    userController.suggestion(username)
+        .then(suggestions => res.send({ suggestions }))
+        .catch(error => res.send({ error }))
 })
 
 module.exports = Router

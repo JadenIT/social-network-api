@@ -1,5 +1,4 @@
 const router = require('express').Router()
-const saveUser = require('./saveUser')
 const authUser = require('./authUser')
 const logoutUser = require('./logoutUser')
 const authorize = require('./authorize')
@@ -10,7 +9,6 @@ const suggestion = require('./suggestion')
 const message = require('./message')
 const search = require('./search')
 
-router.use('/', saveUser)
 router.use('/', authUser)
 router.use('/', logoutUser)
 router.use('/', authorize)
