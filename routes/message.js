@@ -36,4 +36,18 @@ router.get('/allMessagesAmount', (req, res) => {
         .catch(error => res.send({ error }))
 })
 
+router.post('/dialogLastVisit', (req, res) => {
+    const { dialogID, username } = req.body
+    userController.dialogLastVisit(dialogID, username)
+        .then(res => res.send({ status: 'ok' }))
+        .catch(error => res.send({ error: error }))
+})
+
+router.post('/addMessage', (req, res) => {
+    const { username, message, dialogID, token } = req.body
+    userController.addMessage(username, message, dialogID, token)
+        .then(resp => res.end({ status: 'ok' }))
+        .catch(error => res.send({ error }))
+})
+
 module.exports = router
