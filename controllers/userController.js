@@ -313,24 +313,31 @@ class userController {
                 if (users.some(el => { el.username != decoded.username })) return reject("Token username doesn't match username from req")
 
                 messageModel.findOne({
-                    users: { $eq: users }
+                    $and: [
+                        { 'users.username': { $eq: users[0].username } },
+                        { 'users.username': { $eq: users[1].username } }
+                    ]
                 }, (error, doc) => {
                     if (error) throw error
-                    if (doc) resolve(doc.id)
 
-                    const dialogID = uniqid()
-                    new messageModel({
-                        id: dialogID,
-                        users: users,
-                        messages: []
-                    }).save((error) => {
-                        if (error) return reject(error)
-                        let pureUsersArr = []
-                        users.map(el => pureUsersArr.push(el.username))
-                        userModel.updateMany({ username: { $in: pureUsersArr } }, { $push: { messages: dialogID } })
-                            .then(res => resolve(dialogID))
-                            .catch(error => reject(error))
-                    })
+                    if (doc) {
+                        resolve(doc.id)
+                    }
+                    else {
+                        const dialogID = uniqid()
+                        new messageModel({
+                            id: dialogID,
+                            users: users,
+                            messages: []
+                        }).save((error) => {
+                            if (error) return reject(error)
+                            let pureUsersArr = []
+                            users.map(el => pureUsersArr.push(el.username))
+                            userModel.updateMany({ username: { $in: pureUsersArr } }, { $push: { messages: dialogID } })
+                                .then(res => resolve(dialogID))
+                                .catch(error => reject(error))
+                        })
+                    }
                 })
             })
         })
