@@ -437,7 +437,7 @@ class userController {
     static async updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatar) {
         await new Promise(async (resolve, reject) => {
             let query = {}
-            if (newAvatar) query.avatar = newAvatar
+            if (newAvatar) query.avatar = `uploads/${newAvatar}`
             if (newFullname) query.fullname = newFullname
             query.about = newAbout
             if (!newAbout) { query.about = '' }
