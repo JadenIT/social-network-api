@@ -4,32 +4,6 @@ var uniqid = require('uniqid');
 const messageModel = require('../models/messages')
 const bcrypt = require('bcrypt')
 
-// let a = new Promise((resolve, reject) => {
-//     setTimeout(() => resolve("done!"), 1000)
-// })
-
-// async function f() {
-//     await a.then(res => console.log(res))
-//     console.log(1)
-// }
-
-// f();
-
-/* If promise has been rejected 
- * before  resolved =>
- * it will not call resolve function
- * 
- * new Promise((resolve, reject) => {
- *     reject('1')
- *     resolve('2')
- * })
- * 
- * .then(res => console.log(res))
-   .catch(error => console.log(error))
- * 
- * will out put 1
- */
-
 class userController {
 
     static usernameIsFree(username) {

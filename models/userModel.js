@@ -1,8 +1,6 @@
 const mongoose = require('mongoose')
 
-const { USER_USERNAME_MIN_LENGTH, USER_FULLNAME_MIN_LENGTH, USER_PASSWORD_MIN_LENGTH } = process.env
-
-mongoose.connect('mongodb://localhost:27017/social-network', { useNewUrlParser: true, useUnifiedTopology: true }, (err) => {
+mongoose.connect(process.env.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, (err) => {
     if (err) throw err
 })
 
