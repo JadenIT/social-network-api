@@ -396,12 +396,17 @@ class userController {
                         if (doc.messages.length == 0) resolve([])
                         messageModel.find({ id: { $in: doc.messages } })
                             .then(res => {
+                                if (res.length == 0) reject('No messages')
                                 res.map((el1, i) => {
                                     el1.users.map((el, j) => {
                                         userModel.findOne({ username: el.username }, { username: 1, avatar: 1, _id: 0 })
                                             .then(doc => {
                                                 if (doc && doc.avatar) el.avatar = doc.avatar
-                                                if (j + 1 == el1.users.length && res.length == i + 1) resolve(res)
+                                                if (j + 1 == el1.users.length && res.length == i + 1) {
+
+                                                    resolve(res)
+                                                }
+
                                             })
                                             .catch(error => reject(error))
                                     })
@@ -422,7 +427,7 @@ class userController {
                 messageModel.findOne({ id: dialogID }, (error, doc) => {
                     if (error) return reject(error)
 
-                    if (doc.users.some(el => el.username == decoded.username)) { resolve(doc) }
+                    if (doc.users && doc.users.some(el => el.username == decoded.username)) { resolve(doc) }
                     else {
                         reject('Not user dialog')
                     }
@@ -454,6 +459,8 @@ class userController {
             if (newAvatar) query.avatar = newAvatar
             if (newFullname) query.fullname = newFullname
             query.about = newAbout
+            if (!newAbout) { query.about = '' }
+            else { query.about = newAbout }
 
             if (newUsername) {
                 await this.usernameIsFree(newUsername).then((onResolved) => {
@@ -480,6 +487,67 @@ class userController {
                     reject(error)
                 })
             })
+    }
+
+    static dialogLastVisit(dialogID, username) {
+        return new Promise((resolve, reject) => {
+            messageModel.updateOne({ id: dialogID, 'users.username': { $eq: username } }, {
+                $set: {
+                    'users.$.lastVisited': Date.now()
+                }
+            })
+                .then(res => resolve())
+                .catch(error => reject(error))
+        })
+    }
+
+    static messagesAmount(dialogID, username) {
+        return new Promise((resolve, reject) => {
+            messageModel.findOne({ id: dialogID }, { users: 1, _id: 0, messages: 1 })
+                .then(res => {
+                    res.users.map(el => {
+                        if (el.username == username) {
+                            resolve({ lastVisited: el.lastVisited, messages: res.messages, authUsername: username })
+                        }
+                    })
+                })
+                .catch(error => reject(error))
+        }).then(data => {
+            return new Promise((resolve, reject) => {
+                let newMsgs = 0
+                data.messages.map((el, i) => {
+                    if (el.timestamp > data.lastVisited && el.username !== data.authUsername) {
+                        newMsgs++
+                    }
+                    if (i + 1 == data.messages.length) {
+                        resolve(newMsgs)
+                    }
+                })
+            })
+        })
+            .catch(error => {
+                return new Promise((resolve, reject) => {
+                    reject(error)
+                })
+            })
+    }
+
+    static allMessagesAmount(username) {
+        return new Promise(async (resolve, reject) => {
+            userModel.findOne({ username }, { messages: 1, _id: 0 })
+                .then(userMessages => {
+                    let allMSGS = 0
+                    userMessages.messages.map((dialogID, i) => {
+                        this.messagesAmount(dialogID, username)
+                            .then(messages => {
+                                allMSGS += messages
+                                if (i + 1 == userMessages.messages.length) return resolve(allMSGS)
+                            })
+                            .catch(error => reject(error))
+                    })
+                })
+                .catch(error => reject(error))
+        })
     }
 }
 

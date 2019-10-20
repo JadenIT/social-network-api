@@ -4,7 +4,12 @@ const jwt = require('jsonwebtoken')
 
 io.on('connection', (client) => {
 
-    client.on('joinRoom', (room) => client.join(room))
+    client.on('joinRoom', (dialogID, username) => {
+        client.join(dialogID)
+        userController.dialogLastVisit(dialogID, username)
+            .then(res => { })
+            .catch(error => { })
+    })
 
     client.on('msgToServer', (msgObj) => {
         const { username, message, roomID, token } = msgObj
