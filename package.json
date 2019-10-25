@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha tests",
+    "test": "jest test",
     "start": "node app.js",
     "dev": "node_modules/.bin/nodemon app.js"
   },
@@ -27,6 +27,7 @@
     "expect": "^24.9.0",
     "express": "^4.17.1",
     "i": "^0.3.6",
+    "jest": "^24.9.0",
     "jsonwebtoken": "^8.5.1",
     "mocha": "^6.2.1",
     "mongodb": "^3.3.2",
@@ -34,6 +35,7 @@
     "multer": "^1.4.2",
     "nodemon": "^1.19.2",
     "npm": "^6.11.3",
+    "randomstring": "^1.1.5",
     "socket.io": "^2.3.0",
     "uniqid": "^5.0.3"
   }
