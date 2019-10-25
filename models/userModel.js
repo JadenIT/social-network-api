@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
     posts: Array,
     avatar: {
         type: String,
-        default: 'default/defaultLogo.png',
+        default: 'defaults/defaultLogo.png',
         required: true
     },
     subscribers: {

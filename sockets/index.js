@@ -1,1 +1,0 @@
-const dialog = require('./dialog')
