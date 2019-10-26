@@ -1,3 +1,4 @@
+require('dotenv').config()
 const userModel = require('../models/userModel')
 const jwt = require('jsonwebtoken')
 var uniqid = require('uniqid')
@@ -40,6 +41,7 @@ class userController {
         })
     }
 
+    /* Test covered */
     static isUserIsset(username, password) {
         return new Promise((resolve, reject) => {
             userModel
@@ -60,10 +62,11 @@ class userController {
         })
     }
 
-    static savePost(username, filename, text, avatar, timestamp, token, callback) {
+    /* Test covered */
+    static savePost(username, filename, text, avatar, timestamp, token) {
         return new Promise((resolve, reject) => {
             jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
-                if (error) return reject(error)
+                if (error) return reject('Not authorized') 
                 if (!decoded) return reject('Not authorized')
                 if (decoded.username != username) return reject("Token username doesn't match username from req")
 
@@ -76,7 +79,6 @@ class userController {
                                     id: uniqid(),
                                     filename: filename,
                                     text: text,
-                                    likes: 0,
                                     username: username,
                                     avatar: avatar,
                                     timestamp: timestamp,
