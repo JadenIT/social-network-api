@@ -66,7 +66,7 @@ class userController {
     static savePost(username, filename, text, avatar, timestamp, token) {
         return new Promise((resolve, reject) => {
             jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
-                if (error) return reject('Not authorized') 
+                if (error) return reject('Not authorized')
                 if (!decoded) return reject('Not authorized')
                 if (decoded.username != username) return reject("Token username doesn't match username from req")
 
@@ -98,22 +98,44 @@ class userController {
     static getNewsByArrOfSUbscriptions(arr) {
         return new Promise((resolve, reject) => {
             let newsArr = []
-            if (arr.length <= 0) resolve([])
-            arr.map((el, i) => {
-                userModel.findOne({ username: el.username }, { posts: 1 }, (err, response) => {
-                    newsArr = newsArr.concat(response.posts)
-                    if (i + 1 == arr.length) {
-                        newsArr.sort((a, b) => {
-                            if (a.timestamp > b.timestamp) {
-                                return -1
-                            } else {
-                                return 1
-                            }
+            if (arr.length <= 0) return resolve([])
+
+            userModel
+                .find({ username: { $in: arr } }, { _id: 0, username: 1, avatar: 1, fullname: 1, posts: 1 })
+                .then((response) => {
+                    const { posts } = response
+
+                    let newArr = []
+
+                    response.map((el) => {
+                        el.posts.map((el2) => {
+                            
+                            delete el2.username
+                            delete el2.avatar
+
+                            newArr.push({
+                                username: el.username,
+                                fullname: el.fullname,
+                                avatar: el.avatar,
+                                post: el2
+                            })
                         })
-                        resolve(newsArr)
-                    }
+                    })
+
+                    newArr.sort((a, b) => {
+                        if (a.post.timestamp > b.post.timestamp) {
+                            return -1
+                        } else {
+                            return 1
+                        }
+                    })
+
+                    resolve(newArr)
                 })
-            })
+                .catch((error) => {
+                    console.log(error)
+                    reject(error)
+                })
         })
     }
 
@@ -182,9 +204,7 @@ class userController {
                     { username: username },
                     {
                         $push: {
-                            subscriptions: {
-                                username: usernameToSubscribe
-                            }
+                            subscriptions: usernameToSubscribe
                         }
                     },
                     (error) => {
@@ -193,9 +213,7 @@ class userController {
                             { username: usernameToSubscribe },
                             {
                                 $push: {
-                                    subscribers: {
-                                        username: username
-                                    }
+                                    subscribers: username
                                 }
                             },
                             (error) => {
@@ -215,9 +233,7 @@ class userController {
                 { username: username },
                 {
                     $pull: {
-                        subscriptions: {
-                            username: usernameToUnSubscribe
-                        }
+                        subscriptions: usernameToUnSubscribe
                     }
                 },
                 (error) => {
@@ -226,9 +242,7 @@ class userController {
                         { username: usernameToUnSubscribe },
                         {
                             $pull: {
-                                subscribers: {
-                                    username: username
-                                }
+                                subscribers: username
                             }
                         },
                         (error) => {
@@ -608,6 +622,26 @@ class userController {
                 .catch((error) => reject(error))
         })
     }
+
+    static getSubscriptionsByUsername(username) {
+        return new Promise((resolve, reject) => {
+            userModel
+                .findOne({ username }, { subscriptions: 1, _id: 0 })
+                .then((res) => {
+                    userModel
+                        .find({ username: { $in: res.subscriptions } }, { username: 1, avatar: 1, fullname: 1, _id: 0 })
+                        .then((result) => {
+                            resolve(result)
+                        })
+                        .catch((error) => {
+                            reject(error)
+                        })
+                })
+                .catch((error) => reject('Error'))
+        })
+    }
 }
+
+// indentity by username -> fix it
 
 module.exports = userController

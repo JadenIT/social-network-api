@@ -12,6 +12,7 @@ const like = require('./like')
 const dislike = require('./dislike')
 const subscribe = require('./subscribe')
 const unsubscribe = require('./unsubscribe')
+const subscriptions = require('./subscriptions')
 
 router.use('/', login)
 router.use('/', logout)
@@ -26,5 +27,6 @@ router.use('/', like)
 router.use('/', dislike)
 router.use('/', subscribe)
 router.use('/', unsubscribe)
+router.use('/', subscriptions)
 
 module.exports = router
