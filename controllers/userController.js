@@ -109,7 +109,6 @@ class userController {
 
                     response.map((el) => {
                         el.posts.map((el2) => {
-                            
                             delete el2.username
                             delete el2.avatar
 
@@ -133,7 +132,6 @@ class userController {
                     resolve(newArr)
                 })
                 .catch((error) => {
-                    console.log(error)
                     reject(error)
                 })
         })
@@ -382,34 +380,20 @@ class userController {
                     })
                 )
                     return reject("Token username doesn't match username from req")
+                userModel
+                    .findOne({ 'messages.users': { $all: users } })
+                    .then((response) => {
+                        if (response) return resolve(response.messages[0].dialogID)
 
-                messageModel.findOne(
-                    {
-                        $and: [{ 'users.username': { $eq: users[0].username } }, { 'users.username': { $eq: users[1].username } }]
-                    },
-                    (error, doc) => {
-                        if (error) throw error
-
-                        if (doc) {
-                            resolve(doc.id)
-                        } else {
-                            const dialogID = uniqid()
-                            new messageModel({
-                                id: dialogID,
-                                users: users,
-                                messages: []
-                            }).save((error) => {
-                                if (error) return reject(error)
-                                let pureUsersArr = []
-                                users.map((el) => pureUsersArr.push(el.username))
-                                userModel
-                                    .updateMany({ username: { $in: pureUsersArr } }, { $push: { messages: dialogID } })
-                                    .then((res) => resolve(dialogID))
-                                    .catch((error) => reject(error))
+                        const dialogID = uniqid()
+                        userModel
+                            .updateMany({ username: { $in: users } }, { $push: { messages: { dialogID: dialogID, users: users, messages: [] } } })
+                            .then((doc) => {
+                                resolve(dialogID)
                             })
-                        }
-                    }
-                )
+                            .catch((error) => reject(error))
+                    })
+                    .catch((error) => reject(error))
             })
         })
     }
@@ -420,21 +404,12 @@ class userController {
                 if (error) return reject(error)
                 if (!decoded) return reject('Not authorized')
                 if (username != decoded.username) return reject("Token username doesn't match username from req")
-
-                messageModel.findOne({ id: roomID }, (error, doc) => {
-                    if (error) return reject(error)
-                    if (!doc) return reject('no such room')
-
-                    messageModel.updateOne(
-                        { id: roomID },
-                        {
-                            $push: {
-                                messages: { username, message, timestamp: Date.now() }
-                            }
-                        },
-                        (error, result) => resolve()
-                    )
-                })
+                userModel
+                    .updateMany({ 'messages.dialogID': roomID }, { $push: { 'messages.$.messages': { message: message, username: username, timestamp: Date.now() } } })
+                    .then((res) => {
+                        resolve()
+                    })
+                    .catch((error) => reject(error))
             })
         })
     }
@@ -448,47 +423,35 @@ class userController {
 
                 userModel
                     .findOne({ username: username }, { messages: 1 })
-                    .then((doc) => {
-                        if (doc.messages.length == 0) resolve([])
-                        messageModel
-                            .find({ id: { $in: doc.messages } })
-                            .then((res) => {
-                                if (res.length == 0) reject('No messages')
-                                res.map((el1, i) => {
-                                    el1.users.map((el, j) => {
-                                        userModel
-                                            .findOne({ username: el.username }, { username: 1, avatar: 1, _id: 0 })
-                                            .then((doc) => {
-                                                if (doc && doc.avatar) el.avatar = doc.avatar
-                                                if (j + 1 == el1.users.length && res.length == i + 1) {
-                                                    resolve(res)
-                                                }
-                                            })
-                                            .catch((error) => reject(error))
-                                    })
-                                })
-                            })
-                            .catch((error) => reject(error))
+                    .then((res) => {
+                        resolve(res.messages)
                     })
-                    .catch((error) => reject(error))
+                    .catch((error) => {
+                        reject(error)
+                    })
             })
         })
     }
 
     static getDialog(dialogID, token) {
+        const self = this
         return new Promise((resolve, reject) => {
             jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
                 if (error) return reject(error)
                 if (!decoded) return reject('!decoded')
-                messageModel.findOne({ id: dialogID }, (error, doc) => {
-                    if (error) return reject(error)
-
-                    if (doc.users && doc.users.some((el) => el.username == decoded.username)) {
-                        resolve(doc)
-                    } else {
-                        reject('Not user dialog')
-                    }
-                })
+                userModel
+                    .findOne({ 'messages.dialogID': dialogID }, { messages: 1, _id: 0 })
+                    .then((res) => {
+                        res.messages.map((el) => {
+                            if (el.dialogID == dialogID) {
+                                userModel.find({ username: { $in: el.users } }, { avatar: 1, _id: 0, username: 1 }).then((res) => {
+                                    el.users_2 = res
+                                    return resolve(el)
+                                })
+                            }
+                        })
+                    })
+                    .catch((error) => reject(error))
             })
         })
     }
