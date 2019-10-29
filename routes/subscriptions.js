@@ -7,10 +7,11 @@ router.get('/subscriptions', (req, res) => {
         .getSubscriptionsByUsername(username)
         .then((subscriptions) => {
             res.send({
+                status: 'ok',
                 subscriptions
             })
         })
-        .catch((error) => res.send({ error: error }))
+        .catch((error) => res.send({ status: 'error' }))
 })
 
 module.exports = router

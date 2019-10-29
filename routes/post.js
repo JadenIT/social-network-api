@@ -5,7 +5,7 @@ const upload = require('../middlewares/storage')
 router.post('/post', (req, res) => {
     upload(req, res, (err) => {
         if (err) {
-            res.send({ error: 'Error' })
+            res.send({ status: 'error' })
         } else {
             const { text, avatar, username, token } = req.body
             const file = req.files[0] || null
@@ -18,7 +18,7 @@ router.post('/post', (req, res) => {
                     res.send({ status: 'ok' })
                 })
                 .catch((error) => {
-                    res.send({ error })
+                    res.send({ status: 'error' })
                 })
         }
     })
