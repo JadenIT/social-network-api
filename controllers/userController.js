@@ -413,7 +413,6 @@ class userController {
             })
         })
     }
-
     static getMessages(username, token) {
         return new Promise((resolve, reject) => {
             jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
@@ -423,8 +422,15 @@ class userController {
 
                 userModel
                     .findOne({ username: username }, { messages: 1 })
-                    .then((res) => {
-                        resolve(res.messages)
+                    .then(async (res) => {
+                        let messages = res.messages
+                        for (let i = 0; i < messages.length; i++) {
+                            await userModel
+                                .find({ username: { $in: messages[i].users } }, { username: 1, avatar: 1, _id: 0 })
+                                .then((res) => (messages[i].users = res))
+                                .catch((error) => reject(error))
+                            if (i + 1 == messages.length) return resolve(messages)
+                        }
                     })
                     .catch((error) => {
                         reject(error)
