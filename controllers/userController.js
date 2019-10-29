@@ -1,9 +1,9 @@
 require('dotenv').config()
 const userModel = require('../models/userModel')
 const jwt = require('jsonwebtoken')
-var uniqid = require('uniqid')
 const messageModel = require('../models/messages')
 const bcrypt = require('bcrypt')
+var uniqid = require('uniqid')
 
 class userController {
     /* Test covered */
