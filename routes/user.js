@@ -30,7 +30,7 @@ router.post('/update', upload, (req, res, next) => {
             })
         })
         .catch((error) => {
-            res.send({ status: 'error' })
+            res.send({ status: 'error', error: 'error' })
         })
 })
 
@@ -49,7 +49,7 @@ router.post('/user', (req, res, next) => {
                 res.send({ status: 'ok' })
             })
         })
-        .catch((error) => res.send({ status: 'error' }))
+        .catch((error) => res.send({ status: 'error', error: error }))
 })
 
 module.exports = router
