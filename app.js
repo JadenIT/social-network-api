@@ -4,11 +4,8 @@ const bodyParser = require('body-parser')
 const router = require('./routes/index')
 const cookies = require('./middlewares/cookies')
 const cors = require('./middlewares/cors')
-const session = require('express-session')
 
 var app = express()
-
-app.use(session({ secret: 'keyboard cat', cookie: { maxAge: 60000 } }))
 app.use(cors)
 app.use(express.static(__dirname))
 app.use(cookies)

@@ -12,26 +12,32 @@ router.get('/user/:username', (req, res, next) => {
         .catch((error) => res.send({ error }))
 })
 
-router.post('/update', upload, (req, res, next) => {
-    const { oldUsername, newUsername, newPassword, newAbout, newFullname } = req.body
-    const newAvatar = req.files[0] || null
-    const newAvatarFileName = newAvatar ? newAvatar.filename : null
-    userController
-        .updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatarFileName)
-        .then((onResolved) => {
-            jwt.sign({ username: newUsername ? newUsername : oldUsername }, process.env.JWT_KEY, (err, token) => {
-                res.setHeader(
-                    'Set-Cookie',
-                    cookie.serialize('token', token, {
-                        maxAge: 60 * 60 * 24 * 7 // 1 week
+router.post('/update', (req, res, next) => {
+    upload(req, res, (err) => {
+        if (err) {
+            res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' })
+        } else {
+            const { oldUsername, newUsername, newPassword, newAbout, newFullname } = req.body
+            const newAvatar = req.files[0] || null
+            const newAvatarFileName = newAvatar ? newAvatar.filename : null
+            userController
+                .updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatarFileName)
+                .then((onResolved) => {
+                    jwt.sign({ username: newUsername ? newUsername : oldUsername }, process.env.JWT_KEY, (err, token) => {
+                        res.setHeader(
+                            'Set-Cookie',
+                            cookie.serialize('token', token, {
+                                maxAge: 60 * 60 * 24 * 7 // 1 week
+                            })
+                        )
+                        res.send({ status: 'ok' })
                     })
-                )
-                res.send({ status: 'ok' })
-            })
-        })
-        .catch((error) => {
-            res.send({ status: 'error', error: 'error' })
-        })
+                })
+                .catch((error) => {
+                    res.send({ status: 'error', error: 'error' })
+                })
+        }
+    })
 })
 
 router.post('/user', (req, res, next) => {

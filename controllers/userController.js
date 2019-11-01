@@ -424,6 +424,7 @@ class userController {
                     .findOne({ username: username }, { messages: 1 })
                     .then(async (res) => {
                         let messages = res.messages
+                        if (messages.length == 0) return resolve([])
                         for (let i = 0; i < messages.length; i++) {
                             await userModel
                                 .find({ username: { $in: messages[i].users } }, { username: 1, avatar: 1, _id: 0 })

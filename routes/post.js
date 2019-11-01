@@ -5,7 +5,7 @@ const upload = require('../middlewares/storage')
 router.post('/post', (req, res) => {
     upload(req, res, (err) => {
         if (err) {
-            res.send({ status: 'error' })
+            res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' })
         } else {
             const { text, avatar, username, token } = req.body
             const file = req.files[0] || null
