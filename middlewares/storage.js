@@ -3,7 +3,8 @@ const multer = require('multer')
 var storage = multer.diskStorage({
     destination: './uploads',
     filename: function(req, file, cb) {
-        let name = decodeURI(Date.now())
+        const newFileName = file.originalname.replace(/\s/g, '')
+        let name = decodeURI(Date.now() + newFileName)
         cb(null, name)
     }
 })
