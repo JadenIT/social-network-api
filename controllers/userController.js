@@ -63,7 +63,7 @@ class userController {
     }
 
     /* Test covered */
-    static savePost(username, filename, text, avatar, timestamp, token) {
+    static savePost(username, text, avatar, timestamp, token, buffer) {
         return new Promise((resolve, reject) => {
             jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
                 if (error) return reject('Not authorized')
@@ -77,12 +77,12 @@ class userController {
                             $push: {
                                 posts: {
                                     id: uniqid(),
-                                    filename: filename,
                                     text: text,
                                     username: username,
                                     avatar: avatar,
                                     timestamp: timestamp,
-                                    likedBy: []
+                                    likedBy: [],
+                                    buffer: buffer
                                 }
                             }
                         }
