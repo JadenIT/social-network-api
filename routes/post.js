@@ -6,22 +6,21 @@ const fs = require('fs')
 router.post('/post', (req, res) => {
     upload(req, res, (err) => {
         if (err) {
+            console.log(err)
             res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' })
         } else {
-            const { text, avatar, username, token } = req.body
+            const { text, username, token } = req.body
             const file = req.files[0] || null
             const timestamp = Date.now()
 
             let buffer
-            let filename
 
             if (file) {
-                filename = file.filename
-                buffer = fs.readFileSync(`./uploads/${filename}`)
+                buffer = fs.readFileSync(`./uploads/${file.filename}`)
             }
 
             userController
-                .savePost(username, text, avatar, timestamp, token, buffer)
+                .savePost(username, text, timestamp, token, buffer)
                 .then((onResolved) => {
                     res.send({ status: 'ok' })
                 })

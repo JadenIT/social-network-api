@@ -63,7 +63,7 @@ class userController {
     }
 
     /* Test covered */
-    static savePost(username, text, avatar, timestamp, token, buffer) {
+    static savePost(username, text, timestamp, token, buffer) {
         return new Promise((resolve, reject) => {
             jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
                 if (error) return reject('Not authorized')
@@ -79,7 +79,6 @@ class userController {
                                     id: uniqid(),
                                     text: text,
                                     username: username,
-                                    avatar: avatar,
                                     timestamp: timestamp,
                                     likedBy: [],
                                     buffer: buffer
@@ -483,10 +482,10 @@ class userController {
         })
     }
 
-    static async updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatar) {
+    static async updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, avatarBuffer) {
         await new Promise(async (resolve, reject) => {
             let query = {}
-            if (newAvatar) query.avatar = `uploads/${newAvatar}`
+            if (avatarBuffer) query.avatar = avatarBuffer.toString('base64')
             if (newFullname) query.fullname = newFullname
             query.about = newAbout
             if (!newAbout) {

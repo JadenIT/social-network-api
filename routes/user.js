@@ -3,6 +3,7 @@ const userController = require('../controllers/userController')
 const jwt = require('jsonwebtoken')
 const cookie = require('cookie')
 const upload = require('../middlewares/storage')
+const fs = require('fs')
 
 router.get('/user/:username', (req, res, next) => {
     const username = req.params.username
@@ -19,9 +20,13 @@ router.post('/update', (req, res, next) => {
         } else {
             const { oldUsername, newUsername, newPassword, newAbout, newFullname } = req.body
             const newAvatar = req.files[0] || null
-            const newAvatarFileName = newAvatar ? newAvatar.filename : null
+            let avatarBuffer
+            if (newAvatar) {
+                avatarBuffer = fs.readFileSync(`./uploads/${newAvatar.filename}`)
+            }
+
             userController
-                .updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, newAvatarFileName)
+                .updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, avatarBuffer)
                 .then((onResolved) => {
                     jwt.sign({ username: newUsername ? newUsername : oldUsername }, process.env.JWT_KEY, (err, token) => {
                         res.setHeader(

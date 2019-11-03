@@ -1,4 +1,6 @@
 const mongoose = require('mongoose')
+const defaultAvatar = require('./defaultAvatar')
+
 mongoose.connect(process.env.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, (err) => {
     if (err) throw err
 })
@@ -23,7 +25,7 @@ const userSchema = new mongoose.Schema({
     posts: Array,
     avatar: {
         type: String,
-        default: 'defaults/defaultLogo.png',
+        default: defaultAvatar.toString('base64'),
         required: true
     },
     subscribers: {
