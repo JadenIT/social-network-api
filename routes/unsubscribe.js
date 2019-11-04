@@ -2,9 +2,9 @@ const router = require('express').Router()
 const userController = require('../controllers/userController')
 
 router.post('/unSubscribe', (req, res, next) => {
-    const { username, usernameToUnSubscribe } = req.body
+    const { usernameID, usernameToSubscribeID } = req.body
     userController
-        .unSubscribe(username, usernameToUnSubscribe)
+        .unSubscribe(usernameID, usernameToSubscribeID)
         .then((response) => res.send({ status: 'ok', response }))
         .catch((error) => res.send({ status: 'error' }))
 })

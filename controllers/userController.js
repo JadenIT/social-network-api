@@ -65,10 +65,15 @@ class userController {
     /* Test covered */
     static savePost(username, text, timestamp, token, buffer) {
         return new Promise((resolve, reject) => {
-            jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
+            jwt.verify(token, process.env.JWT_KEY, async (error, decoded) => {
                 if (error) return reject('Not authorized')
                 if (!decoded) return reject('Not authorized')
                 if (decoded.username != username) return reject("Token username doesn't match username from req")
+
+                let usernameID
+                await this.getUserIdByUsername(username)
+                    .then((_id) => (usernameID = _id))
+                    .catch((err) => reject(err))
 
                 userModel
                     .updateOne(
@@ -76,6 +81,7 @@ class userController {
                         {
                             $push: {
                                 posts: {
+                                    _id: usernameID,
                                     id: uniqid(),
                                     text: text,
                                     username: username,
@@ -98,9 +104,8 @@ class userController {
         return new Promise((resolve, reject) => {
             let newsArr = []
             if (arr.length <= 0) return resolve([])
-
             userModel
-                .find({ username: { $in: arr } }, { _id: 0, username: 1, avatar: 1, fullname: 1, posts: 1 })
+                .find({ _id: { $in: arr } }, { _id: 0, username: 1, avatar: 1, fullname: 1, posts: 1 })
                 .then((response) => {
                     const { posts } = response
 
@@ -165,6 +170,7 @@ class userController {
             userModel.findOne(
                 { username: username },
                 {
+                    _id: 1,
                     username: 1,
                     fullname: 1,
                     posts: 1,
@@ -191,26 +197,36 @@ class userController {
         })
     }
 
-    static subscribe(username, usernameToSubscribe) {
+    static getUserIdByUsername(username) {
         return new Promise((resolve, reject) => {
-            userModel.findOne({ username: username }, function(error, doc) {
+            userModel
+                .findOne({ username })
+                .then((res) => resolve(res._id))
+                .catch((err) => reject('Error'))
+        })
+    }
+
+    static subscribe(username_ID, usernameToSubscribe_ID) {
+        return new Promise((resolve, reject) => {
+            userModel.findOne({ _id: username_ID }, function(error, doc) {
                 const { subscriptions } = doc
-                if (subscriptions.some((el) => el.username == usernameToSubscribe)) return reject('Already subscribed')
+
+                if (subscriptions.includes(usernameToSubscribe_ID)) return reject('Already subscribed')
 
                 userModel.updateOne(
-                    { username: username },
+                    { _id: username_ID },
                     {
                         $push: {
-                            subscriptions: usernameToSubscribe
+                            subscriptions: usernameToSubscribe_ID
                         }
                     },
                     (error) => {
                         if (error) return reject(error)
                         userModel.updateOne(
-                            { username: usernameToSubscribe },
+                            { _id: usernameToSubscribe_ID },
                             {
                                 $push: {
-                                    subscribers: username
+                                    subscribers: username_ID
                                 }
                             },
                             (error) => {
@@ -224,22 +240,22 @@ class userController {
         })
     }
 
-    static unSubscribe(username, usernameToUnSubscribe) {
+    static unSubscribe(username_ID, usernameToUnSubscribe_ID) {
         return new Promise((resolve, reject) => {
             userModel.updateOne(
-                { username: username },
+                { _id: username_ID },
                 {
                     $pull: {
-                        subscriptions: usernameToUnSubscribe
+                        subscriptions: usernameToUnSubscribe_ID
                     }
                 },
                 (error) => {
                     if (error) return reject(error)
                     userModel.updateOne(
-                        { username: usernameToUnSubscribe },
+                        { _id: usernameToUnSubscribe_ID },
                         {
                             $pull: {
-                                subscribers: username
+                                subscribers: username_ID
                             }
                         },
                         (error) => {
@@ -252,7 +268,8 @@ class userController {
         })
     }
 
-    static addLike(likedUsername, usernamePostedPost, postID, token) {
+    static addLike(usernameID, usernamePostedPostID, postID, token) {
+        console.log(usernameID, usernamePostedPostID)
         /* Query an Array of Embedded Documents
          * https://docs.mongodb.com/manual/tutorial/query-array-of-documents/
          * If you do not know the index position of the document nested in the array,
@@ -263,11 +280,11 @@ class userController {
         return new Promise((resolve, reject) => {
             jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
                 if (!decoded) return reject('Not authorized')
-                if (likedUsername != decoded.username) return reject("Token username doesn't match username from req")
+                // if (likedUsername != decoded.username) return reject("Token username doesn't match username from req")
 
                 userModel.find(
                     {
-                        $and: [{ username: { $eq: { usernamePostedPost } } }, { 'posts.id': { $eq: postID } }, { 'posts.likedBy.username': { $eq: likedUsername } }]
+                        $and: [{ _id: { $eq: { usernamePostedPostID } } }, { 'posts.id': { $eq: postID } }, { 'posts.likedBy._id': { $eq: usernameID } }]
                     },
                     { posts: 1 },
                     (error, doc) => {
@@ -276,7 +293,7 @@ class userController {
                         userModel.updateOne(
                             {
                                 $and: [
-                                    { username: { $eq: usernamePostedPost } },
+                                    { _id: { $eq: usernamePostedPostID } },
                                     {
                                         'posts.id': {
                                             $eq: postID
@@ -298,7 +315,7 @@ class userController {
                                      * so this query will update only the first field of array
                                      */
                                     'posts.$.likedBy': {
-                                        username: likedUsername
+                                        _id: usernameID
                                     }
                                 }
                             },
@@ -313,15 +330,15 @@ class userController {
         })
     }
 
-    static removeLike(likedUsername, usernamePostedPost, postID, token) {
+    static removeLike(usernameID, usernamePostedPostID, postID, token) {
         return new Promise((resolve, reject) => {
             jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
                 if (!decoded) return reject('Not authorized')
-                if (likedUsername != decoded.username) return reject("Token username doesn't match username from req")
+                //if (likedUsername != decoded.username) return reject("Token username doesn't match username from req")
 
                 userModel.updateOne(
                     {
-                        username: { $eq: usernamePostedPost },
+                        _id: { $eq: usernamePostedPostID },
                         'posts.id': {
                             $eq: postID
                         }
@@ -329,7 +346,7 @@ class userController {
                     {
                         $pull: {
                             'posts.$.likedBy': {
-                                username: likedUsername
+                                _id: usernameID
                             }
                         }
                     },
