@@ -390,12 +390,12 @@ class userController {
             jwt.verify(token, process.env.JWT_KEY, (error, decoded) => {
                 if (error) return reject(error)
                 if (!decoded) return reject('Not authorized')
-                if (
-                    users.some((el) => {
-                        el.username != decoded.username
-                    })
-                )
-                    return reject("Token username doesn't match username from req")
+                // if (
+                //     users.some((el) => {
+                //         el.username != decoded.username
+                //     })
+                // )
+                //     return reject("Token username doesn't match username from req")
                 userModel
                     .findOne({ 'messages.users': { $all: users } })
                     .then((response) => {
@@ -403,7 +403,7 @@ class userController {
 
                         const dialogID = uniqid()
                         userModel
-                            .updateMany({ username: { $in: users } }, { $push: { messages: { dialogID: dialogID, users: users, messages: [] } } })
+                            .updateMany({ _id: { $in: users } }, { $push: { messages: { dialogID: dialogID, users: users, messages: [] } } })
                             .then((doc) => {
                                 resolve(dialogID)
                             })
@@ -443,7 +443,7 @@ class userController {
                         if (messages.length == 0) return resolve([])
                         for (let i = 0; i < messages.length; i++) {
                             await userModel
-                                .find({ username: { $in: messages[i].users } }, { username: 1, avatar: 1, _id: 0 })
+                                .find({ _id: { $in: messages[i].users } }, { username: 1, avatar: 1, _id: 0 })
                                 .then((res) => (messages[i].users = res))
                                 .catch((error) => reject(error))
                             if (i + 1 == messages.length) return resolve(messages)
@@ -467,7 +467,7 @@ class userController {
                     .then((res) => {
                         res.messages.map((el) => {
                             if (el.dialogID == dialogID) {
-                                userModel.find({ username: { $in: el.users } }, { avatar: 1, _id: 0, username: 1 }).then((res) => {
+                                userModel.find({ _id: { $in: el.users } }, { avatar: 1, _id: 0, username: 1 }).then((res) => {
                                     el.users_2 = res
                                     return resolve(el)
                                 })
