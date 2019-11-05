@@ -1,6 +1,6 @@
 require('dotenv').config()
 const randomString = require('randomstring')
-const userModel = require('../../models/userModel')
+const userModel = require('../../../models/userModel')
 const userController = require('../../controllers/userController')
 
 describe('isUserIsset()', () => {
