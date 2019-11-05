@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 import defaultAvatar from './defaultAvatar'
 
-mongoose.connect(process.env.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, (err) => {
+mongoose.connect(process.env.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, (err: any) => {
     if (err) throw err
 })
 

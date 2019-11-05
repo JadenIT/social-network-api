@@ -3,6 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var express_1 = require("express");
 var UserController_1 = require("../controllers/UserController");
 var storage_1 = require("../middlewares/storage");
+var cookie = require('cookie');
+var jwt = require('jsonwebtoken');
+var fs = require('fs');
 var UserRouter = (function () {
     function UserRouter() {
         this.router = express_1.Router();
@@ -11,7 +14,15 @@ var UserRouter = (function () {
     UserRouter.prototype.CreateUser = function (req, res) {
         var _a = req.body, fullName = _a.fullName, username = _a.username, password = _a.password;
         UserController_1.default.createUser({ fullName: fullName, username: username, password: password })
-            .then(function (response) { return res.send({ status: 'ok' }); })
+            .then(function (response) {
+            jwt.sign({ username: username }, process.env.JWT_KEY, function (err, token) {
+                res.setHeader('Set-Cookie', cookie.serialize('token', token, {
+                    maxAge: 60 * 60 * 24 * 7,
+                    path: '/'
+                }));
+                res.send({ status: 'ok' });
+            });
+        })
             .catch(function (err) { return res.send({ status: 'error', error: err }); });
     };
     UserRouter.prototype.UpdateUser = function (req, res) {
@@ -21,17 +32,18 @@ var UserRouter = (function () {
             }
             else {
                 var _a = req.body, oldUsername_1 = _a.oldUsername, newUsername_1 = _a.newUsername, newPassword = _a.newPassword, newAbout = _a.newAbout, newFullname = _a.newFullname;
-                var newAvatar = req.files[0] || null;
+                var newAvatar = req.files ? req.files[0] : null;
                 var avatarBuffer = void 0;
                 if (newAvatar) {
                     avatarBuffer = fs.readFileSync("./uploads/" + newAvatar.filename);
                 }
-                userController
-                    .updateUser(oldUsername_1, newUsername_1, newFullname, newPassword, newAbout, avatarBuffer)
+                var newFullName = newFullname;
+                UserController_1.default.updateUser({ oldUsername: oldUsername_1, newUsername: newUsername_1, newFullName: newFullName, newPassword: newPassword, newAbout: newAbout, avatarBuffer: avatarBuffer })
                     .then(function (onResolved) {
                     jwt.sign({ username: newUsername_1 ? newUsername_1 : oldUsername_1 }, process.env.JWT_KEY, function (err, token) {
                         res.setHeader('Set-Cookie', cookie.serialize('token', token, {
-                            maxAge: 60 * 60 * 24 * 7
+                            maxAge: 60 * 60 * 24 * 7,
+                            path: '/'
                         }));
                         res.send({ status: 'ok' });
                     });
@@ -41,7 +53,6 @@ var UserRouter = (function () {
                 });
             }
         });
-        res.send({ status: 'ok' });
     };
     UserRouter.prototype.GetUser = function (req, res) {
         var username = req.params.username;
@@ -52,7 +63,7 @@ var UserRouter = (function () {
     UserRouter.prototype.Subscribe = function (req, res) {
         var _a = req.body, usernameID = _a.usernameID, usernameToSubscribeID = _a.usernameToSubscribeID;
         UserController_1.default.subscribe(usernameID, usernameToSubscribeID)
-            .then(function (response) { return res.send({ response: response }); })
+            .then(function (response) { return res.send({ status: 'ok' }); })
             .catch(function (error) { return res.send({ status: 'error' }); });
     };
     UserRouter.prototype.UnSubscribe = function (req, res) {
@@ -72,10 +83,21 @@ var UserRouter = (function () {
         })
             .catch(function (error) { return res.send({ status: 'error' }); });
     };
+    UserRouter.prototype.Logout = function (req, res) {
+        res.setHeader('Set-Cookie', cookie.serialize('token', 'null', {
+            expires: new Date(),
+            path: '/'
+        }));
+        res.send({ status: 'ok' });
+    };
     UserRouter.prototype.routes = function () {
         this.router.post('/', this.CreateUser);
         this.router.get('/:username', this.GetUser);
-        this.router.put('/:username', this.UpdateUser);
+        this.router.post('/update', this.UpdateUser);
+        this.router.post('/subscribe', this.Subscribe);
+        this.router.post('/unsubscribe', this.UnSubscribe);
+        this.router.get('subscriptions', this.GetSubscriptionsByUsername);
+        this.router.post('/logout', this.Logout);
     };
     return UserRouter;
 }());

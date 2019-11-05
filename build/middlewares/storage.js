@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var fs = require("fs");
-var multer = require("multer");
+var multer = require('multer');
 if (!fs.existsSync('./uploads')) {
     fs.mkdirSync('./uploads');
 }

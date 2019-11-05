@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var EntryController_1 = require("../controllers/EntryController");
 var express_1 = require("express");
 var storage_1 = require("../middlewares/storage");
-var fs_1 = require("fs");
+var fs = require('fs');
 var EntryRouter = (function () {
     function EntryRouter() {
         this.router = express_1.Router();
@@ -18,7 +18,7 @@ var EntryRouter = (function () {
             var timestamp = Date.now();
             var buffer;
             if (file)
-                buffer = fs_1.default.readFileSync("./uploads/" + file.filename);
+                buffer = fs.readFileSync("./uploads/" + file.filename);
             EntryController_1.default.create({ username: username, text: text, timestamp: timestamp, token: token, buffer: buffer })
                 .then(function (onResolved) {
                 res.send({ status: 'ok' });

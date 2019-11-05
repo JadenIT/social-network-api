@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import * as multer from 'multer'
+const multer = require('multer')
 
 if (!fs.existsSync('./uploads')) {
     fs.mkdirSync('./uploads')
@@ -7,14 +7,14 @@ if (!fs.existsSync('./uploads')) {
 
 var storage = multer.diskStorage({
     destination: './uploads',
-    filename: function(req, file, cb) {
+    filename: function(req: any, file: any, cb: any) {
         const newFileName = file.originalname.replace(/\s/g, '')
         let name = decodeURI(Date.now() + newFileName)
         cb(null, name)
     }
 })
 
-const checkFileType = (file, cb) => {
+const checkFileType = (file: any, cb: any) => {
     if (file.mimetype == 'image/png' || file.mimetype == 'image/jpg' || file.mimetype == 'image/jpeg' || file.mimetype == 'image/gif') {
         cb(null, true)
     } else {
@@ -25,7 +25,7 @@ const checkFileType = (file, cb) => {
 const upload = multer({
     storage: storage,
     limits: { fileSize: 1 * 1024 * 1024 },
-    fileFilter: function(req, file, cb) {
+    fileFilter: function(req: any, file: any, cb: any) {
         checkFileType(file, cb)
     }
 }).any()

@@ -81,7 +81,7 @@ var UserController = (function () {
     };
     UserController.prototype.updateUser = function (user) {
         var _this = this;
-        new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+        return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
             var query;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -91,7 +91,7 @@ var UserController = (function () {
                             query.avatar = user.avatarBuffer.toString('base64');
                         if (user.newFullName)
                             query.fullname = user.newFullName;
-                        query.about = newAbout.user;
+                        query.about = user.newAbout;
                         if (!user.newAbout) {
                             query.about = '';
                         }
@@ -99,7 +99,7 @@ var UserController = (function () {
                             query.about = user.newAbout;
                         }
                         if (!user.newUsername) return [3, 2];
-                        return [4, this.usernameIsFree(user.newUsername)
+                        return [4, this.isUsernameIsFree(user.newUsername)
                                 .then(function (onResolved) {
                                 if (!onResolved)
                                     reject('Имя занято');

@@ -1,6 +1,9 @@
 import { Router, Request, Response } from 'express'
 import UserController from '../controllers/UserController'
 import upload from '../middlewares/storage'
+const cookie = require('cookie')
+const jwt = require('jsonwebtoken')
+const fs = require('fs')
 
 class UserRouter {
     router: Router
@@ -11,30 +14,42 @@ class UserRouter {
     CreateUser(req: Request, res: Response): void {
         const { fullName, username, password } = req.body
         UserController.createUser({ fullName, username, password })
-            .then((response) => res.send({ status: 'ok' }))
+            .then((response) => {
+                jwt.sign({ username: username }, process.env.JWT_KEY, (err: any, token: any) => {
+                    res.setHeader(
+                        'Set-Cookie',
+                        cookie.serialize('token', token, {
+                            maxAge: 60 * 60 * 24 * 7,
+                            path: '/'
+                        })
+                    )
+                    res.send({ status: 'ok' })
+                })
+            })
             .catch((err) => res.send({ status: 'error', error: err }))
     }
 
-    UpdateUser(req: Request, res: Response): void {
+    UpdateUser(req: Request, res: Response) {
         upload(req, res, (err: Error) => {
             if (err) {
                 res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' })
             } else {
                 const { oldUsername, newUsername, newPassword, newAbout, newFullname } = req.body
-                const newAvatar = req.files[0] || null
+                const newAvatar = req.files ? req.files[0] : null
                 let avatarBuffer
                 if (newAvatar) {
                     avatarBuffer = fs.readFileSync(`./uploads/${newAvatar.filename}`)
                 }
+                let newFullName = newFullname
 
-                userController
-                    .updateUser(oldUsername, newUsername, newFullname, newPassword, newAbout, avatarBuffer)
+                UserController.updateUser({ oldUsername, newUsername, newFullName, newPassword, newAbout, avatarBuffer })
                     .then((onResolved: any) => {
                         jwt.sign({ username: newUsername ? newUsername : oldUsername }, process.env.JWT_KEY, (err: any, token: any) => {
                             res.setHeader(
                                 'Set-Cookie',
                                 cookie.serialize('token', token, {
-                                    maxAge: 60 * 60 * 24 * 7 // 1 week
+                                    maxAge: 60 * 60 * 24 * 7,
+                                    path: '/'
                                 })
                             )
                             res.send({ status: 'ok' })
@@ -45,7 +60,6 @@ class UserRouter {
                     })
             }
         })
-        res.send({ status: 'ok' })
     }
 
     GetUser(req: Request, res: Response): void {
@@ -58,7 +72,7 @@ class UserRouter {
     Subscribe(req: Request, res: Response): void {
         const { usernameID, usernameToSubscribeID } = req.body
         UserController.subscribe(usernameID, usernameToSubscribeID)
-            .then((response) => res.send({ response }))
+            .then((response) => res.send({ status: 'ok' }))
             .catch((error) => res.send({ status: 'error' }))
     }
 
@@ -81,10 +95,25 @@ class UserRouter {
             .catch((error) => res.send({ status: 'error' }))
     }
 
+    Logout(req: Request, res: Response) {
+        res.setHeader(
+            'Set-Cookie',
+            cookie.serialize('token', 'null', {
+                expires: new Date(),
+                path: '/'
+            })
+        )
+        res.send({ status: 'ok' })
+    }
+
     routes() {
         this.router.post('/', this.CreateUser)
         this.router.get('/:username', this.GetUser)
-        this.router.put('/:username', this.UpdateUser)
+        this.router.post('/update', this.UpdateUser)
+        this.router.post('/subscribe', this.Subscribe)
+        this.router.post('/unsubscribe', this.UnSubscribe)
+        this.router.get('subscriptions', this.GetSubscriptionsByUsername)
+        this.router.post('/logout', this.Logout)
     }
 }
 const UserRouterInstance: UserRouter = new UserRouter()

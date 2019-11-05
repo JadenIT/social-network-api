@@ -8,12 +8,12 @@ interface createUserInterface {
 }
 
 interface updateUserInterface {
-    oldUsername: String
-    newUsername: String
-    newFullName: String
-    newPassword: String
-    newAbout: String
-    avatarBuffer: String
+    oldUsername: any
+    newUsername: any
+    newFullName: any
+    newPassword: any
+    newAbout: any
+    avatarBuffer: any
 }
 
 class UserController {
@@ -51,11 +51,11 @@ class UserController {
     }
 
     public updateUser(user: updateUserInterface) {
-        new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             let query = {}
             if (user.avatarBuffer) query.avatar = user.avatarBuffer.toString('base64')
             if (user.newFullName) query.fullname = user.newFullName
-            query.about = newAbout.user
+            query.about = user.newAbout
             if (!user.newAbout) {
                 query.about = ''
             } else {
@@ -63,7 +63,7 @@ class UserController {
             }
 
             if (user.newUsername) {
-                await this.usernameIsFree(user.newUsername)
+                await this.isUsernameIsFree(user.newUsername)
                     .then((onResolved: any) => {
                         if (!onResolved) reject('Имя занято')
                         query.username = user.newUsername
@@ -72,7 +72,7 @@ class UserController {
             }
 
             if (user.newPassword) {
-                await bcrypt.hash(user.newPassword, 10).then((hash) => (query.password = hash), (error) => reject('Произошла ошибка'))
+                await bcrypt.hash(user.newPassword, 10).then((hash: any) => (query.password = hash), (error: any) => reject('Произошла ошибка'))
             }
 
             resolve(query)

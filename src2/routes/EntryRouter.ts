@@ -1,7 +1,7 @@
 import EntryController from '../controllers/EntryController'
 import { Router, Request, Response } from 'express'
 import upload from '../middlewares/storage'
-import fs from 'fs'
+const fs = require('fs')
 
 class EntryRouter {
     router: Router

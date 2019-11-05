@@ -5,6 +5,9 @@ import * as bodyParser from 'body-parser'
 import UserRouter from './routes/UserRouter'
 import EntryRouter from './routes/EntryRouter'
 import SearchRouter from './routes/SearchRouter'
+import AuthRouter from './routes/AuthRouter'
+import DialogRouter from './routes/DialogRouter'
+import NewsRouter from './routes/NewsRouter'
 
 /* Import middlewares */
 import cookies from './middlewares/cookies'
@@ -30,6 +33,10 @@ class Server {
         this.app.use('/user', UserRouter)
         this.app.use('/entry', EntryRouter)
         this.app.use('/search', SearchRouter)
+
+        this.app.use('/auth', AuthRouter)
+        this.app.use('/messenger', DialogRouter)
+        this.app.use('/news', NewsRouter)
     }
 }
 

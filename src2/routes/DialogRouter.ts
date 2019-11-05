@@ -38,7 +38,10 @@ class DialogRouter {
     }
 
     routes() {
-        this.router.get('/', this.searchByQueryForUsernameOrFullName)
+        this.router.post('/dialog', this.CreateDialog)
+        this.router.post('/message', this.CreateMessage)
+        this.router.get('/dialogs', this.GetMessages)
+        this.router.get('/dialog', this.getDialog)
     }
 }
 const DialogRouterInstance: DialogRouter = new DialogRouter()
