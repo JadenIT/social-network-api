@@ -78,6 +78,12 @@ var UserRouter = (function () {
         AuthController_1.default.setCookie(res, 'token', null, 0);
         res.send({ status: 'ok' });
     };
+    UserRouter.prototype.SuggestionsByUsername = function (req, res) {
+        var username = req.query.username;
+        UserController_1.default.suggestionsByUsername(username)
+            .then(function (suggestions) { return res.send({ suggestions: suggestions }); })
+            .catch(function (err) { return res.send({ status: 'error', error: err }); });
+    };
     UserRouter.prototype.routes = function () {
         this.router.post('/', this.CreateUser);
         this.router.get('/:username', auth_1.default, this.GetUser);
@@ -86,6 +92,7 @@ var UserRouter = (function () {
         this.router.post('/unsubscribe', auth_1.default, this.UnSubscribe);
         this.router.get('/subscriptions/:username', auth_1.default, this.GetSubscriptionsByUsername);
         this.router.post('/logout', this.Logout);
+        this.router.get('/suggestions/suggestionsByUsername', auth_1.default, this.SuggestionsByUsername);
     };
     return UserRouter;
 }());

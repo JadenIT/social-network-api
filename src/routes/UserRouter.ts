@@ -86,6 +86,14 @@ class UserRouter implements RouterInterface {
         res.send({ status: 'ok' })
     }
 
+    SuggestionsByUsername(req: Request, res: Response): void {
+        const { username } = req.query
+
+        UserController.suggestionsByUsername(username)
+            .then((suggestions) => res.send({ suggestions }))
+            .catch((err) => res.send({ status: 'error', error: err }))
+    }
+
     routes() {
         this.router.post('/', this.CreateUser)
         this.router.get('/:username', auth, this.GetUser)
@@ -94,6 +102,7 @@ class UserRouter implements RouterInterface {
         this.router.post('/unsubscribe', auth, this.UnSubscribe)
         this.router.get('/subscriptions/:username', auth, this.GetSubscriptionsByUsername)
         this.router.post('/logout', this.Logout)
+        this.router.get('/suggestions/suggestionsByUsername', auth, this.SuggestionsByUsername)
     }
 }
 const UserRouterInstance: UserRouter = new UserRouter()

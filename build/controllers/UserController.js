@@ -235,6 +235,29 @@ var UserController = (function () {
             });
         });
     };
+    UserController.prototype.suggestionsByUsername = function (username) {
+        return new Promise(function (resolve, reject) {
+            UserModel_1.default.find({
+                $and: [
+                    {
+                        $or: [{ $where: 'this.subscribers.length >= 0' }, { $where: 'this.posts.length >= 0' }]
+                    },
+                    { username: { $not: { $eq: username } } }
+                ]
+            }, function (error, docs) {
+                if (error)
+                    return reject(error);
+                if (docs.length === 0)
+                    resolve([]);
+                var newArr = [];
+                docs.map(function (el, i) {
+                    newArr.push({ username: el.username, fullname: el.fullname, avatar: el.avatar });
+                    if (i + 1 == docs.length)
+                        resolve(newArr);
+                });
+            }).limit(10);
+        });
+    };
     return UserController;
 }());
 var UserControllerInstance = new UserController();

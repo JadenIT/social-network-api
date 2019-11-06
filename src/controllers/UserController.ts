@@ -210,6 +210,30 @@ class UserController {
                 })
         })
     }
+
+    public suggestionsByUsername(username: String) {
+        return new Promise((resolve, reject) => {
+            UserModel.find(
+                {
+                    $and: [
+                        {
+                            $or: [{ $where: 'this.subscribers.length >= 0' }, { $where: 'this.posts.length >= 0' }]
+                        },
+                        { username: { $not: { $eq: username } } }
+                    ]
+                },
+                (error: any, docs: any) => {
+                    if (error) return reject(error)
+                    if (docs.length === 0) resolve([])
+                    const newArr = []
+                    docs.map((el: any, i: any) => {
+                        newArr.push({ username: el.username, fullname: el.fullname, avatar: el.avatar })
+                        if (i + 1 == docs.length) resolve(newArr)
+                    })
+                }
+            ).limit(10)
+        })
+    }
 }
 
 const UserControllerInstance: UserController = new UserController()
