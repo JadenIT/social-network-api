@@ -36,7 +36,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var jwt = require('jsonwebtoken');
 var UserController_1 = require("./UserController");
 var uniqid = require('uniqid');
 var UserModel_1 = require("../models/UserModel");
@@ -45,101 +44,84 @@ var EntryController = (function () {
     }
     EntryController.prototype.create = function (entry) {
         var _this = this;
-        return new Promise(function (resolve, reject) {
-            jwt.verify(entry.token, process.env.JWT_KEY, function (error, decoded) { return __awaiter(_this, void 0, void 0, function () {
-                var usernameID;
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            if (error)
-                                return [2, reject('Not authorized')];
-                            if (!decoded)
-                                return [2, reject('Not authorized')];
-                            if (decoded.username != entry.username)
-                                return [2, reject("Token username doesn't match username from req")];
-                            return [4, UserController_1.default.getUserIdByUsername(entry.username)
-                                    .then(function (_id) { return (usernameID = _id); })
-                                    .catch(function (err) { return reject(err); })];
-                        case 1:
-                            _a.sent();
-                            UserModel_1.default.updateOne({ username: entry.username }, {
-                                $push: {
-                                    posts: {
-                                        _id: usernameID,
-                                        id: uniqid(),
-                                        text: entry.text,
-                                        username: entry.username,
-                                        timestamp: entry.timestamp,
-                                        likedBy: [],
-                                        buffer: entry.buffer
-                                    }
-                                }
-                            })
-                                .then(function (doc) {
-                                resolve();
-                            })
-                                .catch(function (error) { return reject(error); });
-                            return [2];
-                    }
-                });
-            }); });
-        });
-    };
-    EntryController.prototype.like = function (usernameID, usernamePostedPostID, postID, token) {
-        return new Promise(function (resolve, reject) {
-            jwt.verify(token, process.env.JWT_KEY, function (error, decoded) {
-                if (!decoded)
-                    return reject('Not authorized');
-                UserModel_1.default.find({
-                    $and: [{ _id: { $eq: { usernamePostedPostID: usernamePostedPostID } } }, { 'posts.id': { $eq: postID } }, { 'posts.likedBy._id': { $eq: usernameID } }]
-                }, { posts: 1 }, function (error, doc) {
-                    if (doc)
-                        return reject('Already liked');
-                    UserModel_1.default.updateOne({
-                        $and: [
-                            { _id: { $eq: usernamePostedPostID } },
-                            {
-                                'posts.id': {
-                                    $eq: postID
+        return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+            var usernameID;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4, UserController_1.default.getUserIdByUsername(entry.username)
+                            .then(function (_id) { return (usernameID = _id); })
+                            .catch(function (err) { return reject(err); })];
+                    case 1:
+                        _a.sent();
+                        UserModel_1.default.updateOne({ username: entry.username }, {
+                            $push: {
+                                posts: {
+                                    _id: usernameID,
+                                    id: uniqid(),
+                                    text: entry.text,
+                                    username: entry.username,
+                                    timestamp: entry.timestamp,
+                                    likedBy: [],
+                                    buffer: entry.buffer
                                 }
                             }
-                        ]
-                    }, {
-                        $push: {
-                            'posts.$.likedBy': {
-                                _id: usernameID
+                        })
+                            .then(function (doc) {
+                            resolve();
+                        })
+                            .catch(function (error) { return reject(error); });
+                        return [2];
+                }
+            });
+        }); });
+    };
+    EntryController.prototype.like = function (usernameID, usernamePostedPostID, postID) {
+        return new Promise(function (resolve, reject) {
+            UserModel_1.default.find({
+                $and: [{ _id: { $eq: { usernamePostedPostID: usernamePostedPostID } } }, { 'posts.id': { $eq: postID } }, { 'posts.likedBy._id': { $eq: usernameID } }]
+            }, { posts: 1 }, function (error, doc) {
+                if (doc)
+                    return reject('Already liked');
+                UserModel_1.default.updateOne({
+                    $and: [
+                        { _id: { $eq: usernamePostedPostID } },
+                        {
+                            'posts.id': {
+                                $eq: postID
                             }
                         }
-                    }, function (error, doc) {
-                        if (error)
-                            throw error;
-                        resolve('Successfuly liked');
-                    });
-                });
-            });
-        });
-    };
-    EntryController.prototype.dislike = function (usernameID, usernamePostedPostID, postID, token) {
-        return new Promise(function (resolve, reject) {
-            jwt.verify(token, process.env.JWT_KEY, function (error, decoded) {
-                if (!decoded)
-                    return reject('Not authorized');
-                UserModel_1.default.updateOne({
-                    _id: { $eq: usernamePostedPostID },
-                    'posts.id': {
-                        $eq: postID
-                    }
+                    ]
                 }, {
-                    $pull: {
+                    $push: {
                         'posts.$.likedBy': {
                             _id: usernameID
                         }
                     }
                 }, function (error, doc) {
                     if (error)
-                        return reject(error);
-                    resolve();
+                        throw error;
+                    resolve('Successfuly liked');
                 });
+            });
+        });
+    };
+    EntryController.prototype.dislike = function (usernameID, usernamePostedPostID, postID) {
+        return new Promise(function (resolve, reject) {
+            UserModel_1.default.updateOne({
+                _id: { $eq: usernamePostedPostID },
+                'posts.id': {
+                    $eq: postID
+                }
+            }, {
+                $pull: {
+                    'posts.$.likedBy': {
+                        _id: usernameID
+                    }
+                }
+            }, function (error, doc) {
+                if (error)
+                    return reject(error);
+                resolve();
             });
         });
     };

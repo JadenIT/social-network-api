@@ -71,7 +71,7 @@ var UserController = (function () {
                     var userModelInstance = new UserModel_1.default({ fullname: user.fullName, username: user.username, password: hash });
                     userModelInstance
                         .save()
-                        .then(function (doc) { return resolve(); })
+                        .then(function (doc) { return resolve(doc._id); })
                         .catch(function (error) { return reject(error); });
                 })
                     .catch(function (error) { return reject(error); });
@@ -149,16 +149,15 @@ var UserController = (function () {
             }, function (error, doc) {
                 if (error)
                     return reject(error);
-                doc
-                    ? doc.posts.sort(function (a, b) {
+                doc &&
+                    doc.posts.sort(function (a, b) {
                         if (a.timestamp > b.timestamp) {
                             return -1;
                         }
                         else {
                             return 1;
                         }
-                    })
-                    : null;
+                    });
                 resolve(doc);
             });
         });
@@ -221,7 +220,9 @@ var UserController = (function () {
         return new Promise(function (resolve, reject) {
             UserModel_1.default.findOne({ username: username }, { subscriptions: 1, _id: 0 })
                 .then(function (res) {
-                UserModel_1.default.find({ username: { $in: res.subscriptions } }, { username: 1, avatar: 1, fullname: 1, _id: 0 })
+                if (!res)
+                    return resolve([]);
+                UserModel_1.default.find({ _id: { $in: res.subscriptions } }, { username: 1, avatar: 1, fullname: 1, _id: 0 })
                     .then(function (result) {
                     resolve(result);
                 })
@@ -229,7 +230,9 @@ var UserController = (function () {
                     reject(error);
                 });
             })
-                .catch(function (error) { return reject('Error'); });
+                .catch(function (error) {
+                reject('Error');
+            });
         });
     };
     return UserController;

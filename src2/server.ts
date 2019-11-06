@@ -17,16 +17,16 @@ class Server {
     public app: express.Application
     constructor() {
         this.app = express()
-        this.config()
+        this.middlewares()
         this.routes()
     }
 
-    public config(): void {
+    public middlewares(): void {
+        this.app.use(cookies)
         this.app.use(bodyParser.urlencoded({ extended: true }))
         this.app.use(bodyParser.json())
         this.app.use(cors)
         this.app.use(express.static(__dirname))
-        this.app.use(cookies)
     }
 
     public routes(): void {

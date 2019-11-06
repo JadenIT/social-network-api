@@ -1,7 +1,8 @@
 const mongoose = require('mongoose')
 import defaultAvatar from './defaultAvatar'
+import Config from '../config/index'
 
-mongoose.connect(process.env.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, (err: any) => {
+mongoose.connect(Config.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, (err: any) => {
     if (err) throw err
 })
 

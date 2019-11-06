@@ -1,11 +1,14 @@
-import { Router, Request, Response } from 'express'
-import UserController from '../controllers/UserController'
-import upload from '../middlewares/storage'
 const cookie = require('cookie')
 const jwt = require('jsonwebtoken')
 const fs = require('fs')
+import { Router, Request, Response } from 'express'
+import UserController from '../controllers/UserController'
+import upload from '../middlewares/storage'
+import RouterInterface from '../interfaces/Router'
+import Config from '../config/index'
+import auth from '../middlewares/auth'
 
-class UserRouter {
+class UserRouter implements RouterInterface {
     router: Router
     constructor() {
         this.router = Router()
@@ -14,8 +17,8 @@ class UserRouter {
     CreateUser(req: Request, res: Response): void {
         const { fullName, username, password } = req.body
         UserController.createUser({ fullName, username, password })
-            .then((response) => {
-                jwt.sign({ username: username }, process.env.JWT_KEY, (err: any, token: any) => {
+            .then((user_id) => {
+                jwt.sign({ user_id, username }, Config.JWT_KEY, (err: any, token: any) => {
                     res.setHeader(
                         'Set-Cookie',
                         cookie.serialize('token', token, {
@@ -44,7 +47,7 @@ class UserRouter {
 
                 UserController.updateUser({ oldUsername, newUsername, newFullName, newPassword, newAbout, avatarBuffer })
                     .then((onResolved: any) => {
-                        jwt.sign({ username: newUsername ? newUsername : oldUsername }, process.env.JWT_KEY, (err: any, token: any) => {
+                        jwt.sign({ username: newUsername ? newUsername : oldUsername }, Config.JWT_KEY, (err: any, token: any) => {
                             res.setHeader(
                                 'Set-Cookie',
                                 cookie.serialize('token', token, {
@@ -70,21 +73,23 @@ class UserRouter {
     }
 
     Subscribe(req: Request, res: Response): void {
-        const { usernameID, usernameToSubscribeID } = req.body
+        const { usernameToSubscribeID } = req.body
+        const usernameID = req.auth.user_id
         UserController.subscribe(usernameID, usernameToSubscribeID)
             .then((response) => res.send({ status: 'ok' }))
             .catch((error) => res.send({ status: 'error' }))
     }
 
     UnSubscribe(req: Request, res: Response): void {
-        const { usernameID, usernameToSubscribeID } = req.body
+        const { usernameToSubscribeID } = req.body
+        const usernameID = req.auth.user_id
         UserController.unSubscribe(usernameID, usernameToSubscribeID)
             .then((response) => res.send({ status: 'ok', response }))
             .catch((error) => res.send({ status: 'error' }))
     }
 
     GetSubscriptionsByUsername(req: Request, res: Response): void {
-        const { username } = req.query
+        const { username } = req.params
         UserController.getSubscriptionsByUsername(username)
             .then((subscriptions) => {
                 res.send({
@@ -108,11 +113,11 @@ class UserRouter {
 
     routes() {
         this.router.post('/', this.CreateUser)
-        this.router.get('/:username', this.GetUser)
-        this.router.post('/update', this.UpdateUser)
-        this.router.post('/subscribe', this.Subscribe)
-        this.router.post('/unsubscribe', this.UnSubscribe)
-        this.router.get('subscriptions', this.GetSubscriptionsByUsername)
+        this.router.get('/:username', auth, this.GetUser)
+        this.router.post('/update', auth, this.UpdateUser)
+        this.router.post('/subscribe', auth, this.Subscribe)
+        this.router.post('/unsubscribe', auth, this.UnSubscribe)
+        this.router.get('/subscriptions/:username', auth, this.GetSubscriptionsByUsername)
         this.router.post('/logout', this.Logout)
     }
 }

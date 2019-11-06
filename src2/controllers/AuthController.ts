@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt')
 import UserModel from '../models/UserModel'
 
 class AuthController {
-    public isUserIsset(username: String, password: String) {
+    public login(username: String, password: String) {
         return new Promise((resolve, reject) => {
             UserModel.findOne({ username })
                 .then((doc: any) => {
@@ -11,9 +11,7 @@ class AuthController {
                         .compare(password, doc.password)
                         .then((hash: any) => {
                             if (!hash) return reject('Incorrect password')
-                            if (hash) {
-                                resolve()
-                            }
+                            resolve(doc._id)
                         })
                         .catch((error: any) => reject(error))
                 })

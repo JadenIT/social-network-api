@@ -1,11 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var express_1 = require("express");
-var UserController_1 = require("../controllers/UserController");
-var storage_1 = require("../middlewares/storage");
 var cookie = require('cookie');
 var jwt = require('jsonwebtoken');
 var fs = require('fs');
+var express_1 = require("express");
+var UserController_1 = require("../controllers/UserController");
+var storage_1 = require("../middlewares/storage");
+var index_1 = require("../config/index");
+var auth_1 = require("../middlewares/auth");
 var UserRouter = (function () {
     function UserRouter() {
         this.router = express_1.Router();
@@ -14,8 +16,8 @@ var UserRouter = (function () {
     UserRouter.prototype.CreateUser = function (req, res) {
         var _a = req.body, fullName = _a.fullName, username = _a.username, password = _a.password;
         UserController_1.default.createUser({ fullName: fullName, username: username, password: password })
-            .then(function (response) {
-            jwt.sign({ username: username }, process.env.JWT_KEY, function (err, token) {
+            .then(function (user_id) {
+            jwt.sign({ user_id: user_id, username: username }, index_1.default.JWT_KEY, function (err, token) {
                 res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                     maxAge: 60 * 60 * 24 * 7,
                     path: '/'
@@ -40,7 +42,7 @@ var UserRouter = (function () {
                 var newFullName = newFullname;
                 UserController_1.default.updateUser({ oldUsername: oldUsername_1, newUsername: newUsername_1, newFullName: newFullName, newPassword: newPassword, newAbout: newAbout, avatarBuffer: avatarBuffer })
                     .then(function (onResolved) {
-                    jwt.sign({ username: newUsername_1 ? newUsername_1 : oldUsername_1 }, process.env.JWT_KEY, function (err, token) {
+                    jwt.sign({ username: newUsername_1 ? newUsername_1 : oldUsername_1 }, index_1.default.JWT_KEY, function (err, token) {
                         res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                             maxAge: 60 * 60 * 24 * 7,
                             path: '/'
@@ -61,19 +63,21 @@ var UserRouter = (function () {
             .catch(function (error) { return res.send({ error: error }); });
     };
     UserRouter.prototype.Subscribe = function (req, res) {
-        var _a = req.body, usernameID = _a.usernameID, usernameToSubscribeID = _a.usernameToSubscribeID;
+        var usernameToSubscribeID = req.body.usernameToSubscribeID;
+        var usernameID = req.auth.user_id;
         UserController_1.default.subscribe(usernameID, usernameToSubscribeID)
             .then(function (response) { return res.send({ status: 'ok' }); })
             .catch(function (error) { return res.send({ status: 'error' }); });
     };
     UserRouter.prototype.UnSubscribe = function (req, res) {
-        var _a = req.body, usernameID = _a.usernameID, usernameToSubscribeID = _a.usernameToSubscribeID;
+        var usernameToSubscribeID = req.body.usernameToSubscribeID;
+        var usernameID = req.auth.user_id;
         UserController_1.default.unSubscribe(usernameID, usernameToSubscribeID)
             .then(function (response) { return res.send({ status: 'ok', response: response }); })
             .catch(function (error) { return res.send({ status: 'error' }); });
     };
     UserRouter.prototype.GetSubscriptionsByUsername = function (req, res) {
-        var username = req.query.username;
+        var username = req.params.username;
         UserController_1.default.getSubscriptionsByUsername(username)
             .then(function (subscriptions) {
             res.send({
@@ -92,11 +96,11 @@ var UserRouter = (function () {
     };
     UserRouter.prototype.routes = function () {
         this.router.post('/', this.CreateUser);
-        this.router.get('/:username', this.GetUser);
-        this.router.post('/update', this.UpdateUser);
-        this.router.post('/subscribe', this.Subscribe);
-        this.router.post('/unsubscribe', this.UnSubscribe);
-        this.router.get('subscriptions', this.GetSubscriptionsByUsername);
+        this.router.get('/:username', auth_1.default, this.GetUser);
+        this.router.post('/update', auth_1.default, this.UpdateUser);
+        this.router.post('/subscribe', auth_1.default, this.Subscribe);
+        this.router.post('/unsubscribe', auth_1.default, this.UnSubscribe);
+        this.router.get('/subscriptions/:username', auth_1.default, this.GetSubscriptionsByUsername);
         this.router.post('/logout', this.Logout);
     };
     return UserRouter;

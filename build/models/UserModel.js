@@ -2,7 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var mongoose = require('mongoose');
 var defaultAvatar_1 = require("./defaultAvatar");
-mongoose.connect(process.env.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, function (err) {
+var index_1 = require("../config/index");
+mongoose.connect(index_1.default.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, function (err) {
     if (err)
         throw err;
 });

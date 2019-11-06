@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var UserModel_1 = require("../models/UserModel");
-var jwt = require('jsonwebtoken');
 var NewsController = (function () {
     function NewsController() {
     }
@@ -41,27 +40,21 @@ var NewsController = (function () {
             });
         });
     };
-    NewsController.prototype.getNewsByUsername = function (username, page, perpage, token) {
+    NewsController.prototype.getNewsByUsername = function (username, page, perpage) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            jwt.verify(token, process.env.JWT_KEY, function (error, decoded) {
-                if (!decoded)
-                    return reject('Not authorized');
-                if (decoded.username != username)
-                    return reject("Token username doesn't match username from req", []);
-                var end = page * perpage;
-                var start = end - (perpage - 1) - 1;
-                var self = _this;
-                UserModel_1.default.findOne({ username: username }, { subscriptions: 1 }, function (error, doc) {
-                    if (error)
-                        throw error;
-                    var subscriptions = (doc || []).subscriptions;
-                    if (!subscriptions)
-                        resolve([]);
-                    self.getNewsByArrOfSUbscriptions(subscriptions)
-                        .then(function (news) { return resolve(news.splice(start, perpage)); })
-                        .catch(function (error) { return reject(error); });
-                });
+            var end = page * perpage;
+            var start = end - (perpage - 1) - 1;
+            var self = _this;
+            UserModel_1.default.findOne({ username: username }, { subscriptions: 1 }, function (error, doc) {
+                if (error)
+                    throw error;
+                var subscriptions = (doc || []).subscriptions;
+                if (!subscriptions)
+                    resolve([]);
+                self.getNewsByArrOfSUbscriptions(subscriptions)
+                    .then(function (news) { return resolve(news.splice(start, perpage)); })
+                    .catch(function (error) { return reject(error); });
             });
         });
     };

@@ -19,7 +19,7 @@ interface updateUserInterface {
 class UserController {
     private isUsernameIsFree(username: String) {
         return new Promise((resolve, reject) => {
-            UserModel.findOne({ username }, (error: Error, doc: String) => {
+            UserModel.findOne({ username }, (error: Error, doc: any) => {
                 if (error) return reject(error)
                 if (doc) return resolve(false)
                 resolve(true)
@@ -41,10 +41,10 @@ class UserController {
                             const userModelInstance = new UserModel({ fullname: user.fullName, username: user.username, password: hash })
                             userModelInstance
                                 .save()
-                                .then((doc) => resolve())
-                                .catch((error) => reject(error))
+                                .then((doc: any) => resolve(doc._id))
+                                .catch((error: any) => reject(error))
                         })
-                        .catch((error) => reject(error))
+                        .catch((error: any) => reject(error))
                 })
                 .catch((error) => reject(error))
         })
@@ -108,15 +108,14 @@ class UserController {
                 },
                 (error: any, doc: any) => {
                     if (error) return reject(error)
-                    doc
-                        ? doc.posts.sort((a: any, b: any) => {
-                              if (a.timestamp > b.timestamp) {
-                                  return -1
-                              } else {
-                                  return 1
-                              }
-                          })
-                        : null
+                    doc &&
+                        doc.posts.sort((a: any, b: any) => {
+                            if (a.timestamp > b.timestamp) {
+                                return -1
+                            } else {
+                                return 1
+                            }
+                        })
                     resolve(doc)
                 }
             )
@@ -197,7 +196,8 @@ class UserController {
         return new Promise((resolve, reject) => {
             UserModel.findOne({ username }, { subscriptions: 1, _id: 0 })
                 .then((res: any) => {
-                    UserModel.find({ username: { $in: res.subscriptions } }, { username: 1, avatar: 1, fullname: 1, _id: 0 })
+                    if (!res) return resolve([])
+                    UserModel.find({ _id: { $in: res.subscriptions } }, { username: 1, avatar: 1, fullname: 1, _id: 0 })
                         .then((result: any) => {
                             resolve(result)
                         })
@@ -205,7 +205,9 @@ class UserController {
                             reject(error)
                         })
                 })
-                .catch((error: any) => reject('Error'))
+                .catch((error: any) => {
+                    reject('Error')
+                })
         })
     }
 }

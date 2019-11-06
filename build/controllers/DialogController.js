@@ -37,127 +37,97 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var UserModel_1 = require("../models/UserModel");
-var jwt = require('jsonwebtoken');
 var uniqid = require('uniqid');
 var DialogController = (function () {
     function DialogController() {
     }
-    DialogController.prototype.createDialog = function (users, token) {
+    DialogController.prototype.createDialog = function (users) {
         return new Promise(function (resolve, reject) {
-            jwt.verify(token, process.env.JWT_KEY, function (error, decoded) {
-                if (error)
-                    return reject(error);
-                if (!decoded)
-                    return reject('Not authorized');
-                UserModel_1.default.findOne({ 'messages.users': { $all: users } })
-                    .then(function (response) {
-                    if (response)
-                        return resolve(response.messages[0].dialogID);
-                    var dialogID = uniqid();
-                    UserModel_1.default.updateMany({ _id: { $in: users } }, { $push: { messages: { dialogID: dialogID, users: users, messages: [] } } })
-                        .then(function (doc) {
-                        resolve(dialogID);
-                    })
-                        .catch(function (error) { return reject(error); });
+            UserModel_1.default.findOne({ 'messages.users': { $all: users } })
+                .then(function (response) {
+                if (response)
+                    return resolve(response.messages[0].dialogID);
+                var dialogID = uniqid();
+                UserModel_1.default.updateMany({ _id: { $in: users } }, { $push: { messages: { dialogID: dialogID, users: users, messages: [] } } })
+                    .then(function (doc) {
+                    resolve(dialogID);
                 })
                     .catch(function (error) { return reject(error); });
-            });
+            })
+                .catch(function (error) { return reject(error); });
         });
     };
-    DialogController.prototype.createMessage = function (username, message, roomID, token) {
+    DialogController.prototype.createMessage = function (username, message, roomID) {
         return new Promise(function (resolve, reject) {
-            jwt.verify(token, process.env.JWT_KEY, function (error, decoded) {
-                if (error)
-                    return reject(error);
-                if (!decoded)
-                    return reject('Not authorized');
-                if (username != decoded.username)
-                    return reject("Token username doesn't match username from req");
-                UserModel_1.default.updateMany({ 'messages.dialogID': roomID }, { $push: { 'messages.$.messages': { message: message, username: username, timestamp: Date.now() } } })
-                    .then(function (res) {
-                    resolve();
-                })
-                    .catch(function (error) { return reject(error); });
-            });
+            UserModel_1.default.updateMany({ 'messages.dialogID': roomID }, { $push: { 'messages.$.messages': { message: message, username: username, timestamp: Date.now() } } })
+                .then(function (res) {
+                resolve();
+            })
+                .catch(function (error) { return reject(error); });
         });
     };
-    DialogController.prototype.getMessages = function (username, token) {
+    DialogController.prototype.getMessages = function (username) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            jwt.verify(token, process.env.JWT_KEY, function (error, decoded) {
-                if (error)
-                    return reject(error);
-                if (!decoded)
-                    return reject('Not authorized');
-                if (decoded.username != username)
-                    return reject("Token username doesn't match username from req");
-                UserModel_1.default.findOne({ username: username }, { messages: 1 })
-                    .then(function (res) { return __awaiter(_this, void 0, void 0, function () {
-                    var messages, _loop_1, i, state_1;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                messages = res.messages;
-                                if (messages.length == 0)
-                                    return [2, resolve([])];
-                                _loop_1 = function (i) {
-                                    return __generator(this, function (_a) {
-                                        switch (_a.label) {
-                                            case 0: return [4, UserModel_1.default.find({ _id: { $in: messages[i].users } }, { username: 1, avatar: 1, _id: 0 })
-                                                    .then(function (res) { return (messages[i].users = res); })
-                                                    .catch(function (error) { return reject(error); })];
-                                            case 1:
-                                                _a.sent();
-                                                if (i + 1 == messages.length)
-                                                    return [2, { value: resolve(messages) }];
-                                                return [2];
-                                        }
-                                    });
-                                };
-                                i = 0;
-                                _a.label = 1;
-                            case 1:
-                                if (!(i < messages.length)) return [3, 4];
-                                return [5, _loop_1(i)];
-                            case 2:
-                                state_1 = _a.sent();
-                                if (typeof state_1 === "object")
-                                    return [2, state_1.value];
-                                _a.label = 3;
-                            case 3:
-                                i++;
-                                return [3, 1];
-                            case 4: return [2];
-                        }
-                    });
-                }); })
-                    .catch(function (error) {
-                    reject(error);
+            UserModel_1.default.findOne({ username: username }, { messages: 1 })
+                .then(function (res) { return __awaiter(_this, void 0, void 0, function () {
+                var messages, _loop_1, i, state_1;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            messages = res.messages;
+                            if (messages.length == 0)
+                                return [2, resolve([])];
+                            _loop_1 = function (i) {
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0: return [4, UserModel_1.default.find({ _id: { $in: messages[i].users } }, { username: 1, avatar: 1, _id: 0 })
+                                                .then(function (res) { return (messages[i].users = res); })
+                                                .catch(function (error) { return reject(error); })];
+                                        case 1:
+                                            _a.sent();
+                                            if (i + 1 == messages.length)
+                                                return [2, { value: resolve(messages) }];
+                                            return [2];
+                                    }
+                                });
+                            };
+                            i = 0;
+                            _a.label = 1;
+                        case 1:
+                            if (!(i < messages.length)) return [3, 4];
+                            return [5, _loop_1(i)];
+                        case 2:
+                            state_1 = _a.sent();
+                            if (typeof state_1 === "object")
+                                return [2, state_1.value];
+                            _a.label = 3;
+                        case 3:
+                            i++;
+                            return [3, 1];
+                        case 4: return [2];
+                    }
                 });
+            }); })
+                .catch(function (error) {
+                reject(error);
             });
         });
     };
-    DialogController.prototype.getDialog = function (dialogID, token) {
-        var self = this;
+    DialogController.prototype.getDialog = function (dialogID) {
         return new Promise(function (resolve, reject) {
-            jwt.verify(token, process.env.JWT_KEY, function (error, decoded) {
-                if (error)
-                    return reject(error);
-                if (!decoded)
-                    return reject('!decoded');
-                UserModel_1.default.findOne({ 'messages.dialogID': dialogID }, { messages: 1, _id: 0 })
-                    .then(function (res) {
-                    res.messages.map(function (el) {
-                        if (el.dialogID == dialogID) {
-                            UserModel_1.default.find({ _id: { $in: el.users } }, { avatar: 1, _id: 0, username: 1 }).then(function (res) {
-                                el.users_2 = res;
-                                return resolve(el);
-                            });
-                        }
-                    });
-                })
-                    .catch(function (error) { return reject(error); });
-            });
+            UserModel_1.default.findOne({ 'messages.dialogID': dialogID }, { messages: 1, _id: 0 })
+                .then(function (res) {
+                res.messages.map(function (el) {
+                    if (el.dialogID == dialogID) {
+                        UserModel_1.default.find({ _id: { $in: el.users } }, { avatar: 1, _id: 0, username: 1 }).then(function (res) {
+                            el.users_2 = res;
+                            return resolve(el);
+                        });
+                    }
+                });
+            })
+                .catch(function (error) { return reject(error); });
         });
     };
     return DialogController;

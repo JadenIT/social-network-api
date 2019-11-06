@@ -1,7 +1,9 @@
 import { Router, Request, Response } from 'express'
 import SearchController from '../controllers/SearchController'
+import RouterInterface from '../interfaces/Router'
+import auth from '../middlewares/auth'
 
-class SearchRouter {
+class SearchRouter implements RouterInterface {
     router: Router
     constructor() {
         this.router = Router()
@@ -15,7 +17,7 @@ class SearchRouter {
     }
 
     routes() {
-        this.router.get('/', this.searchByQueryForUsernameOrFullName)
+        this.router.get('/', auth, this.searchByQueryForUsernameOrFullName)
     }
 }
 const SearchRouterInstance: SearchRouter = new SearchRouter()

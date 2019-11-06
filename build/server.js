@@ -13,15 +13,15 @@ var cors_1 = require("./middlewares/cors");
 var Server = (function () {
     function Server() {
         this.app = express();
-        this.config();
+        this.middlewares();
         this.routes();
     }
-    Server.prototype.config = function () {
+    Server.prototype.middlewares = function () {
+        this.app.use(cookies_1.default);
         this.app.use(bodyParser.urlencoded({ extended: true }));
         this.app.use(bodyParser.json());
         this.app.use(cors_1.default);
         this.app.use(express.static(__dirname));
-        this.app.use(cookies_1.default);
     };
     Server.prototype.routes = function () {
         this.app.use('/user', UserRouter_1.default);

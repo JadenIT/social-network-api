@@ -5,7 +5,7 @@ var UserModel_1 = require("../models/UserModel");
 var AuthController = (function () {
     function AuthController() {
     }
-    AuthController.prototype.isUserIsset = function (username, password) {
+    AuthController.prototype.login = function (username, password) {
         return new Promise(function (resolve, reject) {
             UserModel_1.default.findOne({ username: username })
                 .then(function (doc) {
@@ -16,9 +16,7 @@ var AuthController = (function () {
                     .then(function (hash) {
                     if (!hash)
                         return reject('Incorrect password');
-                    if (hash) {
-                        resolve();
-                    }
+                    resolve(doc._id);
                 })
                     .catch(function (error) { return reject(error); });
             })

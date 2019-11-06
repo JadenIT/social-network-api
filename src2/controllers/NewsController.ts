@@ -1,5 +1,4 @@
 import UserModel from '../models/UserModel'
-const jwt = require('jsonwebtoken')
 
 class NewsController {
     private getNewsByArrOfSUbscriptions(arr: Array<String>) {
@@ -42,27 +41,22 @@ class NewsController {
         })
     }
 
-    public getNewsByUsername(username: String, page: any, perpage: any, token: String) {
+    public getNewsByUsername(username: String, page: any, perpage: any) {
         return new Promise((resolve, reject) => {
-            jwt.verify(token, process.env.JWT_KEY, (error: any, decoded: any) => {
-                if (!decoded) return reject('Not authorized')
-                if (decoded.username != username) return reject("Token username doesn't match username from req", [])
+            let end = page * perpage
+            let start = end - (perpage - 1) - 1
 
-                let end = page * perpage
-                let start = end - (perpage - 1) - 1
+            let self = this
 
-                let self = this
+            UserModel.findOne({ username: username }, { subscriptions: 1 }, function(error: any, doc: any) {
+                if (error) throw error
+                const { subscriptions } = doc || []
 
-                UserModel.findOne({ username: username }, { subscriptions: 1 }, function(error: any, doc: any) {
-                    if (error) throw error
-                    const { subscriptions } = doc || []
+                if (!subscriptions) resolve([])
 
-                    if (!subscriptions) resolve([])
-
-                    self.getNewsByArrOfSUbscriptions(subscriptions)
-                        .then((news: any) => resolve(news.splice(start, perpage)))
-                        .catch((error: any) => reject(error))
-                })
+                self.getNewsByArrOfSUbscriptions(subscriptions)
+                    .then((news: any) => resolve(news.splice(start, perpage)))
+                    .catch((error: any) => reject(error))
             })
         })
     }

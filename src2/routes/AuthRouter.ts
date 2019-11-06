@@ -1,9 +1,12 @@
-import AuthController from '../controllers/AuthController'
-import { Router, Request, Response } from 'express'
 const jwt = require('jsonwebtoken')
 const cookie = require('cookie')
+import AuthController from '../controllers/AuthController'
+import { Router, Request, Response } from 'express'
+import RouterInterface from '../interfaces/Router'
+import Config from '../config/index'
 
-class AuthRouter {
+
+class AuthRouter implements RouterInterface {
     router: Router
     constructor() {
         this.router = Router()
@@ -12,9 +15,10 @@ class AuthRouter {
     public Login(req: Request, res: Response) {
         const { username, password } = req.body
 
-        AuthController.isUserIsset(username, password)
-            .then((onResolved) => {
-                jwt.sign({ username: username }, process.env.JWT_KEY, (err: any, token: any) => {
+        AuthController.login(username, password)
+            .then((user_id) => {
+                jwt.sign({ user_id: user_id, username: username }, Config.JWT_KEY, (err: any, token: any) => {
+                    console.log(token, 'token')
                     res.setHeader(
                         'Set-Cookie',
                         cookie.serialize('token', token, {
@@ -31,7 +35,7 @@ class AuthRouter {
     public Authorize(req: Request, res: Response) {
         const { token } = req.cookies
         if (!token) return res.send({ isAuthorized: false, token: null })
-        jwt.verify(token, process.env.JWT_KEY, (err: any, decoded: any) => {
+        jwt.verify(token, Config.JWT_KEY, (err: any, decoded: any) => {
             if (err) throw err
             res.send({
                 isAuthorized: decoded,

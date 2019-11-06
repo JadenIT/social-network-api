@@ -1,47 +1,52 @@
+const jwt = require('jsonwebtoken')
 import { Router, Request, Response } from 'express'
 import DialogController from '../controllers/DialogController'
+import RouterInterface from '../interfaces/Router'
+import auth from '../middlewares/auth'
+import Config from '../config/index'
 
-class DialogRouter {
+class DialogRouter implements RouterInterface {
     router: Router
     constructor() {
         this.router = Router()
         this.routes()
     }
     CreateDialog(req: Request, res: Response): void {
-        const { users, token } = req.body
-        DialogController.createDialog(users, token)
+        const { users } = req.body
+        DialogController.createDialog(users)
             .then((dialogID) => res.send({ dialogID }))
             .catch((error) => res.send({ error }))
     }
 
     CreateMessage(req: Request, res: Response): void {
-        const { username, message, dialogID, token } = req.body
-        DialogController.createMessage(username, message, dialogID, token)
-            .then((resp) => res.end({ status: 'ok' }))
-            .catch((error) => res.send({ error }))
+        const { message, dialogID, token } = req.body
+        jwt.verify(token, Config.JWT_KEY, (err: any, decoded: any) => {
+            if (!decoded) return res.send({ status: 'error', error: 'Not authorized' })
+            DialogController.createMessage(decoded.username, message, dialogID)
+                .then((resp) => res.end({ status: 'ok' }))
+                .catch((error) => res.send({ error }))
+        })
     }
 
-    GetMessages(req: Request, res: Response): void {
-        const { username, token } = req.query
-        DialogController.getMessages(username, token)
-            .then((dialogs) => {
-                res.send({ dialogs })
-            })
+    async GetMessages(req: Request, res: Response) {
+        const username = req.auth.username
+        DialogController.getMessages(username)
+            .then((dialogs) => res.send({ dialogs }))
             .catch((error) => res.send({ error }))
     }
 
     getDialog(req: Request, res: Response): void {
-        const { dialogID, token } = req.query
-        DialogController.getDialog(dialogID, token)
+        const { dialogID } = req.query
+        DialogController.getDialog(dialogID)
             .then((dialog) => res.send({ dialog }))
             .catch((error) => res.send({ error }))
     }
 
     routes() {
-        this.router.post('/dialog', this.CreateDialog)
+        this.router.post('/dialog', auth, this.CreateDialog)
+        this.router.get('/dialog', auth, this.getDialog)
         this.router.post('/message', this.CreateMessage)
-        this.router.get('/dialogs', this.GetMessages)
-        this.router.get('/dialog', this.getDialog)
+        this.router.get('/dialogs', auth, this.GetMessages)
     }
 }
 const DialogRouterInstance: DialogRouter = new DialogRouter()
