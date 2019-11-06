@@ -8,5 +8,5 @@
         "outDir": "./build",
         "allowSyntheticDefaultImports": true
     },
-    "include": ["./src2/**/*"]
+    "include": ["src/**/*"]
 }

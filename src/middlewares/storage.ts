@@ -15,11 +15,8 @@ var storage = multer.diskStorage({
 })
 
 const checkFileType = (file: any, cb: any) => {
-    if (file.mimetype == 'image/png' || file.mimetype == 'image/jpg' || file.mimetype == 'image/jpeg' || file.mimetype == 'image/gif') {
-        cb(null, true)
-    } else {
-        cb('Incorrect type of file')
-    }
+    if (file.mimetype == 'image/png' || file.mimetype == 'image/jpg' || file.mimetype == 'image/jpeg' || file.mimetype == 'image/gif') return cb(null, true)
+    cb('Incorrect type of file')
 }
 
 const upload = multer({

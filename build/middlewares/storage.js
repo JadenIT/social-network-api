@@ -14,12 +14,9 @@ var storage = multer.diskStorage({
     }
 });
 var checkFileType = function (file, cb) {
-    if (file.mimetype == 'image/png' || file.mimetype == 'image/jpg' || file.mimetype == 'image/jpeg' || file.mimetype == 'image/gif') {
-        cb(null, true);
-    }
-    else {
-        cb('Incorrect type of file');
-    }
+    if (file.mimetype == 'image/png' || file.mimetype == 'image/jpg' || file.mimetype == 'image/jpeg' || file.mimetype == 'image/gif')
+        return cb(null, true);
+    cb('Incorrect type of file');
 };
 var upload = multer({
     storage: storage,
