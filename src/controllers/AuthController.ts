@@ -1,5 +1,7 @@
 const bcrypt = require('bcrypt')
+const cookie = require('cookie')
 import UserModel from '../models/UserModel'
+import { Response } from 'express'
 
 class AuthController {
     public login(username: String, password: String) {
@@ -17,6 +19,16 @@ class AuthController {
                 })
                 .catch((error: any) => reject(error))
         })
+    }
+
+    public setCookie(res: Response, field: any, value: any, maxAge: any) {
+        res.setHeader(
+            'Set-Cookie',
+            cookie.serialize(field, value, {
+                maxAge: maxAge,
+                path: '/'
+            })
+        )
     }
 }
 

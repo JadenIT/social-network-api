@@ -1,4 +1,3 @@
-const cookie = require('cookie')
 const jwt = require('jsonwebtoken')
 const fs = require('fs')
 import { Router, Request, Response } from 'express'
@@ -7,6 +6,7 @@ import upload from '../middlewares/storage'
 import RouterInterface from '../interfaces/Router'
 import Config from '../config/index'
 import auth from '../middlewares/auth'
+import AuthController from '../controllers/AuthController'
 
 class UserRouter implements RouterInterface {
     router: Router
@@ -19,13 +19,7 @@ class UserRouter implements RouterInterface {
         UserController.createUser({ fullName, username, password })
             .then((user_id) => {
                 jwt.sign({ user_id, username }, Config.JWT_KEY, (err: any, token: any) => {
-                    res.setHeader(
-                        'Set-Cookie',
-                        cookie.serialize('token', token, {
-                            maxAge: 60 * 60 * 24 * 7,
-                            path: '/'
-                        })
-                    )
+                    AuthController.setCookie(res, 'token', token, 60 * 60 * 24 * 7)
                     res.send({ status: 'ok' })
                 })
             })
@@ -34,34 +28,21 @@ class UserRouter implements RouterInterface {
 
     UpdateUser(req: Request, res: Response) {
         upload(req, res, (err: Error) => {
-            if (err) {
-                res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' })
-            } else {
-                const { oldUsername, newUsername, newPassword, newAbout, newFullname } = req.body
-                const newAvatar = req.files ? req.files[0] : null
-                let avatarBuffer
-                if (newAvatar) {
-                    avatarBuffer = fs.readFileSync(`./uploads/${newAvatar.filename}`)
-                }
-                let newFullName = newFullname
+            if (err) return res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' })
 
-                UserController.updateUser({ oldUsername, newUsername, newFullName, newPassword, newAbout, avatarBuffer })
-                    .then((onResolved: any) => {
-                        jwt.sign({ username: newUsername ? newUsername : oldUsername }, Config.JWT_KEY, (err: any, token: any) => {
-                            res.setHeader(
-                                'Set-Cookie',
-                                cookie.serialize('token', token, {
-                                    maxAge: 60 * 60 * 24 * 7,
-                                    path: '/'
-                                })
-                            )
-                            res.send({ status: 'ok' })
-                        })
+            const { oldUsername, newUsername, newPassword, newAbout, newFullname } = req.body
+            const newAvatar = req.files ? req.files[0] : null
+            let avatarBuffer
+            if (newAvatar) avatarBuffer = fs.readFileSync(`./uploads/${newAvatar.filename}`)
+
+            UserController.updateUser({ oldUsername, newUsername, newFullName: newFullname, newPassword, newAbout, avatarBuffer })
+                .then((onResolved: any) => {
+                    jwt.sign({ username: newUsername ? newUsername : oldUsername }, Config.JWT_KEY, (err: any, token: any) => {
+                        AuthController.setCookie(res, 'token', token, 60 * 60 * 24 * 7)
+                        res.send({ status: 'ok' })
                     })
-                    .catch((error: Error) => {
-                        res.send({ status: 'error', error: 'error' })
-                    })
-            }
+                })
+                .catch((error: Error) => res.send({ status: 'error', error: 'error' }))
         })
     }
 
@@ -101,13 +82,7 @@ class UserRouter implements RouterInterface {
     }
 
     Logout(req: Request, res: Response) {
-        res.setHeader(
-            'Set-Cookie',
-            cookie.serialize('token', 'null', {
-                expires: new Date(),
-                path: '/'
-            })
-        )
+        AuthController.setCookie(res, 'token', null, 0)
         res.send({ status: 'ok' })
     }
 

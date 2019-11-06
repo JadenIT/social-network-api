@@ -1,10 +1,8 @@
 const jwt = require('jsonwebtoken')
-const cookie = require('cookie')
 import AuthController from '../controllers/AuthController'
 import { Router, Request, Response } from 'express'
 import RouterInterface from '../interfaces/Router'
 import Config from '../config/index'
-
 
 class AuthRouter implements RouterInterface {
     router: Router
@@ -18,14 +16,7 @@ class AuthRouter implements RouterInterface {
         AuthController.login(username, password)
             .then((user_id) => {
                 jwt.sign({ user_id: user_id, username: username }, Config.JWT_KEY, (err: any, token: any) => {
-                    console.log(token, 'token')
-                    res.setHeader(
-                        'Set-Cookie',
-                        cookie.serialize('token', token, {
-                            maxAge: 60 * 60 * 24 * 7,
-                            path: '/'
-                        })
-                    )
+                    AuthController.setCookie(res, 'token', token, 60 * 60 * 24 * 7)
                     res.send({ status: 'ok' })
                 })
             })

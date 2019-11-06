@@ -13,18 +13,14 @@ class EntryRouter implements RouterInterface {
     }
 
     createEntry(req: Request, res: Response) {
-        upload(req, res, async (err: any) => {
+        upload(req, res, (err: any) => {
             if (err) return res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' })
-            const { text, token } = req.body
             const file = req.files[0] || null
-            const timestamp = Date.now()
             let buffer
             if (file) buffer = fs.readFileSync(`./uploads/${file.filename}`)
             const username = req.auth.username
-            EntryController.create({ username, text, timestamp, token, buffer })
-                .then((onResolved: any) => {
-                    res.send({ status: 'ok' })
-                })
+            EntryController.create({ username, text: req.body.text, timestamp: Date.now(), buffer })
+                .then((onResolved: any) => res.send({ status: 'ok' }))
                 .catch((error: any) => res.send({ status: 'error', error: error }))
         })
     }

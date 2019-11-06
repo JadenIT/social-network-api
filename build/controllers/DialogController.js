@@ -60,9 +60,7 @@ var DialogController = (function () {
     DialogController.prototype.createMessage = function (username, message, roomID) {
         return new Promise(function (resolve, reject) {
             UserModel_1.default.updateMany({ 'messages.dialogID': roomID }, { $push: { 'messages.$.messages': { message: message, username: username, timestamp: Date.now() } } })
-                .then(function (res) {
-                resolve();
-            })
+                .then(function (res) { return resolve(); })
                 .catch(function (error) { return reject(error); });
         });
     };
@@ -109,9 +107,7 @@ var DialogController = (function () {
                     }
                 });
             }); })
-                .catch(function (error) {
-                reject(error);
-            });
+                .catch(function (error) { return reject(error); });
         });
     };
     DialogController.prototype.getDialog = function (dialogID) {

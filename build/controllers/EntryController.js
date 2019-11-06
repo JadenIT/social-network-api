@@ -66,9 +66,7 @@ var EntryController = (function () {
                                 }
                             }
                         })
-                            .then(function (doc) {
-                            resolve();
-                        })
+                            .then(function (doc) { return resolve(); })
                             .catch(function (error) { return reject(error); });
                         return [2];
                 }

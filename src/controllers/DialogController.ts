@@ -22,9 +22,7 @@ class DialogController {
     public createMessage(username: String, message: String, roomID: any) {
         return new Promise((resolve, reject) => {
             UserModel.updateMany({ 'messages.dialogID': roomID }, { $push: { 'messages.$.messages': { message: message, username: username, timestamp: Date.now() } } })
-                .then((res: any) => {
-                    resolve()
-                })
+                .then((res: any) => resolve())
                 .catch((error: any) => reject(error))
         })
     }
@@ -42,9 +40,7 @@ class DialogController {
                         if (i + 1 == messages.length) return resolve(messages)
                     }
                 })
-                .catch((error: any) => {
-                    reject(error)
-                })
+                .catch((error: any) => reject(error))
         })
     }
 

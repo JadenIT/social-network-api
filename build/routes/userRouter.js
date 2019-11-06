@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var cookie = require('cookie');
 var jwt = require('jsonwebtoken');
 var fs = require('fs');
 var express_1 = require("express");
@@ -8,6 +7,7 @@ var UserController_1 = require("../controllers/UserController");
 var storage_1 = require("../middlewares/storage");
 var index_1 = require("../config/index");
 var auth_1 = require("../middlewares/auth");
+var AuthController_1 = require("../controllers/AuthController");
 var UserRouter = (function () {
     function UserRouter() {
         this.router = express_1.Router();
@@ -18,10 +18,7 @@ var UserRouter = (function () {
         UserController_1.default.createUser({ fullName: fullName, username: username, password: password })
             .then(function (user_id) {
             jwt.sign({ user_id: user_id, username: username }, index_1.default.JWT_KEY, function (err, token) {
-                res.setHeader('Set-Cookie', cookie.serialize('token', token, {
-                    maxAge: 60 * 60 * 24 * 7,
-                    path: '/'
-                }));
+                AuthController_1.default.setCookie(res, 'token', token, 60 * 60 * 24 * 7);
                 res.send({ status: 'ok' });
             });
         })
@@ -29,31 +26,21 @@ var UserRouter = (function () {
     };
     UserRouter.prototype.UpdateUser = function (req, res) {
         storage_1.default(req, res, function (err) {
-            if (err) {
-                res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' });
-            }
-            else {
-                var _a = req.body, oldUsername_1 = _a.oldUsername, newUsername_1 = _a.newUsername, newPassword = _a.newPassword, newAbout = _a.newAbout, newFullname = _a.newFullname;
-                var newAvatar = req.files ? req.files[0] : null;
-                var avatarBuffer = void 0;
-                if (newAvatar) {
-                    avatarBuffer = fs.readFileSync("./uploads/" + newAvatar.filename);
-                }
-                var newFullName = newFullname;
-                UserController_1.default.updateUser({ oldUsername: oldUsername_1, newUsername: newUsername_1, newFullName: newFullName, newPassword: newPassword, newAbout: newAbout, avatarBuffer: avatarBuffer })
-                    .then(function (onResolved) {
-                    jwt.sign({ username: newUsername_1 ? newUsername_1 : oldUsername_1 }, index_1.default.JWT_KEY, function (err, token) {
-                        res.setHeader('Set-Cookie', cookie.serialize('token', token, {
-                            maxAge: 60 * 60 * 24 * 7,
-                            path: '/'
-                        }));
-                        res.send({ status: 'ok' });
-                    });
-                })
-                    .catch(function (error) {
-                    res.send({ status: 'error', error: 'error' });
+            if (err)
+                return res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' });
+            var _a = req.body, oldUsername = _a.oldUsername, newUsername = _a.newUsername, newPassword = _a.newPassword, newAbout = _a.newAbout, newFullname = _a.newFullname;
+            var newAvatar = req.files ? req.files[0] : null;
+            var avatarBuffer;
+            if (newAvatar)
+                avatarBuffer = fs.readFileSync("./uploads/" + newAvatar.filename);
+            UserController_1.default.updateUser({ oldUsername: oldUsername, newUsername: newUsername, newFullName: newFullname, newPassword: newPassword, newAbout: newAbout, avatarBuffer: avatarBuffer })
+                .then(function (onResolved) {
+                jwt.sign({ username: newUsername ? newUsername : oldUsername }, index_1.default.JWT_KEY, function (err, token) {
+                    AuthController_1.default.setCookie(res, 'token', token, 60 * 60 * 24 * 7);
+                    res.send({ status: 'ok' });
                 });
-            }
+            })
+                .catch(function (error) { return res.send({ status: 'error', error: 'error' }); });
         });
     };
     UserRouter.prototype.GetUser = function (req, res) {
@@ -88,10 +75,7 @@ var UserRouter = (function () {
             .catch(function (error) { return res.send({ status: 'error' }); });
     };
     UserRouter.prototype.Logout = function (req, res) {
-        res.setHeader('Set-Cookie', cookie.serialize('token', 'null', {
-            expires: new Date(),
-            path: '/'
-        }));
+        AuthController_1.default.setCookie(res, 'token', null, 0);
         res.send({ status: 'ok' });
     };
     UserRouter.prototype.routes = function () {

@@ -6,7 +6,6 @@ interface CreateInterface {
     username: String
     text: String
     timestamp: Number
-    token: String
     buffer: any
 }
 
@@ -34,9 +33,7 @@ class EntryController {
                     }
                 }
             )
-                .then((doc: any) => {
-                    resolve()
-                })
+                .then((doc: any) => resolve())
                 .catch((error: any) => reject(error))
         })
     }

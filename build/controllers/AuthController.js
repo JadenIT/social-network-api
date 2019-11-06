@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var bcrypt = require('bcrypt');
+var cookie = require('cookie');
 var UserModel_1 = require("../models/UserModel");
 var AuthController = (function () {
     function AuthController() {
@@ -22,6 +23,12 @@ var AuthController = (function () {
             })
                 .catch(function (error) { return reject(error); });
         });
+    };
+    AuthController.prototype.setCookie = function (res, field, value, maxAge) {
+        res.setHeader('Set-Cookie', cookie.serialize(field, value, {
+            maxAge: maxAge,
+            path: '/'
+        }));
     };
     return AuthController;
 }());
