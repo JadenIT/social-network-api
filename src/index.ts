@@ -1,4 +1,10 @@
 require('dotenv').config()
-import Server from './server'
+const http = require('http')
 
-Server.app.listen(8000, () => console.log('1'))
+import Server from './server'
+import Socket from './socket'
+
+var server = http.createServer(Server.app)
+new Socket(server)
+
+server.listen(8000)
