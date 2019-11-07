@@ -5,7 +5,7 @@
     "main": "index.js",
     "scripts": {
         "test": "jest build/test",
-        "start": "node build/index.js",
+        "start": "node ./build/index.js",
         "compile": "tsc -w"
     },
     "repository": {
@@ -29,7 +29,6 @@
         "express": "^4.17.1",
         "express-session": "^1.17.0",
         "i": "^0.3.6",
-        "jest": "^24.9.0",
         "jsonwebtoken": "^8.5.1",
         "mocha": "^6.2.1",
         "mongodb": "^3.3.2",
