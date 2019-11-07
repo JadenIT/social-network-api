@@ -1,4 +1,3 @@
-"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var express_1 = require("express");
 var SearchController_1 = require("../controllers/SearchController");

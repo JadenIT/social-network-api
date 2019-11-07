@@ -6,7 +6,8 @@
         "removeComments": true,
         "preserveConstEnums": true,
         "outDir": "./build",
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        "noImplicitUseStrict": true
     },
     "include": ["src/**/*"]
 }

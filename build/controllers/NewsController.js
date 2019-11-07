@@ -1,4 +1,3 @@
-"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var UserModel_1 = require("../models/UserModel");
 var NewsController = (function () {

@@ -1,4 +1,3 @@
-"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var jwt = require('jsonwebtoken');
 var AuthController_1 = require("../controllers/AuthController");

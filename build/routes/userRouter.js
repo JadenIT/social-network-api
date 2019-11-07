@@ -1,4 +1,3 @@
-"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var jwt = require('jsonwebtoken');
 var fs = require('fs');

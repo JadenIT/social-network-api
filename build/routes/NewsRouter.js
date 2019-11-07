@@ -1,4 +1,3 @@
-"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var NewsController_1 = require("../controllers/NewsController");
 var express_1 = require("express");

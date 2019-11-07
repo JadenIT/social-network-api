@@ -1,4 +1,3 @@
-"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var bcrypt = require('bcrypt');
 var cookie = require('cookie');

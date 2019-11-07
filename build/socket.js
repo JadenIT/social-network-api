@@ -1,4 +1,3 @@
-"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var io = require('socket.io');
 var jwt = require('jsonwebtoken');

@@ -1,4 +1,3 @@
-"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var cookie = require('cookie');
 function cookies(req, res, next) {
