@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-import defaultAvatar from './defaultAvatar'
 import Config from '../config/index'
 
 mongoose.connect(Config.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, (err: any) => {
@@ -26,7 +25,7 @@ const userSchema = new mongoose.Schema({
     posts: Array,
     avatar: {
         type: String,
-        default: defaultAvatar.toString('base64'),
+        default: 'https://social-network-1601.s3.eu-north-1.amazonaws.com/default.jpg',
         required: true
     },
     subscribers: {

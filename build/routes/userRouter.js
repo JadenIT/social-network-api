@@ -28,11 +28,8 @@ var UserRouter = (function () {
             if (err)
                 return res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' });
             var _a = req.body, oldUsername = _a.oldUsername, newUsername = _a.newUsername, newPassword = _a.newPassword, newAbout = _a.newAbout, newFullname = _a.newFullname;
-            var newAvatar = req.files ? req.files[0] : null;
-            var avatarBuffer;
-            if (newAvatar)
-                avatarBuffer = fs.readFileSync("./uploads/" + newAvatar.filename);
-            UserController_1.default.updateUser({ oldUsername: oldUsername, newUsername: newUsername, newFullName: newFullname, newPassword: newPassword, newAbout: newAbout, avatarBuffer: avatarBuffer })
+            var fileURL = req.files[0] ? req.files[0].location : null;
+            UserController_1.default.updateUser({ oldUsername: oldUsername, newUsername: newUsername, newFullName: newFullname, newPassword: newPassword, newAbout: newAbout, fileURL: fileURL })
                 .then(function (onResolved) {
                 jwt.sign({ username: newUsername ? newUsername : oldUsername }, index_1.default.JWT_KEY, function (err, token) {
                     AuthController_1.default.setCookie(res, 'token', token, 60 * 60 * 24 * 7);

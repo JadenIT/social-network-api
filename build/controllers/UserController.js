@@ -86,8 +86,8 @@ var UserController = (function () {
                 switch (_a.label) {
                     case 0:
                         query = {};
-                        if (user.avatarBuffer)
-                            query.avatar = user.avatarBuffer.toString('base64');
+                        if (user.fileURL)
+                            query.avatar = user.fileURL.toString('base64');
                         if (user.newFullName)
                             query.fullname = user.newFullName;
                         query.about = user.newAbout;

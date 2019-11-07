@@ -1,5 +1,4 @@
 Object.defineProperty(exports, "__esModule", { value: true });
-var fs = require('fs');
 var EntryController_1 = require("../controllers/EntryController");
 var express_1 = require("express");
 var storage_1 = require("../middlewares/storage");
@@ -13,12 +12,9 @@ var EntryRouter = (function () {
         storage_1.default(req, res, function (err) {
             if (err)
                 return res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' });
-            var file = req.files[0] || null;
-            var buffer;
-            if (file)
-                buffer = fs.readFileSync("./uploads/" + file.filename);
             var username = req.auth.username;
-            EntryController_1.default.create({ username: username, text: req.body.text, timestamp: Date.now(), buffer: buffer })
+            var fileURL = req.files[0] ? req.files[0].location : null;
+            EntryController_1.default.create({ username: username, text: req.body.text, timestamp: Date.now(), fileURL: fileURL })
                 .then(function (onResolved) { return res.send({ status: 'ok' }); })
                 .catch(function (error) { return res.send({ status: 'error', error: error }); });
         });

@@ -1,4 +1,3 @@
-const fs = require('fs')
 import EntryController from '../controllers/EntryController'
 import { Router, Request, Response } from 'express'
 import upload from '../middlewares/storage'
@@ -15,11 +14,9 @@ class EntryRouter implements RouterInterface {
     createEntry(req: Request, res: Response) {
         upload(req, res, (err: any) => {
             if (err) return res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' })
-            const file = req.files[0] || null
-            let buffer
-            if (file) buffer = fs.readFileSync(`./uploads/${file.filename}`)
             const username = req.auth.username
-            EntryController.create({ username, text: req.body.text, timestamp: Date.now(), buffer })
+            const fileURL = req.files[0] ? req.files[0].location : null
+            EntryController.create({ username, text: req.body.text, timestamp: Date.now(), fileURL })
                 .then((onResolved: any) => res.send({ status: 'ok' }))
                 .catch((error: any) => res.send({ status: 'error', error: error }))
         })

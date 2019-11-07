@@ -5,7 +5,7 @@
     "main": "index.js",
     "scripts": {
         "test": "jest build/test",
-        "start": "node ./build/index.js",
+        "start": "nodemon ./build/index.js",
         "compile": "tsc -w"
     },
     "repository": {
@@ -21,6 +21,7 @@
     "homepage": "https://github.com/OutOfTender/social-network-api#readme",
     "dependencies": {
         "@types/express": "^4.17.2",
+        "aws-sdk": "^2.566.0",
         "bcrypt": "^3.0.6",
         "body-parser": "^1.19.0",
         "cookie": "^0.4.0",
@@ -34,6 +35,7 @@
         "mongodb": "^3.3.2",
         "mongoose": "^5.7.1",
         "multer": "^1.4.2",
+        "multer-s3": "^2.9.0",
         "nodemon": "^1.19.2",
         "npm": "^6.11.3",
         "randomstring": "^1.1.5",

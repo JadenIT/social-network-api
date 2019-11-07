@@ -29,13 +29,10 @@ class UserRouter implements RouterInterface {
     UpdateUser(req: Request, res: Response) {
         upload(req, res, (err: Error) => {
             if (err) return res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' })
-
             const { oldUsername, newUsername, newPassword, newAbout, newFullname } = req.body
-            const newAvatar = req.files ? req.files[0] : null
-            let avatarBuffer
-            if (newAvatar) avatarBuffer = fs.readFileSync(`./uploads/${newAvatar.filename}`)
+            const fileURL = req.files[0] ? req.files[0].location : null
 
-            UserController.updateUser({ oldUsername, newUsername, newFullName: newFullname, newPassword, newAbout, avatarBuffer })
+            UserController.updateUser({ oldUsername, newUsername, newFullName: newFullname, newPassword, newAbout, fileURL })
                 .then((onResolved: any) => {
                     jwt.sign({ username: newUsername ? newUsername : oldUsername }, Config.JWT_KEY, (err: any, token: any) => {
                         AuthController.setCookie(res, 'token', token, 60 * 60 * 24 * 7)

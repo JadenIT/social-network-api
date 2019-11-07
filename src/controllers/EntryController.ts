@@ -1,12 +1,13 @@
-import UserController from './UserController'
 const uniqid = require('uniqid')
+
+import UserController from './UserController'
 import UserModel from '../models/UserModel'
 
 interface CreateInterface {
     username: String
     text: String
-    timestamp: Number
-    buffer: any
+    timestamp: Number,
+    fileURL: String
 }
 
 class EntryController {
@@ -28,7 +29,7 @@ class EntryController {
                             username: entry.username,
                             timestamp: entry.timestamp,
                             likedBy: [],
-                            buffer: entry.buffer
+                            fileURL: entry.fileURL
                         }
                     }
                 }

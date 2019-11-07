@@ -5,6 +5,8 @@ class Config {
     USER_FULLNAME_MIN_LENGTH
     USER_PASSWORD_MIN_LENGTH
     MONGO_DB_URI
+    AWS_accessKeyId
+    AWS_secretAccessKey
 
     constructor() {
         this.CLIENT = process.env.CLIENT
@@ -13,6 +15,8 @@ class Config {
         this.USER_FULLNAME_MIN_LENGTH = process.env.USER_FULLNAME_MIN_LENGTH
         this.USER_PASSWORD_MIN_LENGTH = process.env.USER_PASSWORD_MIN_LENGTH
         this.MONGO_DB_URI = process.env.MONGO_DB_URI
+        this.AWS_accessKeyId = process.env.AWS_accessKeyId
+        this.AWS_secretAccessKey = process.env.AWS_secretAccessKey
     }
 }
 

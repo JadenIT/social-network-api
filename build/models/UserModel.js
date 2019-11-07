@@ -1,6 +1,5 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var mongoose = require('mongoose');
-var defaultAvatar_1 = require("./defaultAvatar");
 var index_1 = require("../config/index");
 mongoose.connect(index_1.default.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, function (err) {
     if (err)
@@ -26,7 +25,7 @@ var userSchema = new mongoose.Schema({
     posts: Array,
     avatar: {
         type: String,
-        default: defaultAvatar_1.default.toString('base64'),
+        default: 'https://social-network-1601.s3.eu-north-1.amazonaws.com/default.jpg',
         required: true
     },
     subscribers: {

@@ -13,7 +13,7 @@ interface updateUserInterface {
     newFullName: any
     newPassword: any
     newAbout: any
-    avatarBuffer: any
+    fileURL: any
 }
 
 class UserController {
@@ -53,7 +53,7 @@ class UserController {
     public updateUser(user: updateUserInterface) {
         return new Promise(async (resolve, reject) => {
             let query = {}
-            if (user.avatarBuffer) query.avatar = user.avatarBuffer.toString('base64')
+            if (user.fileURL) query.avatar = user.fileURL.toString('base64')
             if (user.newFullName) query.fullname = user.newFullName
             query.about = user.newAbout
             if (!user.newAbout) {

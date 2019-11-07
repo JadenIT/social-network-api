@@ -35,8 +35,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var UserController_1 = require("./UserController");
 var uniqid = require('uniqid');
+var UserController_1 = require("./UserController");
 var UserModel_1 = require("../models/UserModel");
 var EntryController = (function () {
     function EntryController() {
@@ -61,7 +61,7 @@ var EntryController = (function () {
                                     username: entry.username,
                                     timestamp: entry.timestamp,
                                     likedBy: [],
-                                    buffer: entry.buffer
+                                    fileURL: entry.fileURL
                                 }
                             }
                         })
