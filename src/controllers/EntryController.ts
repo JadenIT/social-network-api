@@ -6,7 +6,7 @@ import UserModel from '../models/UserModel'
 interface CreateInterface {
     username: String
     text: String
-    timestamp: Number,
+    timestamp: Number
     fileURL: String
 }
 

@@ -1,9 +1,9 @@
 import UserModel from '../models/UserModel'
 
 class SearchController {
-    public searchByQueryForUsernameOrFullName(query: String) {
+    public searchByQueryForUsernameOrFullName(query: any) {
         return new Promise((resolve, reject) => {
-            const q = new RegExp(query)
+            const q = new RegExp(query, 'i')
             UserModel.find(
                 {
                     $or: [{ username: q }, { fullname: q }]

@@ -5,7 +5,7 @@ var SearchController = (function () {
     }
     SearchController.prototype.searchByQueryForUsernameOrFullName = function (query) {
         return new Promise(function (resolve, reject) {
-            var q = new RegExp(query);
+            var q = new RegExp(query, 'i');
             UserModel_1.default.find({
                 $or: [{ username: q }, { fullname: q }]
             }, {

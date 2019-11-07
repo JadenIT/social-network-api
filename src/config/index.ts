@@ -1,12 +1,12 @@
 class Config {
-    CLIENT
-    JWT_KEY
-    USER_USERNAME_MIN_LENGTH
-    USER_FULLNAME_MIN_LENGTH
-    USER_PASSWORD_MIN_LENGTH
-    MONGO_DB_URI
-    AWS_accessKeyId
-    AWS_secretAccessKey
+    CLIENT: any
+    JWT_KEY: any
+    USER_USERNAME_MIN_LENGTH: any
+    USER_FULLNAME_MIN_LENGTH: any
+    USER_PASSWORD_MIN_LENGTH: any
+    MONGO_DB_URI: any
+    AWS_accessKeyId: any
+    AWS_secretAccessKey: any
 
     constructor() {
         this.CLIENT = process.env.CLIENT
