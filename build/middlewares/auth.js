@@ -4,7 +4,6 @@ var index_1 = require("../config/index");
 var cookie = require('cookie');
 function auth(req, res, next) {
     var token = cookie.parse(req.headers.cookie || '').token;
-    console.log(token, 1);
     jwt.verify(token, index_1.default.JWT_KEY, function (err, decoded) {
         if (!decoded)
             return res.send({ status: 'error', error: 'Not authorized' });

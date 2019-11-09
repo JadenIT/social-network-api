@@ -10,7 +10,6 @@ var NewsRouter = (function () {
     NewsRouter.prototype.getNewsByUsername = function (req, res) {
         var _a = req.query, page = _a.page, perpage = _a.perpage;
         var username = req.auth.username;
-        console.log(username);
         NewsController_1.default.getNewsByUsername(username, page, perpage)
             .then(function (news) { return res.send({ news: news }); })
             .catch(function (error) { return res.send({ status: 'error', error: error }); });

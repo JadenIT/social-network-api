@@ -12,7 +12,6 @@ class NewsRouter implements RouterInterface {
     getNewsByUsername(req: Request, res: Response) {
         const { page, perpage } = req.query
         const username = req.auth.username
-        console.log(username)
         NewsController.getNewsByUsername(username, page, perpage)
             .then((news) => res.send({ news }))
             .catch((error) => res.send({ status: 'error', error: error }))

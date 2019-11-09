@@ -47,7 +47,7 @@ var DialogController = (function () {
                 if (response)
                     return resolve(response.messages[0].dialogID);
                 var dialogID = uniqid();
-                UserModel_1.default.updateMany({ _id: { $in: users } }, { $push: { messages: { dialogID: dialogID, users: users, messages: [] } } })
+                UserModel_1.default.updateMany({ _id: { $in: users } }, { $push: { messages: { lastVisit: Date.now(), dialogID: dialogID, users: users, messages: [] } } })
                     .then(function (doc) {
                     resolve(dialogID);
                 })
@@ -56,19 +56,31 @@ var DialogController = (function () {
                 .catch(function (error) { return reject(error); });
         });
     };
+    DialogController.prototype.updateDialogLastVisit = function (dialogID, date) {
+        return new Promise(function (resolve, reject) {
+            UserModel_1.default.updateOne({ 'messages.dialogID': dialogID }, { $set: { 'messages.$.lastVisit': Date.now() } })
+                .then(function (res) { return resolve(); })
+                .catch(function (err) { return reject(err); });
+        });
+    };
     DialogController.prototype.createMessage = function (username, message, roomID) {
+        var _this = this;
         return new Promise(function (resolve, reject) {
             UserModel_1.default.updateMany({ 'messages.dialogID': roomID }, { $push: { 'messages.$.messages': { message: message, username: username, timestamp: Date.now() } } })
-                .then(function (res) { return resolve(); })
+                .then(function (res) {
+                _this.updateDialogLastVisit(roomID, Date.now())
+                    .then(function (res) { return resolve(); })
+                    .catch(function (err) { return reject(err); });
+            })
                 .catch(function (error) { return reject(error); });
         });
     };
-    DialogController.prototype.getMessages = function (username) {
+    DialogController.prototype.getMessages = function (username, query) {
         var _this = this;
         return new Promise(function (resolve, reject) {
             UserModel_1.default.findOne({ username: username }, { messages: 1 })
                 .then(function (res) { return __awaiter(_this, void 0, void 0, function () {
-                var messages, _loop_1, i, state_1;
+                var messages, _loop_1, i;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -76,6 +88,7 @@ var DialogController = (function () {
                             if (messages.length == 0)
                                 return [2, resolve([])];
                             _loop_1 = function (i) {
+                                var newArr_1;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
                                         case 0: return [4, UserModel_1.default.find({ _id: { $in: messages[i].users } }, { username: 1, avatar: 1, _id: 0 })
@@ -83,8 +96,39 @@ var DialogController = (function () {
                                                 .catch(function (error) { return reject(error); })];
                                         case 1:
                                             _a.sent();
-                                            if (i + 1 == messages.length)
-                                                return [2, { value: resolve(messages) }];
+                                            if (i + 1 == messages.length) {
+                                                messages.sort(function (a, b) {
+                                                    if (a.lastVisit > b.lastVisit) {
+                                                        return -1;
+                                                    }
+                                                    else {
+                                                        return 1;
+                                                    }
+                                                });
+                                                newArr_1 = [];
+                                                messages.map(function (el, i) {
+                                                    el.users.map(function (el2) {
+                                                        if (el2.username != username)
+                                                            newArr_1.push({
+                                                                lastVisit: el.lastVisit,
+                                                                dialogID: el.dialogID,
+                                                                username: el2.username,
+                                                                avatar: el2.avatar
+                                                            });
+                                                        if (i + 1 == messages.length) {
+                                                            if (!query)
+                                                                return resolve(newArr_1);
+                                                            var queriedArr_1 = [];
+                                                            newArr_1.map(function (el, j) {
+                                                                if (el.username.match(new RegExp(query, 'g')))
+                                                                    queriedArr_1.push(el);
+                                                                if (j + 1 == newArr_1.length)
+                                                                    return resolve(queriedArr_1);
+                                                            });
+                                                        }
+                                                    });
+                                                });
+                                            }
                                             return [2];
                                     }
                                 });
@@ -95,9 +139,7 @@ var DialogController = (function () {
                             if (!(i < messages.length)) return [3, 4];
                             return [5, _loop_1(i)];
                         case 2:
-                            state_1 = _a.sent();
-                            if (typeof state_1 === "object")
-                                return [2, state_1.value];
+                            _a.sent();
                             _a.label = 3;
                         case 3:
                             i++;

@@ -63,10 +63,11 @@ var DialogRouter = (function () {
     };
     DialogRouter.prototype.GetMessages = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var username;
+            var username, query;
             return __generator(this, function (_a) {
                 username = req.auth.username;
-                DialogController_1.default.getMessages(username)
+                query = req.query.query;
+                DialogController_1.default.getMessages(username, query)
                     .then(function (dialogs) { return res.send({ dialogs: dialogs }); })
                     .catch(function (error) { return res.send({ error: error }); });
                 return [2];

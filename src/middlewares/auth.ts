@@ -5,7 +5,6 @@ const cookie = require('cookie')
 
 export default function auth(req: Request, res: Response, next: NextFunction) {
     const { token } = cookie.parse(req.headers.cookie || '')
-    console.log(token, 1)
     jwt.verify(token, Config.JWT_KEY, (err: any, decoded: any) => {
         if (!decoded) return res.send({ status: 'error', error: 'Not authorized' })
         req.auth = {

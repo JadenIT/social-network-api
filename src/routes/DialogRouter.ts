@@ -30,7 +30,8 @@ class DialogRouter implements RouterInterface {
 
     async GetMessages(req: Request, res: Response) {
         const username = req.auth.username
-        DialogController.getMessages(username)
+        const query = req.query.query
+        DialogController.getMessages(username, query)
             .then((dialogs) => res.send({ dialogs }))
             .catch((error) => res.send({ error }))
     }
