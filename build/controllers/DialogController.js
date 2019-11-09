@@ -35,9 +35,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var UserModel_1 = require("../models/UserModel");
-var uniqid = require('uniqid');
 var _ = require('lodash');
+var uniqid = require('uniqid');
+var UserModel_1 = require("../models/UserModel");
 var DialogController = (function () {
     function DialogController() {
     }
@@ -62,8 +62,9 @@ var DialogController = (function () {
         });
     };
     DialogController.prototype.updateDialogLastVisit = function (dialogID, date) {
+        console.log(dialogID, date);
         return new Promise(function (resolve, reject) {
-            UserModel_1.default.updateOne({ 'messages.dialogID': dialogID }, { $set: { 'messages.$.lastVisit': Date.now() } })
+            UserModel_1.default.updateMany({ 'messages.dialogID': dialogID }, { $set: { 'messages.$.lastVisit': Date.now() } })
                 .then(function (res) { return resolve(res); })
                 .catch(function (err) { return reject(err); });
         });

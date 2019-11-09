@@ -1,7 +1,6 @@
-import UserModel from '../models/UserModel'
-import { emitKeypressEvents } from 'readline'
-const uniqid = require('uniqid')
 const _ = require('lodash')
+const uniqid = require('uniqid')
+import UserModel from '../models/UserModel'
 
 class DialogController {
     public createDialog(users: any) {
@@ -27,8 +26,9 @@ class DialogController {
     }
 
     private updateDialogLastVisit(dialogID: any, date: any) {
+        console.log(dialogID, date)
         return new Promise((resolve, reject) => {
-            UserModel.updateOne({ 'messages.dialogID': dialogID }, { $set: { 'messages.$.lastVisit': Date.now() } })
+            UserModel.updateMany({ 'messages.dialogID': dialogID }, { $set: { 'messages.$.lastVisit': Date.now() } })
                 .then((res: any) => resolve(res))
                 .catch((err: any) => reject(err))
         })
