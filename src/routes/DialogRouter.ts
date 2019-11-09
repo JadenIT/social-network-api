@@ -15,8 +15,9 @@ class DialogRouter implements RouterInterface {
         const { users } = req.body
 
         if(users.some((el: any) => el == req.auth.user_id))){
+
             DialogController.createDialog(users)
-            .then((dialogID) => res.send({ dialogID }))
+            .then((dialogID) =>  res.send({ dialogID }))
             .catch((error) => res.send({ error }))
         }
     }

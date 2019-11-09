@@ -41,28 +41,37 @@ var UserModel_1 = require("../models/UserModel");
 var DialogController = (function () {
     function DialogController() {
     }
-    DialogController.prototype.createDialog = function (users) {
-        console.log(users);
+    DialogController.prototype.saveManyDialogs = function (users) {
         return new Promise(function (resolve, reject) {
-            UserModel_1.default.findOne({ 'messages.users': { $all: users } })
+            var dialogID = uniqid();
+            UserModel_1.default.updateMany({ _id: { $in: users } }, { $push: { messages: { lastVisit: Date.now(), dialogID: dialogID, users: users, messages: [] } } })
+                .then(function (doc) { return resolve(dialogID); })
+                .catch(function (error) { return reject(error); });
+        });
+    };
+    DialogController.prototype.createDialog = function (users) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            UserModel_1.default.find({ 'messages.users': { $eq: users } })
                 .then(function (response) {
-                if (response) {
-                    return response.messages.map(function (el) {
-                        if (_.isEqual(el.users.sort(), users.sort())) {
-                            return resolve(el.dialogID);
-                        }
+                if (response.length > 0) {
+                    response.map(function (el, k) {
+                        el.messages.map(function (el) {
+                            if (_.isEqual(el.users.sort(), users.sort()))
+                                return resolve(el.dialogID);
+                        });
                     });
                 }
-                var dialogID = uniqid();
-                UserModel_1.default.updateMany({ _id: { $in: users } }, { $push: { messages: { lastVisit: Date.now(), dialogID: dialogID, users: users, messages: [] } } })
-                    .then(function (doc) { return resolve(dialogID); })
-                    .catch(function (error) { return reject(error); });
+                else {
+                    _this.saveManyDialogs(users)
+                        .then(function (res) { return resolve(res); })
+                        .catch(function (err) { return reject(err); });
+                }
             })
                 .catch(function (error) { return reject(error); });
         });
     };
     DialogController.prototype.updateDialogLastVisit = function (dialogID, date) {
-        console.log(dialogID, date);
         return new Promise(function (resolve, reject) {
             UserModel_1.default.updateMany({ 'messages.dialogID': dialogID }, { $set: { 'messages.$.lastVisit': Date.now() } })
                 .then(function (res) { return resolve(res); })

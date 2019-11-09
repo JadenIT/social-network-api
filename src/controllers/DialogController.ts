@@ -3,30 +3,37 @@ const uniqid = require('uniqid')
 import UserModel from '../models/UserModel'
 
 class DialogController {
-    public createDialog(users: any) {
-        console.log(users)
-        return new Promise((resolve, reject) => {
-            UserModel.findOne({ 'messages.users': { $all: users } })
-                .then((response: any) => {
-                    if(response){
-                        return response.messages.map((el:any) => {
-                            if(_.isEqual(el.users.sort(), users.sort()){
-                                return resolve(el.dialogID)
-                            }
-                        })
-                    }
 
-                    const dialogID = uniqid()
-                    UserModel.updateMany({ _id: { $in: users } }, { $push: { messages: { lastVisit: Date.now(), dialogID: dialogID, users: users, messages: [] } } })
-                        .then((doc: any) =>  resolve(dialogID))
-                        .catch((error: any) => reject(error))
+    private saveManyDialogs(users: any) {
+        return new Promise((resolve, reject) => {
+            const dialogID = uniqid()
+            UserModel.updateMany({ _id: { $in: users } }, { $push: { messages: { lastVisit: Date.now(), dialogID: dialogID, users: users, messages: [] } } })
+                .then((doc: any) => resolve(dialogID))
+                .catch((error: any) => reject(error))
+        })
+    }
+
+    public createDialog(users: any) {
+        return new Promise((resolve, reject) => {
+            UserModel.find({ 'messages.users': { $eq: users } })
+                .then((response: any) => {
+                    if (response.length > 0) {
+                        response.map((el: any, k: any) => {
+                            el.messages.map((el: any) => {
+                                if (_.isEqual(el.users.sort(), users.sort())) return resolve(el.dialogID)
+                            })
+                        })
+                    } else {
+                        this.saveManyDialogs(users)
+                            .then((res) => resolve(res))
+                            .catch((err) => reject(err))
+                    }
                 })
                 .catch((error: any) => reject(error))
         })
     }
 
     private updateDialogLastVisit(dialogID: any, date: any) {
-        console.log(dialogID, date)
         return new Promise((resolve, reject) => {
             UserModel.updateMany({ 'messages.dialogID': dialogID }, { $set: { 'messages.$.lastVisit': Date.now() } })
                 .then((res: any) => resolve(res))
