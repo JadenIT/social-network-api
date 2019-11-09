@@ -14,12 +14,16 @@ class DialogRouter implements RouterInterface {
     CreateDialog(req: Request, res: Response) {
         const { users } = req.body
 
-        if(users.some((el: any) => el == req.auth.user_id))){
+        // if(users.some((el: any) => el == req.auth.user_id))){
 
-            DialogController.createDialog(users)
-            .then((dialogID) =>  res.send({ dialogID }))
-            .catch((error) => res.send({ error }))
-        }
+        //     DialogController.createDialog(users)
+        //     .then((dialogID) =>  res.send({ dialogID }))
+        //     .catch((error) => res.send({ error }))
+        // }
+
+        DialogController.createDialog(users)
+            .then(dialogID => res.send({ dialogID }))
+            .catch(e => res.end({ error: e }))
     }
 
     CreateMessage(req: Request, res: Response): void {
@@ -50,7 +54,7 @@ class DialogRouter implements RouterInterface {
     routes() {
         this.router.post('/dialog', auth, this.CreateDialog)
         this.router.get('/dialog', auth, this.getDialog)
-        this.router.post('/message', this.CreateMessage)
+        this.router.post('/message', auth, this.CreateMessage)
         this.router.get('/dialogs', auth, this.GetMessages)
     }
 }

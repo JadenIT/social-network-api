@@ -47,13 +47,9 @@ var DialogRouter = (function () {
     }
     DialogRouter.prototype.CreateDialog = function (req, res) {
         var users = req.body.users;
-        if (users.some(function (el) { return el == req.auth.user_id; }))
-            ;
-        {
-            DialogController_1.default.createDialog(users)
-                .then(function (dialogID) { return res.send({ dialogID: dialogID }); })
-                .catch(function (error) { return res.send({ error: error }); });
-        }
+        DialogController_1.default.createDialog(users)
+            .then(function (dialogID) { return res.send({ dialogID: dialogID }); })
+            .catch(function (e) { return res.end({ error: e }); });
     };
     DialogRouter.prototype.CreateMessage = function (req, res) {
         var _a = req.body, message = _a.message, dialogID = _a.dialogID, token = _a.token;
@@ -87,7 +83,7 @@ var DialogRouter = (function () {
     DialogRouter.prototype.routes = function () {
         this.router.post('/dialog', auth_1.default, this.CreateDialog);
         this.router.get('/dialog', auth_1.default, this.getDialog);
-        this.router.post('/message', this.CreateMessage);
+        this.router.post('/message', auth_1.default, this.CreateMessage);
         this.router.get('/dialogs', auth_1.default, this.GetMessages);
     };
     return DialogRouter;
