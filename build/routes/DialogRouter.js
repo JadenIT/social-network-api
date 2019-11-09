@@ -47,9 +47,13 @@ var DialogRouter = (function () {
     }
     DialogRouter.prototype.CreateDialog = function (req, res) {
         var users = req.body.users;
-        DialogController_1.default.createDialog(users)
-            .then(function (dialogID) { return res.send({ dialogID: dialogID }); })
-            .catch(function (error) { return res.send({ error: error }); });
+        if (users.some(function (el) { return el == req.auth.user_id; }))
+            ;
+        {
+            DialogController_1.default.createDialog(users)
+                .then(function (dialogID) { return res.send({ dialogID: dialogID }); })
+                .catch(function (error) { return res.send({ error: error }); });
+        }
     };
     DialogRouter.prototype.CreateMessage = function (req, res) {
         var _a = req.body, message = _a.message, dialogID = _a.dialogID, token = _a.token;

@@ -37,20 +37,25 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var UserModel_1 = require("../models/UserModel");
 var uniqid = require('uniqid');
+var _ = require('lodash');
 var DialogController = (function () {
     function DialogController() {
     }
     DialogController.prototype.createDialog = function (users) {
+        console.log(users);
         return new Promise(function (resolve, reject) {
             UserModel_1.default.findOne({ 'messages.users': { $all: users } })
                 .then(function (response) {
-                if (response)
-                    return resolve(response.messages[0].dialogID);
+                if (response) {
+                    return response.messages.map(function (el) {
+                        if (_.isEqual(el.users.sort(), users.sort())) {
+                            return resolve(el.dialogID);
+                        }
+                    });
+                }
                 var dialogID = uniqid();
                 UserModel_1.default.updateMany({ _id: { $in: users } }, { $push: { messages: { lastVisit: Date.now(), dialogID: dialogID, users: users, messages: [] } } })
-                    .then(function (doc) {
-                    resolve(dialogID);
-                })
+                    .then(function (doc) { return resolve(dialogID); })
                     .catch(function (error) { return reject(error); });
             })
                 .catch(function (error) { return reject(error); });
@@ -59,7 +64,7 @@ var DialogController = (function () {
     DialogController.prototype.updateDialogLastVisit = function (dialogID, date) {
         return new Promise(function (resolve, reject) {
             UserModel_1.default.updateOne({ 'messages.dialogID': dialogID }, { $set: { 'messages.$.lastVisit': Date.now() } })
-                .then(function (res) { return resolve(); })
+                .then(function (res) { return resolve(res); })
                 .catch(function (err) { return reject(err); });
         });
     };
@@ -69,7 +74,9 @@ var DialogController = (function () {
             UserModel_1.default.updateMany({ 'messages.dialogID': roomID }, { $push: { 'messages.$.messages': { message: message, username: username, timestamp: Date.now() } } })
                 .then(function (res) {
                 _this.updateDialogLastVisit(roomID, Date.now())
-                    .then(function (res) { return resolve(); })
+                    .then(function (res) {
+                    resolve();
+                })
                     .catch(function (err) { return reject(err); });
             })
                 .catch(function (error) { return reject(error); });
@@ -97,14 +104,6 @@ var DialogController = (function () {
                                         case 1:
                                             _a.sent();
                                             if (i + 1 == messages.length) {
-                                                messages.sort(function (a, b) {
-                                                    if (a.lastVisit > b.lastVisit) {
-                                                        return -1;
-                                                    }
-                                                    else {
-                                                        return 1;
-                                                    }
-                                                });
                                                 newArr_1 = [];
                                                 messages.map(function (el, i) {
                                                     el.users.map(function (el2) {
@@ -116,6 +115,14 @@ var DialogController = (function () {
                                                                 avatar: el2.avatar
                                                             });
                                                         if (i + 1 == messages.length) {
+                                                            newArr_1.sort(function (a, b) {
+                                                                if (a.lastVisit > b.lastVisit) {
+                                                                    return -1;
+                                                                }
+                                                                else {
+                                                                    return 1;
+                                                                }
+                                                            });
                                                             if (!query)
                                                                 return resolve(newArr_1);
                                                             var queriedArr_1 = [];

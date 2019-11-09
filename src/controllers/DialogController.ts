@@ -1,18 +1,25 @@
 import UserModel from '../models/UserModel'
+import { emitKeypressEvents } from 'readline'
 const uniqid = require('uniqid')
+const _ = require('lodash')
 
 class DialogController {
-    public createDialog(users: Array<String>) {
+    public createDialog(users: any) {
+        console.log(users)
         return new Promise((resolve, reject) => {
             UserModel.findOne({ 'messages.users': { $all: users } })
                 .then((response: any) => {
-                    if (response) return resolve(response.messages[0].dialogID)
+                    if(response){
+                        return response.messages.map((el:any) => {
+                            if(_.isEqual(el.users.sort(), users.sort()){
+                                return resolve(el.dialogID)
+                            }
+                        })
+                    }
 
                     const dialogID = uniqid()
                     UserModel.updateMany({ _id: { $in: users } }, { $push: { messages: { lastVisit: Date.now(), dialogID: dialogID, users: users, messages: [] } } })
-                        .then((doc: any) => {
-                            resolve(dialogID)
-                        })
+                        .then((doc: any) =>  resolve(dialogID))
                         .catch((error: any) => reject(error))
                 })
                 .catch((error: any) => reject(error))
@@ -22,7 +29,7 @@ class DialogController {
     private updateDialogLastVisit(dialogID: any, date: any) {
         return new Promise((resolve, reject) => {
             UserModel.updateOne({ 'messages.dialogID': dialogID }, { $set: { 'messages.$.lastVisit': Date.now() } })
-                .then((res: any) => resolve())
+                .then((res: any) => resolve(res))
                 .catch((err: any) => reject(err))
         })
     }
@@ -32,7 +39,9 @@ class DialogController {
             UserModel.updateMany({ 'messages.dialogID': roomID }, { $push: { 'messages.$.messages': { message: message, username: username, timestamp: Date.now() } } })
                 .then((res: any) => {
                     this.updateDialogLastVisit(roomID, Date.now())
-                        .then((res) => resolve())
+                        .then((res) => {
+                            resolve()
+                        })
                         .catch((err) => reject(err))
                 })
                 .catch((error: any) => reject(error))
@@ -50,13 +59,6 @@ class DialogController {
                             .then((res: any) => (messages[i].users = res))
                             .catch((error: any) => reject(error))
                         if (i + 1 == messages.length) {
-                            messages.sort((a: any, b: any) => {
-                                if (a.lastVisit > b.lastVisit) {
-                                    return -1
-                                } else {
-                                    return 1
-                                }
-                            })
                             let newArr: any = []
                             messages.map((el: any, i: any) => {
                                 el.users.map((el2: any) => {
@@ -68,6 +70,13 @@ class DialogController {
                                             avatar: el2.avatar
                                         })
                                     if (i + 1 == messages.length) {
+                                        newArr.sort((a: any, b: any) => {
+                                            if (a.lastVisit > b.lastVisit) {
+                                                return -1
+                                            } else {
+                                                return 1
+                                            }
+                                        })
                                         if (!query) return resolve(newArr)
                                         let queriedArr: any = []
                                         newArr.map((el: any, j: any) => {

@@ -11,11 +11,14 @@ class DialogRouter implements RouterInterface {
         this.router = Router()
         this.routes()
     }
-    CreateDialog(req: Request, res: Response): void {
+    CreateDialog(req: Request, res: Response) {
         const { users } = req.body
-        DialogController.createDialog(users)
+
+        if(users.some((el: any) => el == req.auth.user_id))){
+            DialogController.createDialog(users)
             .then((dialogID) => res.send({ dialogID }))
             .catch((error) => res.send({ error }))
+        }
     }
 
     CreateMessage(req: Request, res: Response): void {
