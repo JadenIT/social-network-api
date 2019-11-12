@@ -21,4 +21,5 @@ class SearchRouter implements RouterInterface {
     }
 }
 const SearchRouterInstance: SearchRouter = new SearchRouter()
+
 export default SearchRouterInstance.router

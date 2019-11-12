@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken')
-const fs = require('fs')
 import { Router, Request, Response } from 'express'
 import UserController from '../controllers/UserController'
 import upload from '../middlewares/storage'
@@ -78,6 +77,18 @@ class UserRouter implements RouterInterface {
             .catch((error) => res.send({ status: 'error' }))
     }
 
+    getSubscribersByUsername(req: Request, res: Response): void {
+        const { username } = req.params
+        UserController.getSubscribersByUsername(username)
+            .then((subscribers) => {
+                res.send({
+                    status: 'ok',
+                    subscribers
+                })
+            })
+            .catch((error) => res.send({ status: 'error' }))
+    }
+
     Logout(req: Request, res: Response) {
         AuthController.setCookie(res, 'token', null, 0)
         res.send({ status: 'ok' })
@@ -98,6 +109,7 @@ class UserRouter implements RouterInterface {
         this.router.post('/subscribe', auth, this.Subscribe)
         this.router.post('/unsubscribe', auth, this.UnSubscribe)
         this.router.get('/subscriptions/:username', auth, this.GetSubscriptionsByUsername)
+        this.router.get('/subscribers/:username', auth, this.getSubscribersByUsername)
         this.router.post('/logout', this.Logout)
         this.router.get('/suggestions/suggestionsByUsername', auth, this.SuggestionsByUsername)
     }

@@ -7,20 +7,17 @@ var AuthController = (function () {
     }
     AuthController.prototype.login = function (username, password) {
         return new Promise(function (resolve, reject) {
-            UserModel_1.default.findOne({ username: username })
-                .then(function (doc) {
+            UserModel_1.default.findOne({ username: username }, function (err, doc) {
                 if (!doc)
                     return reject('Incorrect username');
-                bcrypt
-                    .compare(password, doc.password)
-                    .then(function (hash) {
+                if (err)
+                    reject(err);
+                bcrypt.compare(password, doc.password, function (err, hash) {
                     if (!hash)
                         return reject('Incorrect password');
                     resolve(doc._id);
-                })
-                    .catch(function (error) { return reject(error); });
-            })
-                .catch(function (error) { return reject(error); });
+                });
+            });
         });
     };
     AuthController.prototype.setCookie = function (res, field, value, maxAge) {

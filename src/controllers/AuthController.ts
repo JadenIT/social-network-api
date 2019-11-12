@@ -6,18 +6,14 @@ import { Response } from 'express'
 class AuthController {
     public login(username: String, password: String) {
         return new Promise((resolve, reject) => {
-            UserModel.findOne({ username })
-                .then((doc: any) => {
-                    if (!doc) return reject('Incorrect username')
-                    bcrypt
-                        .compare(password, doc.password)
-                        .then((hash: any) => {
-                            if (!hash) return reject('Incorrect password')
-                            resolve(doc._id)
-                        })
-                        .catch((error: any) => reject(error))
+            UserModel.findOne({ username }, function(err: any, doc: any) {
+                if (!doc) return reject('Incorrect username')
+                if (err) reject(err)
+                bcrypt.compare(password, doc.password, function(err: any, hash: any) {
+                    if (!hash) return reject('Incorrect password')
+                    resolve(doc._id)
                 })
-                .catch((error: any) => reject(error))
+            })
         })
     }
 

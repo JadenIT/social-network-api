@@ -198,34 +198,45 @@ class UserController {
                 .then((res: any) => {
                     if (!res) return resolve([])
                     UserModel.find({ _id: { $in: res.subscriptions } }, { username: 1, avatar: 1, fullname: 1, _id: 0 })
-                        .then((result: any) => {
-                            resolve(result)
-                        })
-                        .catch((error: any) => {
-                            reject(error)
-                        })
+                        .then((result: any) => resolve(result))
+                        .catch((error: any) => reject(error))
                 })
-                .catch((error: any) => {
-                    reject('Error')
+                .catch((error: any) => reject('Error'))
+        })
+    }
+
+    public getSubscribersByUsername(username: String) {
+        return new Promise((resolve, reject) => {
+            UserModel.findOne({ username }, { subscribers: 1, _id: 0 })
+                .then((res: any) => {
+                    if (!res) return resolve([])
+                    UserModel.find({ _id: { $in: res.subscribers } }, { username: 1, avatar: 1, fullname: 1, _id: 0 })
+                        .then((result: any) => resolve(result))
+                        .catch((error: any) => reject(error))
                 })
+                .catch((error: any) => reject('Error'))
         })
     }
 
     public suggestionsByUsername(username: String) {
         return new Promise((resolve, reject) => {
-            UserModel.find(
-                {
-                    $and: [
-                        {
-                            $or: [{ $where: 'this.subscribers.length >= 0' }, { $where: 'this.posts.length >= 0' }]
-                        },
-                        { username: { $not: { $eq: username } } }
-                    ]
-                },
+            UserModel.aggregate(
+                [
+                    {
+                        $match: {
+                            $and: [{ username: { $not: { $eq: username } } }]
+                        }
+                    },
+                    {
+                        $sort: {
+                            subscribers: -1
+                        }
+                    }
+                ],
                 (error: any, docs: any) => {
                     if (error) return reject(error)
-                    if (docs.length === 0) resolve([])
-                    const newArr = []
+                    if (docs.length === 0) return resolve([])
+                    const newArr: any = []
                     docs.map((el: any, i: any) => {
                         newArr.push({ username: el.username, fullname: el.fullname, avatar: el.avatar })
                         if (i + 1 == docs.length) resolve(newArr)

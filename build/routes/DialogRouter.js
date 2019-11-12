@@ -35,11 +35,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var jwt = require('jsonwebtoken');
 var express_1 = require("express");
 var DialogController_1 = require("../controllers/DialogController");
 var auth_1 = require("../middlewares/auth");
-var index_1 = require("../config/index");
 var DialogRouter = (function () {
     function DialogRouter() {
         this.router = express_1.Router();
@@ -47,23 +45,18 @@ var DialogRouter = (function () {
     }
     DialogRouter.prototype.CreateDialog = function (req, res) {
         var users = req.body.users;
-        if (users.some(function (el) { return el == req.auth.user_id; }))
-            ;
-        {
+        if (users.some(function (el) { return el == req.auth.user_id; })) {
             DialogController_1.default.createDialog(users)
                 .then(function (dialogID) { return res.send({ dialogID: dialogID }); })
                 .catch(function (error) { return res.send({ error: error }); });
         }
     };
     DialogRouter.prototype.CreateMessage = function (req, res) {
-        var _a = req.body, message = _a.message, dialogID = _a.dialogID, token = _a.token;
-        jwt.verify(token, index_1.default.JWT_KEY, function (err, decoded) {
-            if (!decoded)
-                return res.send({ status: 'error', error: 'Not authorized' });
-            DialogController_1.default.createMessage(decoded.username, message, dialogID)
-                .then(function (resp) { return res.end({ status: 'ok' }); })
-                .catch(function (error) { return res.send({ error: error }); });
-        });
+        var _a = req.body, message = _a.message, dialogID = _a.dialogID;
+        var username = req.auth.username;
+        DialogController_1.default.createMessage(username, message, dialogID)
+            .then(function (resp) { return res.end({ status: 'ok' }); })
+            .catch(function (error) { return res.send({ error: error }); });
     };
     DialogRouter.prototype.GetMessages = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
@@ -87,7 +80,7 @@ var DialogRouter = (function () {
     DialogRouter.prototype.routes = function () {
         this.router.post('/dialog', auth_1.default, this.CreateDialog);
         this.router.get('/dialog', auth_1.default, this.getDialog);
-        this.router.post('/message', this.CreateMessage);
+        this.router.post('/message', auth_1.default, this.CreateMessage);
         this.router.get('/dialogs', auth_1.default, this.GetMessages);
     };
     return DialogRouter;

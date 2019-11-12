@@ -22,4 +22,5 @@ class NewsRouter implements RouterInterface {
 }
 
 const NewsRouterInstance: NewsRouter = new NewsRouter()
+
 export default NewsRouterInstance.router

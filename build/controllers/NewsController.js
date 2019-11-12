@@ -5,12 +5,10 @@ var NewsController = (function () {
     }
     NewsController.prototype.getNewsByArrOfSUbscriptions = function (arr) {
         return new Promise(function (resolve, reject) {
-            var newsArr = [];
             if (arr.length <= 0)
                 return resolve([]);
             UserModel_1.default.find({ _id: { $in: arr } }, { _id: 0, username: 1, avatar: 1, fullname: 1, posts: 1 })
                 .then(function (response) {
-                var posts = response.posts;
                 var newArr = [];
                 response.map(function (el) {
                     el.posts.map(function (el2) {

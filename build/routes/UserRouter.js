@@ -1,6 +1,5 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var jwt = require('jsonwebtoken');
-var fs = require('fs');
 var express_1 = require("express");
 var UserController_1 = require("../controllers/UserController");
 var storage_1 = require("../middlewares/storage");
@@ -70,6 +69,17 @@ var UserRouter = (function () {
         })
             .catch(function (error) { return res.send({ status: 'error' }); });
     };
+    UserRouter.prototype.getSubscribersByUsername = function (req, res) {
+        var username = req.params.username;
+        UserController_1.default.getSubscribersByUsername(username)
+            .then(function (subscribers) {
+            res.send({
+                status: 'ok',
+                subscribers: subscribers
+            });
+        })
+            .catch(function (error) { return res.send({ status: 'error' }); });
+    };
     UserRouter.prototype.Logout = function (req, res) {
         AuthController_1.default.setCookie(res, 'token', null, 0);
         res.send({ status: 'ok' });
@@ -87,6 +97,7 @@ var UserRouter = (function () {
         this.router.post('/subscribe', auth_1.default, this.Subscribe);
         this.router.post('/unsubscribe', auth_1.default, this.UnSubscribe);
         this.router.get('/subscriptions/:username', auth_1.default, this.GetSubscriptionsByUsername);
+        this.router.get('/subscribers/:username', auth_1.default, this.getSubscribersByUsername);
         this.router.post('/logout', this.Logout);
         this.router.get('/suggestions/suggestionsByUsername', auth_1.default, this.SuggestionsByUsername);
     };

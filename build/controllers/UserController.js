@@ -222,32 +222,43 @@ var UserController = (function () {
                 if (!res)
                     return resolve([]);
                 UserModel_1.default.find({ _id: { $in: res.subscriptions } }, { username: 1, avatar: 1, fullname: 1, _id: 0 })
-                    .then(function (result) {
-                    resolve(result);
-                })
-                    .catch(function (error) {
-                    reject(error);
-                });
+                    .then(function (result) { return resolve(result); })
+                    .catch(function (error) { return reject(error); });
             })
-                .catch(function (error) {
-                reject('Error');
-            });
+                .catch(function (error) { return reject('Error'); });
+        });
+    };
+    UserController.prototype.getSubscribersByUsername = function (username) {
+        return new Promise(function (resolve, reject) {
+            UserModel_1.default.findOne({ username: username }, { subscribers: 1, _id: 0 })
+                .then(function (res) {
+                if (!res)
+                    return resolve([]);
+                UserModel_1.default.find({ _id: { $in: res.subscribers } }, { username: 1, avatar: 1, fullname: 1, _id: 0 })
+                    .then(function (result) { return resolve(result); })
+                    .catch(function (error) { return reject(error); });
+            })
+                .catch(function (error) { return reject('Error'); });
         });
     };
     UserController.prototype.suggestionsByUsername = function (username) {
         return new Promise(function (resolve, reject) {
-            UserModel_1.default.find({
-                $and: [
-                    {
-                        $or: [{ $where: 'this.subscribers.length >= 0' }, { $where: 'this.posts.length >= 0' }]
-                    },
-                    { username: { $not: { $eq: username } } }
-                ]
-            }, function (error, docs) {
+            UserModel_1.default.aggregate([
+                {
+                    $match: {
+                        $and: [{ username: { $not: { $eq: username } } }]
+                    }
+                },
+                {
+                    $sort: {
+                        subscribers: -1
+                    }
+                }
+            ], function (error, docs) {
                 if (error)
                     return reject(error);
                 if (docs.length === 0)
-                    resolve([]);
+                    return resolve([]);
                 var newArr = [];
                 docs.map(function (el, i) {
                     newArr.push({ username: el.username, fullname: el.fullname, avatar: el.avatar });

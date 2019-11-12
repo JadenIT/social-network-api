@@ -41,16 +41,7 @@ var UserModel_1 = require("../models/UserModel");
 var DialogController = (function () {
     function DialogController() {
     }
-    DialogController.prototype.saveManyDialogs = function (users) {
-        return new Promise(function (resolve, reject) {
-            var dialogID = uniqid();
-            UserModel_1.default.updateMany({ _id: { $in: users } }, { $push: { messages: { lastVisit: Date.now(), dialogID: dialogID, users: users, messages: [] } } })
-                .then(function (doc) { return resolve(dialogID); })
-                .catch(function (error) { return reject(error); });
-        });
-    };
     DialogController.prototype.createDialog = function (users) {
-        var _this = this;
         return new Promise(function (resolve, reject) {
             UserModel_1.default.find({ 'messages.users': { $eq: users } })
                 .then(function (response) {
@@ -63,33 +54,28 @@ var DialogController = (function () {
                     });
                 }
                 else {
-                    _this.saveManyDialogs(users)
-                        .then(function (res) { return resolve(res); })
-                        .catch(function (err) { return reject(err); });
+                    var dialogID_1 = uniqid();
+                    UserModel_1.default.updateMany({ _id: { $in: users } }, { $push: { messages: { lastVisit: Date.now(), dialogID: dialogID_1, users: users, messages: [] } } }, function (err, doc) {
+                        if (err)
+                            return reject(err);
+                        resolve(dialogID_1);
+                    });
                 }
             })
                 .catch(function (error) { return reject(error); });
         });
     };
-    DialogController.prototype.updateDialogLastVisit = function (dialogID, date) {
-        return new Promise(function (resolve, reject) {
-            UserModel_1.default.updateMany({ 'messages.dialogID': dialogID }, { $set: { 'messages.$.lastVisit': Date.now() } })
-                .then(function (res) { return resolve(res); })
-                .catch(function (err) { return reject(err); });
-        });
-    };
     DialogController.prototype.createMessage = function (username, message, roomID) {
-        var _this = this;
         return new Promise(function (resolve, reject) {
-            UserModel_1.default.updateMany({ 'messages.dialogID': roomID }, { $push: { 'messages.$.messages': { message: message, username: username, timestamp: Date.now() } } })
-                .then(function (res) {
-                _this.updateDialogLastVisit(roomID, Date.now())
-                    .then(function (res) {
-                    resolve();
-                })
-                    .catch(function (err) { return reject(err); });
-            })
-                .catch(function (error) { return reject(error); });
+            UserModel_1.default.updateMany({ 'messages.dialogID': roomID }, { $push: { 'messages.$.messages': { message: message, username: username, timestamp: Date.now() } } }, function (err, res) {
+                if (err)
+                    return reject(err);
+                UserModel_1.default.updateMany({ 'messages.dialogID': roomID }, { $set: { 'messages.$.lastVisit': Date.now() } }, function (err, res) {
+                    if (err)
+                        return reject(err);
+                    resolve(res);
+                });
+            });
         });
     };
     DialogController.prototype.getMessages = function (username, query) {
@@ -137,7 +123,7 @@ var DialogController = (function () {
                                                                 return resolve(newArr_1);
                                                             var queriedArr_1 = [];
                                                             newArr_1.map(function (el, j) {
-                                                                if (el.username.match(new RegExp(query, 'g')))
+                                                                if (el.username.match(new RegExp(query, 'i')))
                                                                     queriedArr_1.push(el);
                                                                 if (j + 1 == newArr_1.length)
                                                                     return resolve(queriedArr_1);
@@ -170,18 +156,18 @@ var DialogController = (function () {
     };
     DialogController.prototype.getDialog = function (dialogID) {
         return new Promise(function (resolve, reject) {
-            UserModel_1.default.findOne({ 'messages.dialogID': dialogID }, { messages: 1, _id: 0 })
-                .then(function (res) {
+            UserModel_1.default.findOne({ 'messages.dialogID': dialogID }, { messages: 1, _id: 0 }, function (err, res) {
                 res.messages.map(function (el) {
                     if (el.dialogID == dialogID) {
-                        UserModel_1.default.find({ _id: { $in: el.users } }, { avatar: 1, _id: 0, username: 1 }).then(function (res) {
+                        UserModel_1.default.find({ _id: { $in: el.users } }, { avatar: 1, _id: 0, username: 1 }, function (err, res) {
+                            if (err)
+                                return reject(err);
                             el.users_2 = res;
                             return resolve(el);
                         });
                     }
                 });
-            })
-                .catch(function (error) { return reject(error); });
+            });
         });
     };
     return DialogController;

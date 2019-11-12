@@ -3,16 +3,6 @@ const uniqid = require('uniqid')
 import UserModel from '../models/UserModel'
 
 class DialogController {
-
-    private saveManyDialogs(users: any) {
-        return new Promise((resolve, reject) => {
-            const dialogID = uniqid()
-            UserModel.updateMany({ _id: { $in: users } }, { $push: { messages: { lastVisit: Date.now(), dialogID: dialogID, users: users, messages: [] } } })
-                .then((doc: any) => resolve(dialogID))
-                .catch((error: any) => reject(error))
-        })
-    }
-
     public createDialog(users: any) {
         return new Promise((resolve, reject) => {
             UserModel.find({ 'messages.users': { $eq: users } })
@@ -24,34 +14,26 @@ class DialogController {
                             })
                         })
                     } else {
-                        this.saveManyDialogs(users)
-                            .then((res) => resolve(res))
-                            .catch((err) => reject(err))
+                        const dialogID = uniqid()
+                        UserModel.updateMany({ _id: { $in: users } }, { $push: { messages: { lastVisit: Date.now(), dialogID: dialogID, users, messages: [] } } }, function(err: any, doc: any) {
+                            if (err) return reject(err)
+                            resolve(dialogID)
+                        })
                     }
                 })
                 .catch((error: any) => reject(error))
         })
     }
 
-    private updateDialogLastVisit(dialogID: any, date: any) {
-        return new Promise((resolve, reject) => {
-            UserModel.updateMany({ 'messages.dialogID': dialogID }, { $set: { 'messages.$.lastVisit': Date.now() } })
-                .then((res: any) => resolve(res))
-                .catch((err: any) => reject(err))
-        })
-    }
-
     public createMessage(username: String, message: String, roomID: any) {
         return new Promise((resolve, reject) => {
-            UserModel.updateMany({ 'messages.dialogID': roomID }, { $push: { 'messages.$.messages': { message: message, username: username, timestamp: Date.now() } } })
-                .then((res: any) => {
-                    this.updateDialogLastVisit(roomID, Date.now())
-                        .then((res) => {
-                            resolve()
-                        })
-                        .catch((err) => reject(err))
+            UserModel.updateMany({ 'messages.dialogID': roomID }, { $push: { 'messages.$.messages': { message: message, username: username, timestamp: Date.now() } } }, function(err: any, res: any) {
+                if (err) return reject(err)
+                UserModel.updateMany({ 'messages.dialogID': roomID }, { $set: { 'messages.$.lastVisit': Date.now() } }, function(err: any, res: any) {
+                    if (err) return reject(err)
+                    resolve(res)
                 })
-                .catch((error: any) => reject(error))
+            })
         })
     }
 
@@ -87,7 +69,7 @@ class DialogController {
                                         if (!query) return resolve(newArr)
                                         let queriedArr: any = []
                                         newArr.map((el: any, j: any) => {
-                                            if (el.username.match(new RegExp(query, 'g'))) queriedArr.push(el)
+                                            if (el.username.match(new RegExp(query, 'i'))) queriedArr.push(el)
 
                                             if (j + 1 == newArr.length) return resolve(queriedArr)
                                         })
@@ -103,18 +85,17 @@ class DialogController {
 
     public getDialog(dialogID: any) {
         return new Promise((resolve, reject) => {
-            UserModel.findOne({ 'messages.dialogID': dialogID }, { messages: 1, _id: 0 })
-                .then((res: any) => {
-                    res.messages.map((el: any) => {
-                        if (el.dialogID == dialogID) {
-                            UserModel.find({ _id: { $in: el.users } }, { avatar: 1, _id: 0, username: 1 }).then((res: any) => {
-                                el.users_2 = res
-                                return resolve(el)
-                            })
-                        }
-                    })
+            UserModel.findOne({ 'messages.dialogID': dialogID }, { messages: 1, _id: 0 }, function(err: any, res: any) {
+                res.messages.map((el: any) => {
+                    if (el.dialogID == dialogID) {
+                        UserModel.find({ _id: { $in: el.users } }, { avatar: 1, _id: 0, username: 1 }, function(err: any, res: any) {
+                            if (err) return reject(err)
+                            el.users_2 = res
+                            return resolve(el)
+                        })
+                    }
                 })
-                .catch((error: any) => reject(error))
+            })
         })
     }
 }
