@@ -68,24 +68,16 @@ var DialogController = (function () {
             });
         });
     };
-    DialogController.prototype.updateDialogLastVisit = function (dialogID, date) {
-        return new Promise(function (resolve, reject) {
-            DialogModel_1.default.updateOne({ _id: dialogID }, { $set: { lastVisit: date } }, function (err, res) {
-                if (err)
-                    reject(err);
-                resolve();
-            });
-        });
-    };
     DialogController.prototype.createMessage = function (username, message, roomID) {
-        var self = this;
         return new Promise(function (resolve, reject) {
             DialogModel_1.default.updateOne({ _id: roomID }, { $push: { messages: { message: message, username: username, timestamp: Date.now() } } }, function (err, res) {
                 if (err)
                     throw err;
-                self.updateDialogLastVisit(roomID, Date.now())
-                    .then(function (res) { return resolve(); })
-                    .catch(function (err) { return reject(err); });
+                DialogModel_1.default.updateOne({ _id: roomID }, { $set: { lastVisit: Date.now() } }, function (err, res) {
+                    if (err)
+                        reject(err);
+                    resolve();
+                });
             });
         });
     };
@@ -112,7 +104,7 @@ var DialogController = (function () {
                                             return [4, UserModel_1.default.aggregate([
                                                     { $match: { $and: [{ _id: { $in: el.users } }, { username: { $not: { $eq: username } } }] } },
                                                     { $unset: ['posts', 'about', 'subscribers', 'subscriptions', 'news', 'fullname', 'password', 'messages', '_id', '__v'] },
-                                                    { $match: { username: { $regex: query, $options: 'g' } } },
+                                                    { $match: { username: { $regex: query, $options: 'i' } } },
                                                     { $set: { lastVisit: el.lastVisit, dialogID: el._id } },
                                                     { $sort: { lastVisit: 1 } }
                                                 ], function (err, docs) {
