@@ -104,6 +104,7 @@ var DialogController = (function () {
                                     switch (_a.label) {
                                         case 0:
                                             el.users = el.users.map(function (el) { return ObjectId(el); });
+                                            if (!query) return [3, 2];
                                             return [4, UserModel_1.default.findOne({ $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }, { username: { $regex: query, $options: 'i' } }] }, { username: 1, avatar: 1, _id: 0 }, function (err, res) {
                                                     if (!res)
                                                         return resolve([]);
@@ -111,8 +112,27 @@ var DialogController = (function () {
                                                 })];
                                         case 1:
                                             _a.sent();
-                                            if (i + 1 == docs.length)
+                                            return [3, 4];
+                                        case 2: return [4, UserModel_1.default.findOne({ $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }] }, { username: 1, avatar: 1, _id: 0 }, function (err, res) {
+                                                if (!res)
+                                                    return resolve([]);
+                                                newArr = newArr.concat({ username: res.username, dialogID: el._id, avatar: res.avatar, lastVisit: el.lastVisit });
+                                            })];
+                                        case 3:
+                                            _a.sent();
+                                            _a.label = 4;
+                                        case 4:
+                                            if (i + 1 == docs.length) {
+                                                newArr.sort(function (a, b) {
+                                                    if (a.lastVisit > b.lastVisit) {
+                                                        return -1;
+                                                    }
+                                                    else {
+                                                        return 1;
+                                                    }
+                                                });
                                                 return [2, resolve(newArr)];
+                                            }
                                             return [2];
                                     }
                                 });

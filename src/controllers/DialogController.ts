@@ -62,15 +62,33 @@ class DialogController {
                     if (err) throw err
                     docs.map(async (el: any, i: any) => {
                         el.users = el.users.map((el: any) => ObjectId(el))
-                        await UserModel.findOne(
-                            { $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }, { username: { $regex: query, $options: 'i' } }] },
-                            { username: 1, avatar: 1, _id: 0 },
-                            function(err: any, res: any) {
+                        if (query) {
+                            await UserModel.findOne(
+                                { $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }, { username: { $regex: query, $options: 'i' } }] },
+                                { username: 1, avatar: 1, _id: 0 },
+                                function(err: any, res: any) {
+                                    if (!res) return resolve([])
+                                    newArr = newArr.concat({ username: res.username, dialogID: el._id, avatar: res.avatar, lastVisit: el.lastVisit })
+                                }
+                            )
+                        } else {
+                            await UserModel.findOne({ $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }] }, { username: 1, avatar: 1, _id: 0 }, function(err: any, res: any) {
                                 if (!res) return resolve([])
                                 newArr = newArr.concat({ username: res.username, dialogID: el._id, avatar: res.avatar, lastVisit: el.lastVisit })
-                            }
-                        )
-                        if (i + 1 == docs.length) return resolve(newArr)
+                            })
+                        }
+
+                        if (i + 1 == docs.length) {
+                            /* Sort */
+                            newArr.sort(function(a: any, b: any) {
+                                if (a.lastVisit > b.lastVisit) {
+                                    return -1
+                                } else {
+                                    return 1
+                                }
+                            })
+                            return resolve(newArr)
+                        }
                     })
                 })
             })
