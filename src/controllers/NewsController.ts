@@ -6,7 +6,6 @@ class NewsController {
             if (arr.length <= 0) return resolve([])
             UserModel.find({ _id: { $in: arr } }, { _id: 0, username: 1, avatar: 1, fullname: 1, posts: 1 })
                 .then((response: any) => {
-                    //const { posts } = response
 
                     let newArr: any = []
 

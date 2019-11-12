@@ -54,19 +54,35 @@ class DialogController {
                     let newArr: any = []
                     docs.map(async (el: any, i: any) => {
                         el.users = el.users.map((el: any) => ObjectId(el))
-                        await UserModel.aggregate(
-                            [
-                                { $match: { $and: [{ _id: { $in: el.users } }, { username: { $not: { $eq: username } } }] } },
-                                { $unset: ['posts', 'about', 'subscribers', 'subscriptions', 'news', 'fullname', 'password', 'messages', '_id', '__v'] },
-                                { $match: { username: { $regex: query, $options: 'i' } } },
-                                { $set: { lastVisit: el.lastVisit, dialogID: el._id } },
-                                { $sort: { lastVisit: 1 } }
-                            ],
-                            function(err: any, docs: any) {
-                                if (err) throw err
-                                newArr = newArr.concat(docs)
-                            }
-                        )
+                        if (query) {
+                            await UserModel.aggregate(
+                                [
+                                    { $match: { $and: [{ _id: { $in: el.users } }, { username: { $not: { $eq: username } } }] } },
+                                    { $unset: ['posts', 'about', 'subscribers', 'subscriptions', 'news', 'fullname', 'password', 'messages', '_id', '__v'] },
+                                    { $match: { username: { $regex: query, $options: 'i' } } },
+                                    { $set: { lastVisit: el.lastVisit, dialogID: el._id } },
+                                    { $sort: { lastVisit: 1 } }
+                                ],
+                                function(err: any, docs: any) {
+                                    if (err) throw err
+                                    newArr = newArr.concat(docs)
+                                }
+                            )
+                        } else {
+                            await UserModel.aggregate(
+                                [
+                                    { $match: { $and: [{ _id: { $in: el.users } }, { username: { $not: { $eq: username } } }] } },
+                                    { $unset: ['posts', 'about', 'subscribers', 'subscriptions', 'news', 'fullname', 'password', 'messages', '_id', '__v'] },
+                                    { $set: { lastVisit: el.lastVisit, dialogID: el._id } },
+                                    { $sort: { lastVisit: 1 } }
+                                ],
+                                function(err: any, docs: any) {
+                                    if (err) throw err
+                                    newArr = newArr.concat(docs)
+                                }
+                            )
+                        }
+
                         if (i + 1 == docs.length) return resolve(newArr)
                     })
                 })
