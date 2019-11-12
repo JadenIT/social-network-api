@@ -2,7 +2,7 @@ import UserModel from '../models/UserModel'
 import { Request, Response } from 'express'
 
 class NewsController {
-    private getNewsByArrOfSubscriptions(arr: Array<String>) {
+    static getNewsByArrOfSubscriptions(arr: Array<String>) {
         return new Promise((resolve, reject) => {
             if (arr.length <= 0) return resolve([])
             UserModel.find(
@@ -48,7 +48,6 @@ class NewsController {
         })
     }
 
-
     public getNewsByUsername(req: Request, res: Response) {
         try {
             const { page, perpage } = req.query
@@ -56,15 +55,13 @@ class NewsController {
             let end = page * perpage
             let start = end - (perpage - 1) - 1
 
-            let self = this
-
             UserModel.findOne({ username: username }, { subscriptions: 1 }, function(error: any, doc: any) {
                 if (error) throw error
                 const { subscriptions } = doc || []
 
                 if (!subscriptions) return res.send([])
 
-                self.getNewsByArrOfSubscriptions(subscriptions)
+                NewsController.getNewsByArrOfSubscriptions(subscriptions)
                     .then((news: any) => res.send({news: news.splice(start, perpage}))
                     .catch((error: any) => res.send({ status: 'error', error }))
             })
@@ -75,4 +72,5 @@ class NewsController {
 }
 
 const NewsControllerInstance: NewsController = new NewsController()
+
 export default NewsControllerInstance

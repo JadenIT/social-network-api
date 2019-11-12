@@ -3,7 +3,7 @@ var UserModel_1 = require("../models/UserModel");
 var NewsController = (function () {
     function NewsController() {
     }
-    NewsController.prototype.getNewsByArrOfSubscriptions = function (arr) {
+    NewsController.getNewsByArrOfSubscriptions = function (arr) {
         return new Promise(function (resolve, reject) {
             if (arr.length <= 0)
                 return resolve([]);
@@ -49,14 +49,13 @@ var NewsController = (function () {
             var username = req.auth.username;
             var end = page * perpage_1;
             var start_1 = end - (perpage_1 - 1) - 1;
-            var self_1 = this;
             UserModel_1.default.findOne({ username: username }, { subscriptions: 1 }, function (error, doc) {
                 if (error)
                     throw error;
                 var subscriptions = (doc || []).subscriptions;
                 if (!subscriptions)
                     return res.send([]);
-                self_1.getNewsByArrOfSubscriptions(subscriptions)
+                NewsController.getNewsByArrOfSubscriptions(subscriptions)
                     .then(function (news) { return res.send({ news: news.splice(start_1, perpage_1) }); })
                     .catch(function (error) { return res.send({ status: 'error', error: error }); });
             });
