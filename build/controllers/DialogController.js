@@ -36,7 +36,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var _ = require('lodash');
-var uniqid = require('uniqid');
 var UserModel_1 = require("../models/UserModel");
 var DialogModel_1 = require("../models/DialogModel");
 var mongoose = require('mongoose');
@@ -74,18 +73,17 @@ var DialogController = (function () {
                 $push: {
                     messages: { message: message, username: username, timestamp: Date.now() },
                 },
+                $set: {
+                    lastVisit: Date.now(),
+                },
             }, function (err, res) {
                 if (err)
-                    throw err;
-                DialogModel_1.default.updateOne({ _id: roomID }, { $set: { lastVisit: Date.now() } }, function (err, res) {
-                    if (err)
-                        reject(err);
-                    resolve();
-                });
+                    return reject(err);
+                resolve();
             });
         });
     };
-    DialogController.prototype.getMessages = function (username, query) {
+    DialogController.prototype.getDialogsList = function (username, query) {
         return new Promise(function (resolve, reject) {
             UserModel_1.default.findOne({ username: username }, { _id: 0 }, function (err, doc) {
                 if (err)
@@ -106,17 +104,19 @@ var DialogController = (function () {
                                             el.users = el.users.map(function (el) { return ObjectId(el); });
                                             if (!query) return [3, 2];
                                             return [4, UserModel_1.default.findOne({ $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }, { username: { $regex: query, $options: 'i' } }] }, { username: 1, avatar: 1, _id: 0 }, function (err, res) {
-                                                    if (!res)
-                                                        return resolve([]);
-                                                    newArr = newArr.concat({ username: res.username, dialogID: el._id, avatar: res.avatar, lastVisit: el.lastVisit });
+                                                    if (err)
+                                                        return reject(err);
+                                                    if (res)
+                                                        newArr = newArr.concat({ username: res.username, dialogID: el._id, avatar: res.avatar, lastVisit: el.lastVisit });
                                                 })];
                                         case 1:
                                             _a.sent();
                                             return [3, 4];
                                         case 2: return [4, UserModel_1.default.findOne({ $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }] }, { username: 1, avatar: 1, _id: 0 }, function (err, res) {
-                                                if (!res)
-                                                    return resolve([]);
-                                                newArr = newArr.concat({ username: res.username, dialogID: el._id, avatar: res.avatar, lastVisit: el.lastVisit });
+                                                if (err)
+                                                    return reject(err);
+                                                if (res)
+                                                    newArr = newArr.concat({ username: res.username, dialogID: el._id, avatar: res.avatar, lastVisit: el.lastVisit });
                                             })];
                                         case 3:
                                             _a.sent();
@@ -124,12 +124,9 @@ var DialogController = (function () {
                                         case 4:
                                             if (i + 1 == docs.length) {
                                                 newArr.sort(function (a, b) {
-                                                    if (a.lastVisit > b.lastVisit) {
+                                                    if (a.lastVisit > b.lastVisit)
                                                         return -1;
-                                                    }
-                                                    else {
-                                                        return 1;
-                                                    }
+                                                    return 1;
                                                 });
                                                 return [2, resolve(newArr)];
                                             }

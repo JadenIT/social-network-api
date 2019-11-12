@@ -1,5 +1,4 @@
 const _ = require('lodash')
-const uniqid = require('uniqid')
 import UserModel from '../models/UserModel'
 import DialogModel from '../models/DialogModel'
 const mongoose = require('mongoose')
@@ -40,19 +39,19 @@ class DialogController {
                     $push: {
                         messages: { message, username, timestamp: Date.now() },
                     },
+                    $set: {
+                        lastVisit: Date.now(),
+                    },
                 },
                 function(err: any, res: any) {
-                    if (err) throw err
-                    DialogModel.updateOne({ _id: roomID }, { $set: { lastVisit: Date.now() } }, function(err: any, res: any) {
-                        if (err) reject(err)
-                        resolve()
-                    })
+                    if (err) return reject(err)
+                    resolve()
                 }
             )
         })
     }
 
-    public getMessages(username: String, query: any) {
+    public getDialogsList(username: String, query: any) {
         return new Promise((resolve, reject) => {
             UserModel.findOne({ username }, { _id: 0 }, function(err: any, doc: any) {
                 if (err) throw err
@@ -61,31 +60,29 @@ class DialogController {
                 DialogModel.find({ _id: { $in: doc.messages } }, { messages: 0 }, async function(err: any, docs: any) {
                     if (err) throw err
                     docs.map(async (el: any, i: any) => {
+                        /* Force every user id to be ObjectId as mongoose requires it */
                         el.users = el.users.map((el: any) => ObjectId(el))
+                        /* If query, searching with Regular Expression */
                         if (query) {
                             await UserModel.findOne(
                                 { $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }, { username: { $regex: query, $options: 'i' } }] },
                                 { username: 1, avatar: 1, _id: 0 },
                                 function(err: any, res: any) {
-                                    if (!res) return resolve([])
-                                    newArr = newArr.concat({ username: res.username, dialogID: el._id, avatar: res.avatar, lastVisit: el.lastVisit })
+                                    if (err) return reject(err)
+                                    if (res) newArr = newArr.concat({ username: res.username, dialogID: el._id, avatar: res.avatar, lastVisit: el.lastVisit })
                                 }
                             )
                         } else {
                             await UserModel.findOne({ $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }] }, { username: 1, avatar: 1, _id: 0 }, function(err: any, res: any) {
-                                if (!res) return resolve([])
-                                newArr = newArr.concat({ username: res.username, dialogID: el._id, avatar: res.avatar, lastVisit: el.lastVisit })
+                                if (err) return reject(err)
+                                if (res) newArr = newArr.concat({ username: res.username, dialogID: el._id, avatar: res.avatar, lastVisit: el.lastVisit })
                             })
                         }
-
                         if (i + 1 == docs.length) {
-                            /* Sort */
+                            /* Sort by lastVisit field to show newest dialogs */
                             newArr.sort(function(a: any, b: any) {
-                                if (a.lastVisit > b.lastVisit) {
-                                    return -1
-                                } else {
-                                    return 1
-                                }
+                                if (a.lastVisit > b.lastVisit) return -1
+                                return 1
                             })
                             return resolve(newArr)
                         }

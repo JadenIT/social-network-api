@@ -9,15 +9,9 @@ class SearchRouter implements RouterInterface {
         this.router = Router()
         this.routes()
     }
-    searchByQueryForUsernameOrFullName(req: Request, res: Response): void {
-        const { query } = req.query
-        SearchController.searchByQueryForUsernameOrFullName(query)
-            .then((docs) => res.send({ search: docs }))
-            .catch((error) => res.send({ status: 'error' }))
-    }
 
     routes() {
-        this.router.get('/', auth, this.searchByQueryForUsernameOrFullName)
+        this.router.get('/', auth, SearchController.searchByQueryForUsernameOrFullName)
     }
 }
 const SearchRouterInstance: SearchRouter = new SearchRouter()

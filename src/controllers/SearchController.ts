@@ -1,24 +1,28 @@
 import UserModel from '../models/UserModel'
+import { Request, Response } from 'express'
 
 class SearchController {
-    public searchByQueryForUsernameOrFullName(query: any) {
-        return new Promise((resolve, reject) => {
+    public searchByQueryForUsernameOrFullName(req: Request, res: Response) {
+        try {
+            const { query } = req.query
             const q = new RegExp(query, 'i')
             UserModel.find(
                 {
-                    $or: [{ username: q }, { fullname: q }]
+                    $or: [{ username: q }, { fullname: q }],
                 },
                 {
                     username: 1,
                     fullname: 1,
-                    avatar: 1
+                    avatar: 1,
                 },
                 (error: any, docs: any) => {
-                    if (error) return reject(error)
-                    resolve(docs)
+                    if (error) res.send({ status: 'error', error })
+                    res.send({ search: docs })
                 }
             )
-        })
+        } catch (error) {
+            res.send({ status: 'error', error })
+        }
     }
 }
 

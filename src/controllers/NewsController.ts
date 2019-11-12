@@ -1,7 +1,8 @@
 import UserModel from '../models/UserModel'
+import { Request, Response } from 'express'
 
 class NewsController {
-    private getNewsByArrOfSUbscriptions(arr: Array<String>) {
+    private getNewsByArrOfSubscriptions(arr: Array<String>) {
         return new Promise((resolve, reject) => {
             if (arr.length <= 0) return resolve([])
             UserModel.find(
@@ -47,8 +48,11 @@ class NewsController {
         })
     }
 
-    public getNewsByUsername(username: String, page: any, perpage: any) {
-        return new Promise((resolve, reject) => {
+
+    public getNewsByUsername(req: Request, res: Response) {
+        try {
+            const { page, perpage } = req.query
+            const username = req.auth.username
             let end = page * perpage
             let start = end - (perpage - 1) - 1
 
@@ -58,13 +62,15 @@ class NewsController {
                 if (error) throw error
                 const { subscriptions } = doc || []
 
-                if (!subscriptions) resolve([])
+                if (!subscriptions) return res.send([])
 
-                self.getNewsByArrOfSUbscriptions(subscriptions)
-                    .then((news: any) => resolve(news.splice(start, perpage)))
-                    .catch((error: any) => reject(error))
+                self.getNewsByArrOfSubscriptions(subscriptions)
+                    .then((news: any) => res.send({news: news.splice(start, perpage}))
+                    .catch((error: any) => res.send({ status: 'error', error }))
             })
-        })
+        } catch (error) {
+            res.send({ status: 'error', error })
+        }
     }
 }
 

@@ -2,29 +2,53 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var bcrypt = require('bcrypt');
 var cookie = require('cookie');
 var UserModel_1 = require("../models/UserModel");
+var jwt = require('jsonwebtoken');
+var index_1 = require("../config/index");
 var AuthController = (function () {
     function AuthController() {
     }
-    AuthController.prototype.login = function (username, password) {
-        return new Promise(function (resolve, reject) {
-            UserModel_1.default.findOne({ username: username }, function (err, doc) {
+    AuthController.prototype.login = function (req, res) {
+        try {
+            var _a = req.body, username_1 = _a.username, password_1 = _a.password;
+            UserModel_1.default.findOne({ username: username_1 }, function (err, doc) {
                 if (!doc)
-                    return reject('Incorrect username');
+                    return res.send({ status: 'error', error: 'Incorrect username' });
                 if (err)
-                    reject(err);
-                bcrypt.compare(password, doc.password, function (err, hash) {
+                    return res.send({ status: 'error', error: err });
+                bcrypt.compare(password_1, doc.password, function (err, hash) {
                     if (!hash)
-                        return reject('Incorrect password');
-                    resolve(doc._id);
+                        return res.send({ status: 'error', error: 'Incorrect password' });
+                    jwt.sign({ user_id: doc.user_id, username: username_1 }, index_1.default.JWT_KEY, function (err, token) {
+                        res.setHeader('Set-Cookie', cookie.serialize('token', token, {
+                            maxAge: 60 * 60 * 24 * 7,
+                            path: '/',
+                        }));
+                        res.send({ status: 'ok' });
+                    });
                 });
             });
-        });
+        }
+        catch (e) {
+            res.send({ status: 'error', error: e });
+        }
     };
-    AuthController.prototype.setCookie = function (res, field, value, maxAge) {
-        res.setHeader('Set-Cookie', cookie.serialize(field, value, {
-            maxAge: maxAge,
-            path: '/'
-        }));
+    AuthController.prototype.Authorize = function (req, res) {
+        try {
+            var token_1 = req.cookies.token;
+            if (!token_1)
+                return res.send({ isAuthorized: false, token: null });
+            jwt.verify(token_1, index_1.default.JWT_KEY, function (err, decoded) {
+                if (err)
+                    throw err;
+                res.send({
+                    isAuthorized: decoded,
+                    token: token_1,
+                });
+            });
+        }
+        catch (e) {
+            res.send({ status: 'error', error: e });
+        }
     };
     return AuthController;
 }());

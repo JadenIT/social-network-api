@@ -3,7 +3,7 @@ var UserModel_1 = require("../models/UserModel");
 var NewsController = (function () {
     function NewsController() {
     }
-    NewsController.prototype.getNewsByArrOfSUbscriptions = function (arr) {
+    NewsController.prototype.getNewsByArrOfSubscriptions = function (arr) {
         return new Promise(function (resolve, reject) {
             if (arr.length <= 0)
                 return resolve([]);
@@ -43,23 +43,27 @@ var NewsController = (function () {
             });
         });
     };
-    NewsController.prototype.getNewsByUsername = function (username, page, perpage) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            var end = page * perpage;
-            var start = end - (perpage - 1) - 1;
-            var self = _this;
+    NewsController.prototype.getNewsByUsername = function (req, res) {
+        try {
+            var _a = req.query, page = _a.page, perpage_1 = _a.perpage;
+            var username = req.auth.username;
+            var end = page * perpage_1;
+            var start_1 = end - (perpage_1 - 1) - 1;
+            var self_1 = this;
             UserModel_1.default.findOne({ username: username }, { subscriptions: 1 }, function (error, doc) {
                 if (error)
                     throw error;
                 var subscriptions = (doc || []).subscriptions;
                 if (!subscriptions)
-                    resolve([]);
-                self.getNewsByArrOfSUbscriptions(subscriptions)
-                    .then(function (news) { return resolve(news.splice(start, perpage)); })
-                    .catch(function (error) { return reject(error); });
+                    return res.send([]);
+                self_1.getNewsByArrOfSubscriptions(subscriptions)
+                    .then(function (news) { return res.send({ news: news.splice(start_1, perpage_1) }); })
+                    .catch(function (error) { return res.send({ status: 'error', error: error }); });
             });
-        });
+        }
+        catch (error) {
+            res.send({ status: 'error', error: error });
+        }
     };
     return NewsController;
 }());

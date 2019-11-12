@@ -3,21 +3,25 @@ var UserModel_1 = require("../models/UserModel");
 var SearchController = (function () {
     function SearchController() {
     }
-    SearchController.prototype.searchByQueryForUsernameOrFullName = function (query) {
-        return new Promise(function (resolve, reject) {
+    SearchController.prototype.searchByQueryForUsernameOrFullName = function (req, res) {
+        try {
+            var query = req.query.query;
             var q = new RegExp(query, 'i');
             UserModel_1.default.find({
-                $or: [{ username: q }, { fullname: q }]
+                $or: [{ username: q }, { fullname: q }],
             }, {
                 username: 1,
                 fullname: 1,
-                avatar: 1
+                avatar: 1,
             }, function (error, docs) {
                 if (error)
-                    return reject(error);
-                resolve(docs);
+                    res.send({ status: 'error', error: error });
+                res.send({ search: docs });
             });
-        });
+        }
+        catch (error) {
+            res.send({ status: 'error', error: error });
+        }
     };
     return SearchController;
 }());

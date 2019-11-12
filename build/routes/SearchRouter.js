@@ -7,14 +7,8 @@ var SearchRouter = (function () {
         this.router = express_1.Router();
         this.routes();
     }
-    SearchRouter.prototype.searchByQueryForUsernameOrFullName = function (req, res) {
-        var query = req.query.query;
-        SearchController_1.default.searchByQueryForUsernameOrFullName(query)
-            .then(function (docs) { return res.send({ search: docs }); })
-            .catch(function (error) { return res.send({ status: 'error' }); });
-    };
     SearchRouter.prototype.routes = function () {
-        this.router.get('/', auth_1.default, this.searchByQueryForUsernameOrFullName);
+        this.router.get('/', auth_1.default, SearchController_1.default.searchByQueryForUsernameOrFullName);
     };
     return SearchRouter;
 }());

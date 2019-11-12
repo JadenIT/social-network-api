@@ -9,42 +9,42 @@ class DialogRouter implements RouterInterface {
         this.router = Router()
         this.routes()
     }
-    CreateDialog(req: Request, res: Response) {
+    createDialog(req: Request, res: Response) {
         const { users } = req.body
 
         DialogController.createDialog(users)
-            .then((dialogID) => res.send({ dialogID }))
-            .catch((e) => res.end({ error: e }))
+            .then(dialogID => res.send({ dialogID }))
+            .catch(e => res.end({ error: e }))
     }
 
-    CreateMessage(req: Request, res: Response): void {
+    createMessage(req: Request, res: Response): void {
         const { message, dialogID } = req.body
         const { username } = req.auth
         DialogController.createMessage(username, message, dialogID)
-            .then((resp) => res.end({ status: 'ok' }))
-            .catch((error) => res.send({ error }))
+            .then(resp => res.end({ status: 'ok' }))
+            .catch(error => res.send({ error }))
     }
 
-    GetMessages(req: Request, res: Response) {
+    getDialogsList(req: Request, res: Response) {
         const username = req.auth.username
         const query = req.query.query
-        DialogController.getMessages(username, query)
-            .then((dialogs) => res.send({ dialogs }))
-            .catch((error) => res.send({ error }))
+        DialogController.getDialogsList(username, query)
+            .then(dialogs => res.send({ dialogs }))
+            .catch(error => res.send({ error }))
     }
 
     getDialog(req: Request, res: Response): void {
         const { dialogID } = req.query
         DialogController.getDialog(dialogID)
-            .then((dialog) => res.send({ dialog }))
-            .catch((error) => res.send({ error }))
+            .then(dialog => res.send({ dialog }))
+            .catch(error => res.send({ error }))
     }
 
     routes() {
-        this.router.post('/dialog', auth, this.CreateDialog)
+        this.router.post('/dialog', auth, this.createDialog)
         this.router.get('/dialog', auth, this.getDialog)
-        this.router.post('/message', auth, this.CreateMessage)
-        this.router.get('/dialogs', auth, this.GetMessages)
+        this.router.post('/message', auth, this.createMessage)
+        this.router.get('/dialogs', auth, this.getDialogsList)
     }
 }
 const DialogRouterInstance: DialogRouter = new DialogRouter()
