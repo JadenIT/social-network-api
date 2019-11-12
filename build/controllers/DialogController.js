@@ -92,14 +92,13 @@ var DialogController = (function () {
                     throw err;
                 if (doc.messages.length == 0)
                     return resolve([]);
-                DialogModel_1.default.aggregate([{ $match: { _id: { $in: doc.messages } } }, { $unset: ['messages', '__v'] }], function (err, docs) {
+                var newArr = [];
+                DialogModel_1.default.find({ _id: { $in: doc.messages } }, { messages: 0 }, function (err, docs) {
                     return __awaiter(this, void 0, void 0, function () {
-                        var newArr;
                         var _this = this;
                         return __generator(this, function (_a) {
                             if (err)
                                 throw err;
-                            newArr = [];
                             docs.map(function (el, i) { return __awaiter(_this, void 0, void 0, function () {
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
@@ -108,16 +107,12 @@ var DialogController = (function () {
                                             return [4, UserModel_1.default.findOne({ $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }, { username: { $regex: query, $options: 'i' } }] }, { username: 1, avatar: 1, _id: 0 }, function (err, res) {
                                                     if (!res)
                                                         return resolve([]);
-                                                    newArr = newArr.concat(res);
-                                                    el.dialogID = el._id;
-                                                    el.username = res.username;
-                                                    el.avatar = res.avatar;
-                                                    delete el.users;
+                                                    newArr = newArr.concat({ username: res.username, dialogID: el._id, avatar: res.avatar, lastVisit: el.lastVisit });
                                                 })];
                                         case 1:
                                             _a.sent();
                                             if (i + 1 == docs.length)
-                                                return [2, resolve(docs)];
+                                                return [2, resolve(newArr)];
                                             return [2];
                                     }
                                 });

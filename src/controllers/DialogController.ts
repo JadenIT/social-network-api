@@ -57,10 +57,9 @@ class DialogController {
             UserModel.findOne({ username }, { _id: 0 }, function(err: any, doc: any) {
                 if (err) throw err
                 if (doc.messages.length == 0) return resolve([])
-                DialogModel.aggregate([{ $match: { _id: { $in: doc.messages } } }, { $unset: ['messages', '__v'] }], async function(err: any, docs: any) {
+                let newArr: any = []
+                DialogModel.find({ _id: { $in: doc.messages } }, { messages: 0 }, async function(err: any, docs: any) {
                     if (err) throw err
-                    let newArr: any = []
-
                     docs.map(async (el: any, i: any) => {
                         el.users = el.users.map((el: any) => ObjectId(el))
                         await UserModel.findOne(
@@ -68,14 +67,10 @@ class DialogController {
                             { username: 1, avatar: 1, _id: 0 },
                             function(err: any, res: any) {
                                 if (!res) return resolve([])
-                                newArr = newArr.concat(res)
-                                el.dialogID = el._id
-                                el.username = res.username
-                                el.avatar = res.avatar
-                                delete el.users
+                                newArr = newArr.concat({ username: res.username, dialogID: el._id, avatar: res.avatar, lastVisit: el.lastVisit })
                             }
                         )
-                        if (i + 1 == docs.length) return resolve(docs)
+                        if (i + 1 == docs.length) return resolve(newArr)
                     })
                 })
             })
