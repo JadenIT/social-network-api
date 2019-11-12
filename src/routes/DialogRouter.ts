@@ -12,11 +12,9 @@ class DialogRouter implements RouterInterface {
     CreateDialog(req: Request, res: Response) {
         const { users } = req.body
 
-        if (users.some((el: any) => el == req.auth.user_id)) {
-            DialogController.createDialog(users)
-                .then((dialogID) => res.send({ dialogID }))
-                .catch((error) => res.send({ error }))
-        }
+        DialogController.createDialog(users)
+            .then((dialogID) => res.send({ dialogID }))
+            .catch((e) => res.end({ error: e }))
     }
 
     CreateMessage(req: Request, res: Response): void {
@@ -27,7 +25,7 @@ class DialogRouter implements RouterInterface {
             .catch((error) => res.send({ error }))
     }
 
-    async GetMessages(req: Request, res: Response) {
+    GetMessages(req: Request, res: Response) {
         const username = req.auth.username
         const query = req.query.query
         DialogController.getMessages(username, query)

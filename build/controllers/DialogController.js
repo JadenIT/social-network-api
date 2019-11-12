@@ -38,134 +38,121 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var _ = require('lodash');
 var uniqid = require('uniqid');
 var UserModel_1 = require("../models/UserModel");
+var DialogModel_1 = require("../models/DialogModel");
+var mongoose = require('mongoose');
+var ObjectId = mongoose.Types.ObjectId;
 var DialogController = (function () {
     function DialogController() {
     }
     DialogController.prototype.createDialog = function (users) {
         return new Promise(function (resolve, reject) {
-            UserModel_1.default.find({ 'messages.users': { $eq: users } })
-                .then(function (response) {
-                if (response.length > 0) {
-                    response.map(function (el, k) {
-                        el.messages.map(function (el) {
-                            if (_.isEqual(el.users.sort(), users.sort()))
-                                return resolve(el.dialogID);
-                        });
-                    });
-                }
-                else {
-                    var dialogID_1 = uniqid();
-                    UserModel_1.default.updateMany({ _id: { $in: users } }, { $push: { messages: { lastVisit: Date.now(), dialogID: dialogID_1, users: users, messages: [] } } }, function (err, doc) {
-                        if (err)
-                            return reject(err);
-                        resolve(dialogID_1);
-                    });
-                }
-            })
-                .catch(function (error) { return reject(error); });
-        });
-    };
-    DialogController.prototype.createMessage = function (username, message, roomID) {
-        return new Promise(function (resolve, reject) {
-            UserModel_1.default.updateMany({ 'messages.dialogID': roomID }, { $push: { 'messages.$.messages': { message: message, username: username, timestamp: Date.now() } } }, function (err, res) {
+            DialogModel_1.default.findOne({ users: users }, function (err, doc) {
                 if (err)
-                    return reject(err);
-                UserModel_1.default.updateMany({ 'messages.dialogID': roomID }, { $set: { 'messages.$.lastVisit': Date.now() } }, function (err, res) {
+                    throw err;
+                if (doc)
+                    return resolve(doc._id);
+                new DialogModel_1.default({
+                    users: users,
+                    messages: [],
+                    lastVisit: Date.now()
+                }).save(function (err, res) {
                     if (err)
-                        return reject(err);
-                    resolve(res);
+                        throw err;
+                    var dialogID = res._id;
+                    UserModel_1.default.updateMany({ _id: { $in: users } }, { $push: { messages: res._id } }, function (err, res) {
+                        if (err)
+                            throw err;
+                        resolve(dialogID);
+                    });
                 });
             });
         });
     };
-    DialogController.prototype.getMessages = function (username, query) {
-        var _this = this;
+    DialogController.prototype.updateDialogLastVisit = function (dialogID, date) {
         return new Promise(function (resolve, reject) {
-            UserModel_1.default.findOne({ username: username }, { messages: 1 })
-                .then(function (res) { return __awaiter(_this, void 0, void 0, function () {
-                var messages, _loop_1, i;
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            messages = res.messages;
-                            if (messages.length == 0)
-                                return [2, resolve([])];
-                            _loop_1 = function (i) {
-                                var newArr_1;
+            DialogModel_1.default.updateOne({ _id: dialogID }, { $set: { lastVisit: date } }, function (err, res) {
+                if (err)
+                    reject(err);
+                resolve();
+            });
+        });
+    };
+    DialogController.prototype.createMessage = function (username, message, roomID) {
+        var self = this;
+        return new Promise(function (resolve, reject) {
+            DialogModel_1.default.updateOne({ _id: roomID }, { $push: { messages: { message: message, username: username, timestamp: Date.now() } } }, function (err, res) {
+                if (err)
+                    throw err;
+                self.updateDialogLastVisit(roomID, Date.now())
+                    .then(function (res) { return resolve(); })
+                    .catch(function (err) { return reject(err); });
+            });
+        });
+    };
+    DialogController.prototype.getMessages = function (username, query) {
+        return new Promise(function (resolve, reject) {
+            UserModel_1.default.findOne({ username: username }, { _id: 0 }, function (err, doc) {
+                if (err)
+                    throw err;
+                if (doc.messages.length == 0)
+                    return resolve([]);
+                DialogModel_1.default.aggregate([{ $match: { _id: { $in: doc.messages } } }, { $unset: ['messages', '__v'] }], function (err, docs) {
+                    return __awaiter(this, void 0, void 0, function () {
+                        var newArr;
+                        var _this = this;
+                        return __generator(this, function (_a) {
+                            if (err)
+                                throw err;
+                            newArr = [];
+                            docs.map(function (el, i) { return __awaiter(_this, void 0, void 0, function () {
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
-                                        case 0: return [4, UserModel_1.default.find({ _id: { $in: messages[i].users } }, { username: 1, avatar: 1, _id: 0 })
-                                                .then(function (res) { return (messages[i].users = res); })
-                                                .catch(function (error) { return reject(error); })];
+                                        case 0:
+                                            el.users = el.users.map(function (el) { return ObjectId(el); });
+                                            return [4, UserModel_1.default.aggregate([
+                                                    { $match: { $and: [{ _id: { $in: el.users } }, { username: { $not: { $eq: username } } }] } },
+                                                    { $unset: ['posts', 'about', 'subscribers', 'subscriptions', 'news', 'fullname', 'password', 'messages', '_id', '__v'] },
+                                                    { $match: { username: { $regex: query, $options: 'g' } } },
+                                                    { $set: { lastVisit: el.lastVisit, dialogID: el._id } },
+                                                    { $sort: { lastVisit: 1 } }
+                                                ], function (err, docs) {
+                                                    if (err)
+                                                        throw err;
+                                                    newArr = newArr.concat(docs);
+                                                })];
                                         case 1:
                                             _a.sent();
-                                            if (i + 1 == messages.length) {
-                                                newArr_1 = [];
-                                                messages.map(function (el, i) {
-                                                    el.users.map(function (el2) {
-                                                        if (el2.username != username)
-                                                            newArr_1.push({
-                                                                lastVisit: el.lastVisit,
-                                                                dialogID: el.dialogID,
-                                                                username: el2.username,
-                                                                avatar: el2.avatar
-                                                            });
-                                                        if (i + 1 == messages.length) {
-                                                            newArr_1.sort(function (a, b) {
-                                                                if (a.lastVisit > b.lastVisit) {
-                                                                    return -1;
-                                                                }
-                                                                else {
-                                                                    return 1;
-                                                                }
-                                                            });
-                                                            if (!query)
-                                                                return resolve(newArr_1);
-                                                            var queriedArr_1 = [];
-                                                            newArr_1.map(function (el, j) {
-                                                                if (el.username.match(new RegExp(query, 'i')))
-                                                                    queriedArr_1.push(el);
-                                                                if (j + 1 == newArr_1.length)
-                                                                    return resolve(queriedArr_1);
-                                                            });
-                                                        }
-                                                    });
-                                                });
-                                            }
+                                            if (i + 1 == docs.length)
+                                                return [2, resolve(newArr)];
                                             return [2];
                                     }
                                 });
-                            };
-                            i = 0;
-                            _a.label = 1;
-                        case 1:
-                            if (!(i < messages.length)) return [3, 4];
-                            return [5, _loop_1(i)];
-                        case 2:
-                            _a.sent();
-                            _a.label = 3;
-                        case 3:
-                            i++;
-                            return [3, 1];
-                        case 4: return [2];
-                    }
+                            }); });
+                            return [2];
+                        });
+                    });
                 });
-            }); })
-                .catch(function (error) { return reject(error); });
+            });
         });
     };
     DialogController.prototype.getDialog = function (dialogID) {
         return new Promise(function (resolve, reject) {
-            UserModel_1.default.findOne({ 'messages.dialogID': dialogID }, { messages: 1, _id: 0 }, function (err, res) {
-                res.messages.map(function (el) {
-                    if (el.dialogID == dialogID) {
-                        UserModel_1.default.find({ _id: { $in: el.users } }, { avatar: 1, _id: 0, username: 1 }, function (err, res) {
-                            if (err)
-                                return reject(err);
-                            el.users_2 = res;
-                            return resolve(el);
-                        });
+            DialogModel_1.default.findOne({ _id: dialogID }, { messages: 1, _id: 0, users: 1 }, function (err, res) {
+                if (err)
+                    throw err;
+                if (!res)
+                    return resolve([]);
+                res.users = res.users.map(function (el) { return ObjectId(el); });
+                UserModel_1.default.aggregate([
+                    {
+                        $match: { _id: { $in: res.users } }
+                    },
+                    {
+                        $unset: ['posts', 'about', 'subscribers', 'subscriptions', 'news', 'fullname', 'password', 'messages', '_id', '__v']
                     }
+                ], function (err, docs) {
+                    res.users = docs;
+                    resolve(res);
                 });
             });
         });
