@@ -4,6 +4,7 @@ import RouterInterface from '../interfaces/Router'
 
 class AuthRouter implements RouterInterface {
     router: Router
+
     constructor() {
         this.router = Router()
         this.routes()

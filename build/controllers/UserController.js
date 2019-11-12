@@ -1,9 +1,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
-var UserModel_1 = require("../models/UserModel");
 var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
-var index_1 = require("../config/index");
 var cookie = require('cookie');
+var UserModel_1 = require("../models/UserModel");
+var index_1 = require("../config/index");
 var storage_1 = require("../middlewares/storage");
 var UserController = (function () {
     function UserController() {
@@ -18,6 +18,13 @@ var UserController = (function () {
                 resolve(true);
             });
         });
+    };
+    UserController.prototype.logout = function (req, res) {
+        res.setHeader('Set-Cookie', cookie.serialize('token', null, {
+            maxAge: 0,
+            path: '/',
+        }));
+        res.send({ status: 'ok' });
     };
     UserController.prototype.createUser = function (req, res) {
         try {

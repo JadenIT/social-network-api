@@ -1,9 +1,9 @@
-import UserModel from '../models/UserModel'
 const bcrypt = require('bcrypt')
-import { Request, Response } from 'express'
 const jwt = require('jsonwebtoken')
-import Config from '../config/index'
 const cookie = require('cookie')
+import UserModel from '../models/UserModel'
+import { Request, Response } from 'express'
+import Config from '../config/index'
 import upload from '../middlewares/storage'
 
 class UserController {
@@ -15,6 +15,17 @@ class UserController {
                 resolve(true)
             })
         })
+    }
+
+    public logout(req: Request, res: Response) {
+        res.setHeader(
+            'Set-Cookie',
+            cookie.serialize('token', null, {
+                maxAge: 0,
+                path: '/',
+            })
+        )
+        res.send({ status: 'ok' })
     }
 
     public createUser(req: Request, res: Response) {
