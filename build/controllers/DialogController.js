@@ -54,7 +54,7 @@ var DialogController = (function () {
                 new DialogModel_1.default({
                     users: users,
                     messages: [],
-                    lastVisit: Date.now()
+                    lastVisit: Date.now(),
                 }).save(function (err, res) {
                     if (err)
                         throw err;
@@ -70,7 +70,11 @@ var DialogController = (function () {
     };
     DialogController.prototype.createMessage = function (username, message, roomID) {
         return new Promise(function (resolve, reject) {
-            DialogModel_1.default.updateOne({ _id: roomID }, { $push: { messages: { message: message, username: username, timestamp: Date.now() } } }, function (err, res) {
+            DialogModel_1.default.updateOne({ _id: roomID }, {
+                $push: {
+                    messages: { message: message, username: username, timestamp: Date.now() },
+                },
+            }, function (err, res) {
                 if (err)
                     throw err;
                 DialogModel_1.default.updateOne({ _id: roomID }, { $set: { lastVisit: Date.now() } }, function (err, res) {
@@ -101,37 +105,19 @@ var DialogController = (function () {
                                     switch (_a.label) {
                                         case 0:
                                             el.users = el.users.map(function (el) { return ObjectId(el); });
-                                            if (!query) return [3, 2];
-                                            return [4, UserModel_1.default.aggregate([
-                                                    { $match: { $and: [{ _id: { $in: el.users } }, { username: { $not: { $eq: username } } }] } },
-                                                    { $unset: ['posts', 'about', 'subscribers', 'subscriptions', 'news', 'fullname', 'password', 'messages', '_id', '__v'] },
-                                                    { $match: { username: { $regex: query, $options: 'i' } } },
-                                                    { $set: { lastVisit: el.lastVisit, dialogID: el._id } },
-                                                    { $sort: { lastVisit: 1 } }
-                                                ], function (err, docs) {
-                                                    if (err)
-                                                        throw err;
-                                                    newArr = newArr.concat(docs);
+                                            return [4, UserModel_1.default.findOne({ $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }, { username: { $regex: query, $options: 'i' } }] }, { username: 1, avatar: 1, _id: 0 }, function (err, res) {
+                                                    if (!res)
+                                                        return resolve([]);
+                                                    newArr = newArr.concat(res);
+                                                    el.dialogID = el._id;
+                                                    el.username = res.username;
+                                                    el.avatar = res.avatar;
+                                                    delete el.users;
                                                 })];
                                         case 1:
                                             _a.sent();
-                                            return [3, 4];
-                                        case 2: return [4, UserModel_1.default.aggregate([
-                                                { $match: { $and: [{ _id: { $in: el.users } }, { username: { $not: { $eq: username } } }] } },
-                                                { $unset: ['posts', 'about', 'subscribers', 'subscriptions', 'news', 'fullname', 'password', 'messages', '_id', '__v'] },
-                                                { $set: { lastVisit: el.lastVisit, dialogID: el._id } },
-                                                { $sort: { lastVisit: 1 } }
-                                            ], function (err, docs) {
-                                                if (err)
-                                                    throw err;
-                                                newArr = newArr.concat(docs);
-                                            })];
-                                        case 3:
-                                            _a.sent();
-                                            _a.label = 4;
-                                        case 4:
                                             if (i + 1 == docs.length)
-                                                return [2, resolve(newArr)];
+                                                return [2, resolve(docs)];
                                             return [2];
                                     }
                                 });
@@ -151,14 +137,7 @@ var DialogController = (function () {
                 if (!res)
                     return resolve([]);
                 res.users = res.users.map(function (el) { return ObjectId(el); });
-                UserModel_1.default.aggregate([
-                    {
-                        $match: { _id: { $in: res.users } }
-                    },
-                    {
-                        $unset: ['posts', 'about', 'subscribers', 'subscriptions', 'news', 'fullname', 'password', 'messages', '_id', '__v']
-                    }
-                ], function (err, docs) {
+                UserModel_1.default.find({ _id: { $in: res.users } }, { password: 0 }, function (err, docs) {
                     res.users = docs;
                     resolve(res);
                 });

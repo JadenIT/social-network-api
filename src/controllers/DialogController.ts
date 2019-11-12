@@ -17,7 +17,7 @@ class DialogController {
                 new DialogModel({
                     users: users,
                     messages: [],
-                    lastVisit: Date.now()
+                    lastVisit: Date.now(),
                 }).save(function(err: any, res: any) {
                     if (err) throw err
                     const dialogID = res._id
@@ -34,13 +34,21 @@ class DialogController {
 
     public createMessage(username: String, message: String, roomID: any) {
         return new Promise((resolve, reject) => {
-            DialogModel.updateOne({ _id: roomID }, { $push: { messages: { message, username, timestamp: Date.now() } } }, function(err: any, res: any) {
-                if (err) throw err
-                DialogModel.updateOne({ _id: roomID }, { $set: { lastVisit: Date.now() } }, function(err: any, res: any) {
-                    if (err) reject(err)
-                    resolve()
-                })
-            })
+            DialogModel.updateOne(
+                { _id: roomID },
+                {
+                    $push: {
+                        messages: { message, username, timestamp: Date.now() },
+                    },
+                },
+                function(err: any, res: any) {
+                    if (err) throw err
+                    DialogModel.updateOne({ _id: roomID }, { $set: { lastVisit: Date.now() } }, function(err: any, res: any) {
+                        if (err) reject(err)
+                        resolve()
+                    })
+                }
+            )
         })
     }
 
@@ -52,38 +60,22 @@ class DialogController {
                 DialogModel.aggregate([{ $match: { _id: { $in: doc.messages } } }, { $unset: ['messages', '__v'] }], async function(err: any, docs: any) {
                     if (err) throw err
                     let newArr: any = []
+
                     docs.map(async (el: any, i: any) => {
                         el.users = el.users.map((el: any) => ObjectId(el))
-                        if (query) {
-                            await UserModel.aggregate(
-                                [
-                                    { $match: { $and: [{ _id: { $in: el.users } }, { username: { $not: { $eq: username } } }] } },
-                                    { $unset: ['posts', 'about', 'subscribers', 'subscriptions', 'news', 'fullname', 'password', 'messages', '_id', '__v'] },
-                                    { $match: { username: { $regex: query, $options: 'i' } } },
-                                    { $set: { lastVisit: el.lastVisit, dialogID: el._id } },
-                                    { $sort: { lastVisit: 1 } }
-                                ],
-                                function(err: any, docs: any) {
-                                    if (err) throw err
-                                    newArr = newArr.concat(docs)
-                                }
-                            )
-                        } else {
-                            await UserModel.aggregate(
-                                [
-                                    { $match: { $and: [{ _id: { $in: el.users } }, { username: { $not: { $eq: username } } }] } },
-                                    { $unset: ['posts', 'about', 'subscribers', 'subscriptions', 'news', 'fullname', 'password', 'messages', '_id', '__v'] },
-                                    { $set: { lastVisit: el.lastVisit, dialogID: el._id } },
-                                    { $sort: { lastVisit: 1 } }
-                                ],
-                                function(err: any, docs: any) {
-                                    if (err) throw err
-                                    newArr = newArr.concat(docs)
-                                }
-                            )
-                        }
-
-                        if (i + 1 == docs.length) return resolve(newArr)
+                        await UserModel.findOne(
+                            { $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }, { username: { $regex: query, $options: 'i' } }] },
+                            { username: 1, avatar: 1, _id: 0 },
+                            function(err: any, res: any) {
+                                if (!res) return resolve([])
+                                newArr = newArr.concat(res)
+                                el.dialogID = el._id
+                                el.username = res.username
+                                el.avatar = res.avatar
+                                delete el.users
+                            }
+                        )
+                        if (i + 1 == docs.length) return resolve(docs)
                     })
                 })
             })
@@ -91,26 +83,15 @@ class DialogController {
     }
 
     public getDialog(dialogID: any) {
-        /* Group by - find simil stuff withoud duplicates */
         return new Promise((resolve, reject) => {
             DialogModel.findOne({ _id: dialogID }, { messages: 1, _id: 0, users: 1 }, function(err: any, res: any) {
                 if (err) throw err
                 if (!res) return resolve([])
                 res.users = res.users.map((el: any) => ObjectId(el))
-                UserModel.aggregate(
-                    [
-                        {
-                            $match: { _id: { $in: res.users } }
-                        },
-                        {
-                            $unset: ['posts', 'about', 'subscribers', 'subscriptions', 'news', 'fullname', 'password', 'messages', '_id', '__v']
-                        }
-                    ],
-                    function(err: any, docs: any) {
-                        res.users = docs
-                        resolve(res)
-                    }
-                )
+                UserModel.find({ _id: { $in: res.users } }, { password: 0 }, function(err: any, docs: any) {
+                    res.users = docs
+                    resolve(res)
+                })
             })
         })
     }

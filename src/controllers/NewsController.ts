@@ -4,13 +4,21 @@ class NewsController {
     private getNewsByArrOfSUbscriptions(arr: Array<String>) {
         return new Promise((resolve, reject) => {
             if (arr.length <= 0) return resolve([])
-            UserModel.find({ _id: { $in: arr } }, { _id: 0, username: 1, avatar: 1, fullname: 1, posts: 1 })
+            UserModel.find(
+                { _id: { $in: arr } },
+                {
+                    _id: 0,
+                    username: 1,
+                    avatar: 1,
+                    fullname: 1,
+                    posts: 1,
+                }
+            )
                 .then((response: any) => {
-
                     let newArr: any = []
 
-                    response.map((el) => {
-                        el.posts.map((el2) => {
+                    response.map(el => {
+                        el.posts.map(el2 => {
                             delete el2.username
                             delete el2.avatar
 
@@ -18,7 +26,7 @@ class NewsController {
                                 username: el.username,
                                 fullname: el.fullname,
                                 avatar: el.avatar,
-                                post: el2
+                                post: el2,
                             })
                         })
                     })

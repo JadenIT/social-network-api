@@ -7,7 +7,13 @@ var NewsController = (function () {
         return new Promise(function (resolve, reject) {
             if (arr.length <= 0)
                 return resolve([]);
-            UserModel_1.default.find({ _id: { $in: arr } }, { _id: 0, username: 1, avatar: 1, fullname: 1, posts: 1 })
+            UserModel_1.default.find({ _id: { $in: arr } }, {
+                _id: 0,
+                username: 1,
+                avatar: 1,
+                fullname: 1,
+                posts: 1,
+            })
                 .then(function (response) {
                 var newArr = [];
                 response.map(function (el) {
@@ -18,7 +24,7 @@ var NewsController = (function () {
                             username: el.username,
                             fullname: el.fullname,
                             avatar: el.avatar,
-                            post: el2
+                            post: el2,
                         });
                     });
                 });
