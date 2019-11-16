@@ -95,9 +95,10 @@ var UserController = (function () {
                 if (newPassword) {
                     bcrypt.hash(newPassword, 10).then(function (hash) { return (query.password = hash); }, function (error) { return res.send({ status: 'error', error: error }); });
                 }
+                console.log(newUsername);
                 UserModel_1.default.updateOne({ username: oldUsername }, query)
                     .then(function (onResolved) {
-                    jwt.sign({ username: newUsername ? newUsername : oldUsername }, index_1.default.JWT_KEY, function (err, token) {
+                    jwt.sign({ username: newUsername ? newUsername : oldUsername, user_id: req.auth.user_id }, index_1.default.JWT_KEY, function (err, token) {
                         res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                             maxAge: 60 * 60 * 24 * 7,
                             path: '/',

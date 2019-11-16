@@ -97,9 +97,11 @@ class UserController {
                     )
                 }
 
+                console.log(newUsername)
+
                 UserModel.updateOne({ username: oldUsername }, query)
                     .then((onResolved: any) => {
-                        jwt.sign({ username: newUsername ? newUsername : oldUsername }, Config.JWT_KEY, (err: any, token: any) => {
+                        jwt.sign({ username: newUsername ? newUsername : oldUsername, user_id: req.auth.user_id }, Config.JWT_KEY, (err: any, token: any) => {
                             res.setHeader(
                                 'Set-Cookie',
                                 cookie.serialize('token', token, {
