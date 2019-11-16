@@ -18,7 +18,7 @@ var AuthController = (function () {
                 bcrypt.compare(password_1, doc.password, function (err, hash) {
                     if (!hash)
                         return res.send({ status: 'error', error: 'Incorrect password' });
-                    jwt.sign({ user_id: doc.user_id, username: username_1 }, index_1.default.JWT_KEY, function (err, token) {
+                    jwt.sign({ user_id: doc._id, username: username_1 }, index_1.default.JWT_KEY, function (err, token) {
                         res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                             maxAge: 60 * 60 * 24 * 7,
                             path: '/',

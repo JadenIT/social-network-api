@@ -67,7 +67,7 @@ class UserController {
 
     public updateUser(req: Request, res: Response) {
         try {
-            upload(req, res, (err: Error) => {
+            upload(req, res, async (err: Error) => {
                 if (err) return res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' })
                 const { oldUsername, newUsername, newPassword, newAbout, newFullname } = req.body
                 const fileURL = req.files[0] ? req.files[0].location : null
@@ -82,7 +82,7 @@ class UserController {
                 }
 
                 if (newUsername) {
-                    UserController.isUsernameIsFree(newUsername)
+                    await UserController.isUsernameIsFree(newUsername)
                         .then((onResolved: any) => {
                             if (!onResolved) return res.send({ status: 'error', error: 'Имя занято' })
                             query.username = newUsername
@@ -91,15 +91,13 @@ class UserController {
                 }
 
                 if (newPassword) {
-                    bcrypt.hash(newPassword, 10).then(
+                    await bcrypt.hash(newPassword, 10).then(
                         (hash: any) => (query.password = hash),
                         (error: any) => res.send({ status: 'error', error })
                     )
                 }
-
-                console.log(newUsername)
-
-                UserModel.updateOne({ username: oldUsername }, query)
+                console.log(query)
+                UserModel.updateOne({ _id: req.auth.user_id }, query)
                     .then((onResolved: any) => {
                         jwt.sign({ username: newUsername ? newUsername : oldUsername, user_id: req.auth.user_id }, Config.JWT_KEY, (err: any, token: any) => {
                             res.setHeader(

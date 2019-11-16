@@ -33,6 +33,7 @@ var EntryController = (function () {
             UserModel_1.default.find({ $and: [{ _id: { $eq: { usernamePostedPostId: usernamePostedPostId_1 } } }, { 'posts._id': { $eq: postID_1 } }, { 'posts.likedBy._id': { $eq: usernameID_1 } }] }, { posts: 1 }, function (error, doc) {
                 if (doc)
                     return res.send({ status: 'error', error: 'Already liked' });
+                console.log(usernameID_1);
                 UserModel_1.default.updateOne({ $and: [{ _id: { $eq: usernamePostedPostId_1 } }, { 'posts._id': { $eq: postID_1 } }] }, { $push: { 'posts.$.likedBy': { _id: usernameID_1 } } }, function (error, doc) {
                     if (error)
                         throw error;

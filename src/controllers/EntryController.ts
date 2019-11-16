@@ -37,7 +37,7 @@ class EntryController {
                 { posts: 1 },
                 (error: any, doc: any) => {
                     if (doc) return res.send({ status: 'error', error: 'Already liked' })
-
+                    console.log(usernameID)
                     UserModel.updateOne(
                         { $and: [{ _id: { $eq: usernamePostedPostId } }, { 'posts._id': { $eq: postID } }] },
                         { $push: { 'posts.$.likedBy': { _id: usernameID } } },
