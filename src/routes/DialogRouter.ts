@@ -34,7 +34,8 @@ class DialogRouter implements RouterInterface {
 
     getDialog(req: Request, res: Response): void {
         const { dialogID } = req.query
-        DialogController.getDialog(dialogID)
+        const { username } = req.auth
+        DialogController.getDialog(dialogID, username)
             .then(dialog => res.send({ dialog }))
             .catch(error => res.send({ error }))
     }

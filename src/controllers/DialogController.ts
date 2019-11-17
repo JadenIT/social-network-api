@@ -1,6 +1,7 @@
 const _ = require('lodash')
 import UserModel from '../models/UserModel'
 import DialogModel from '../models/DialogModel'
+import { urlencoded } from 'body-parser'
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
 
@@ -92,15 +93,20 @@ class DialogController {
         })
     }
 
-    public getDialog(dialogID: any) {
+    public getDialog(dialogID: any, username: any) {
         return new Promise((resolve, reject) => {
             DialogModel.findOne({ _id: dialogID }, { messages: 1, _id: 0, users: 1 }, function(err: any, res: any) {
                 if (err) throw err
                 if (!res) return resolve([])
+                let newObj = {
+                    messages: res.messages,
+                    user: '',
+                    users: [],
+                }
                 res.users = res.users.map((el: any) => ObjectId(el))
-                UserModel.find({ _id: { $in: res.users } }, { password: 0 }, function(err: any, docs: any) {
-                    res.users = docs
-                    resolve(res)
+                UserModel.find({ _id: res.users }, function(err: any, docs: any) {
+                    newObj.users = docs
+                    return resolve(newObj)
                 })
             })
         })

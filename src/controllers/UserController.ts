@@ -74,12 +74,8 @@ class UserController {
                 let query = {}
                 if (fileURL) query.avatar = fileURL.toString('base64')
                 if (newFullname) query.fullname = newFullname
-                query.about = newAbout
-                if (!newAbout) {
-                    query.about = ''
-                } else {
-                    query.about = newAbout
-                }
+
+                !newAbout ? (query.about = '') : (query.about = newAbout)
 
                 if (newUsername) {
                     await UserController.isUsernameIsFree(newUsername)
@@ -97,7 +93,7 @@ class UserController {
                     )
                 }
                 console.log(query)
-                UserModel.updateOne({ _id: req.auth.user_id }, query)
+                UserModel.updateOne({ _id: req.auth.user_id }, { $set: query })
                     .then((onResolved: any) => {
                         jwt.sign({ username: newUsername ? newUsername : oldUsername, user_id: req.auth.user_id }, Config.JWT_KEY, (err: any, token: any) => {
                             res.setHeader(

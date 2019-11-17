@@ -117,13 +117,7 @@ var UserController = (function () {
                                 query.avatar = fileURL.toString('base64');
                             if (newFullname)
                                 query.fullname = newFullname;
-                            query.about = newAbout;
-                            if (!newAbout) {
-                                query.about = '';
-                            }
-                            else {
-                                query.about = newAbout;
-                            }
+                            !newAbout ? (query.about = '') : (query.about = newAbout);
                             if (!newUsername) return [3, 2];
                             return [4, UserController.isUsernameIsFree(newUsername)
                                     .then(function (onResolved) {
@@ -143,7 +137,7 @@ var UserController = (function () {
                             _b.label = 4;
                         case 4:
                             console.log(query);
-                            UserModel_1.default.updateOne({ _id: req.auth.user_id }, query)
+                            UserModel_1.default.updateOne({ _id: req.auth.user_id }, { $set: query })
                                 .then(function (onResolved) {
                                 jwt.sign({ username: newUsername ? newUsername : oldUsername, user_id: req.auth.user_id }, index_1.default.JWT_KEY, function (err, token) {
                                     res.setHeader('Set-Cookie', cookie.serialize('token', token, {

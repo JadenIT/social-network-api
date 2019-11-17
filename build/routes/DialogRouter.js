@@ -29,7 +29,8 @@ var DialogRouter = (function () {
     };
     DialogRouter.prototype.getDialog = function (req, res) {
         var dialogID = req.query.dialogID;
-        DialogController_1.default.getDialog(dialogID)
+        var username = req.auth.username;
+        DialogController_1.default.getDialog(dialogID, username)
             .then(function (dialog) { return res.send({ dialog: dialog }); })
             .catch(function (error) { return res.send({ error: error }); });
     };

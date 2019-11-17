@@ -141,17 +141,22 @@ var DialogController = (function () {
             });
         });
     };
-    DialogController.prototype.getDialog = function (dialogID) {
+    DialogController.prototype.getDialog = function (dialogID, username) {
         return new Promise(function (resolve, reject) {
             DialogModel_1.default.findOne({ _id: dialogID }, { messages: 1, _id: 0, users: 1 }, function (err, res) {
                 if (err)
                     throw err;
                 if (!res)
                     return resolve([]);
+                var newObj = {
+                    messages: res.messages,
+                    user: '',
+                    users: [],
+                };
                 res.users = res.users.map(function (el) { return ObjectId(el); });
-                UserModel_1.default.find({ _id: { $in: res.users } }, { password: 0 }, function (err, docs) {
-                    res.users = docs;
-                    resolve(res);
+                UserModel_1.default.find({ _id: res.users }, function (err, docs) {
+                    newObj.users = docs;
+                    return resolve(newObj);
                 });
             });
         });
