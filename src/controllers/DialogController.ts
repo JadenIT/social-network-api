@@ -1,7 +1,6 @@
 const _ = require('lodash')
 import UserModel from '../models/UserModel'
 import DialogModel from '../models/DialogModel'
-import { urlencoded } from 'body-parser'
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
 
