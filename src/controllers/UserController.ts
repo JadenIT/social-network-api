@@ -33,10 +33,9 @@ class UserController {
         try {
             const { fullName, username, password } = req.body
             if (!_.trim(username) || !_.trim(password) || !_.trim(fullName)) return res.send({ status: 'error', error: 'Не все поля заполнены' })
-
-            if(_.trim(username).length < 4)  return res.send({ status: 'error', error: 'Имя пользователя должно содержать более 3 символов' })
-            if(_.trim(password).length < 4)  return res.send({ status: 'error', error: 'Пароль должен содержать более 3 символов' })
-            if(_.trim(fullName).length < 2)  return res.send({ status: 'error', error: 'Имя и фамилия должны содержать более 1 символа' })
+            if (_.trim(username).length < 4) return res.send({ status: 'error', error: 'Имя пользователя должно содержать более 3 символов' })
+            if (_.trim(password).length < 4) return res.send({ status: 'error', error: 'Пароль должен содержать более 3 символов' })
+            if (_.trim(fullName).length < 2) return res.send({ status: 'error', error: 'Имя и фамилия должны содержать более 1 символа' })
 
             UserController.isUsernameIsFree('username')
                 .then(isFree => {
@@ -74,14 +73,19 @@ class UserController {
             upload(req, res, async (err: Error) => {
                 if (err) return res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' })
                 const { oldUsername, newUsername, newPassword, newAbout, newFullname } = req.body
+
                 const fileURL = req.files[0] ? req.files[0].location : null
                 let query = {}
                 if (fileURL) query.avatar = fileURL.toString('base64')
-                if (newFullname) query.fullname = newFullname
+                if (newFullname) {
+                    if (_.trim(newFullname).length < 2) return res.send({ status: 'error', error: 'Имя и фамилия должны содержать более 1 символа' })
+                    query.fullname = newFullname
+                }
 
                 !newAbout ? (query.about = '') : (query.about = newAbout)
 
                 if (newUsername) {
+                    if (_.trim(newUsername).length < 4) return res.send({ status: 'error', error: 'Имя пользователя должно содержать более 3 символов' })
                     await UserController.isUsernameIsFree(newUsername)
                         .then((onResolved: any) => {
                             if (!onResolved) return res.send({ status: 'error', error: 'Имя занято' })
@@ -91,12 +95,12 @@ class UserController {
                 }
 
                 if (newPassword) {
+                    if (_.trim(newPassword).length < 4) return res.send({ status: 'error', error: 'Пароль должен содержать более 3 символов' })
                     await bcrypt.hash(newPassword, 10).then(
                         (hash: any) => (query.password = hash),
                         (error: any) => res.send({ status: 'error', error })
                     )
                 }
-                console.log(query)
                 UserModel.updateOne({ _id: req.auth.user_id }, { $set: query })
                     .then((onResolved: any) => {
                         jwt.sign({ username: newUsername ? newUsername : oldUsername, user_id: req.auth.user_id }, Config.JWT_KEY, (err: any, token: any) => {

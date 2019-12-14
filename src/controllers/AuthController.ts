@@ -10,14 +10,13 @@ class AuthController {
     public login(req: Request, res: Response) {
         try {
             const { username, password } = req.body
-            // if (!_.trim(username) || !_.trim(password)) return res.send({ status: 'error', error: 'Пароль или имя пользователя не заполнено' })
-
+            if (!_.trim(username) || !_.trim(password)) return res.send({ status: 'error', error: 'Не все поля заполнены' })
 
             UserModel.findOne({ username }, function (err: any, doc: any) {
-                if (!doc) return res.send({ status: 'error', error: 'Incorrect username' })
+                if (!doc) return res.send({ status: 'error', error: 'Неправильное имя пользователя' })
                 if (err) return res.send({ status: 'error', error: err })
                 bcrypt.compare(password, doc.password, function (err: any, hash: any) {
-                    if (!hash) return res.send({ status: 'error', error: 'Incorrect password' })
+                    if (!hash) return res.send({ status: 'error', error: 'Неверный пароль' })
 
                     jwt.sign({ user_id: doc._id, username: username }, Config.JWT_KEY, (err: any, token: any) => {
                         res.setHeader(

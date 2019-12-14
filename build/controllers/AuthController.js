@@ -11,14 +11,16 @@ var AuthController = (function () {
     AuthController.prototype.login = function (req, res) {
         try {
             var _a = req.body, username_1 = _a.username, password_1 = _a.password;
+            if (!_.trim(username_1) || !_.trim(password_1))
+                return res.send({ status: 'error', error: 'Не все поля заполнены' });
             UserModel_1.default.findOne({ username: username_1 }, function (err, doc) {
                 if (!doc)
-                    return res.send({ status: 'error', error: 'Incorrect username' });
+                    return res.send({ status: 'error', error: 'Неправильное имя пользователя' });
                 if (err)
                     return res.send({ status: 'error', error: err });
                 bcrypt.compare(password_1, doc.password, function (err, hash) {
                     if (!hash)
-                        return res.send({ status: 'error', error: 'Incorrect password' });
+                        return res.send({ status: 'error', error: 'Неверный пароль' });
                     jwt.sign({ user_id: doc._id, username: username_1 }, config_1.default.JWT_KEY, function (err, token) {
                         res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                             maxAge: 60 * 60 * 24 * 7,

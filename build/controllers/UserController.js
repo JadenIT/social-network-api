@@ -118,10 +118,15 @@ var UserController = (function () {
                             query = {};
                             if (fileURL)
                                 query.avatar = fileURL.toString('base64');
-                            if (newFullname)
+                            if (newFullname) {
+                                if (_.trim(newFullname).length < 2)
+                                    return [2, res.send({ status: 'error', error: 'Имя и фамилия должны содержать более 1 символа' })];
                                 query.fullname = newFullname;
+                            }
                             !newAbout ? (query.about = '') : (query.about = newAbout);
                             if (!newUsername) return [3, 2];
+                            if (_.trim(newUsername).length < 4)
+                                return [2, res.send({ status: 'error', error: 'Имя пользователя должно содержать более 3 символов' })];
                             return [4, UserController.isUsernameIsFree(newUsername)
                                     .then(function (onResolved) {
                                     if (!onResolved)
@@ -134,12 +139,13 @@ var UserController = (function () {
                             _b.label = 2;
                         case 2:
                             if (!newPassword) return [3, 4];
+                            if (_.trim(newPassword).length < 4)
+                                return [2, res.send({ status: 'error', error: 'Пароль должен содержать более 3 символов' })];
                             return [4, bcrypt.hash(newPassword, 10).then(function (hash) { return (query.password = hash); }, function (error) { return res.send({ status: 'error', error: error }); })];
                         case 3:
                             _b.sent();
                             _b.label = 4;
                         case 4:
-                            console.log(query);
                             UserModel_1.default.updateOne({ _id: req.auth.user_id }, { $set: query })
                                 .then(function (onResolved) {
                                 jwt.sign({ username: newUsername ? newUsername : oldUsername, user_id: req.auth.user_id }, config_1.default.JWT_KEY, function (err, token) {
