@@ -2,7 +2,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var io = require('socket.io');
 var jwt = require('jsonwebtoken');
 var DialogController_1 = require("./controllers/DialogController");
-var index_1 = require("./config/index");
+var config_1 = require("./config");
 var Socket = (function () {
     function Socket(port) {
         var _this = this;
@@ -17,7 +17,7 @@ var Socket = (function () {
         jwt.verify(token, 'Some key', function (err, decoded) {
             if (!decoded)
                 return socket.to(roomID).emit('error', 'incorrect jwt');
-            var username = jwt.verify(token, index_1.default.JWT_KEY, function (err, decoded) { return decoded.username; });
+            var username = jwt.verify(token, config_1.default.JWT_KEY, function (err, decoded) { return decoded.username; });
             DialogController_1.default.createMessage(username, message, roomID)
                 .then(function (res) {
                 msgObj.username = decoded.username;

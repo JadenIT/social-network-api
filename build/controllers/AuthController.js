@@ -3,7 +3,8 @@ var bcrypt = require('bcrypt');
 var cookie = require('cookie');
 var UserModel_1 = require("../models/UserModel");
 var jwt = require('jsonwebtoken');
-var index_1 = require("../config/index");
+var _ = require('lodash');
+var config_1 = require("../config");
 var AuthController = (function () {
     function AuthController() {
     }
@@ -18,7 +19,7 @@ var AuthController = (function () {
                 bcrypt.compare(password_1, doc.password, function (err, hash) {
                     if (!hash)
                         return res.send({ status: 'error', error: 'Incorrect password' });
-                    jwt.sign({ user_id: doc._id, username: username_1 }, index_1.default.JWT_KEY, function (err, token) {
+                    jwt.sign({ user_id: doc._id, username: username_1 }, config_1.default.JWT_KEY, function (err, token) {
                         res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                             maxAge: 60 * 60 * 24 * 7,
                             path: '/',
@@ -37,7 +38,7 @@ var AuthController = (function () {
             var token_1 = req.cookies.token;
             if (!token_1)
                 return res.send({ isAuthorized: false, token: null });
-            jwt.verify(token_1, index_1.default.JWT_KEY, function (err, decoded) {
+            jwt.verify(token_1, config_1.default.JWT_KEY, function (err, decoded) {
                 if (err)
                     throw err;
                 res.send({

@@ -2,7 +2,7 @@ const io = require('socket.io')
 const jwt = require('jsonwebtoken')
 
 import DialogController from './controllers/DialogController'
-import Config from './config/index'
+import Config from './config'
 
 class Socket {
     socket: any

@@ -1,11 +1,6 @@
-const mongoose = require('mongoose')
-import Config from '../config/index'
+import Config from '../config'
 
-mongoose.connect(Config.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, (err: any) => {
-    if (err) throw err
-})
-
-const userSchema = new mongoose.Schema({
+const userSchema = new Config.mongoose.Schema({
     about: {
         type: String,
         default: null
@@ -39,6 +34,6 @@ const userSchema = new mongoose.Schema({
         type: Array
     }
 })
-const UserModel = mongoose.model('users', userSchema)
+const UserModel = Config.mongoose.model('users', userSchema)
 
 export default UserModel

@@ -38,8 +38,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 var cookie = require('cookie');
+var _ = require('lodash');
 var UserModel_1 = require("../models/UserModel");
-var index_1 = require("../config/index");
+var config_1 = require("../config");
 var storage_1 = require("../middlewares/storage");
 var UserController = (function () {
     function UserController() {
@@ -65,12 +66,14 @@ var UserController = (function () {
     UserController.prototype.createUser = function (req, res) {
         try {
             var _a = req.body, fullName_1 = _a.fullName, username_1 = _a.username, password_1 = _a.password;
-            if (!username_1)
-                return res.send({ status: 'error', error: 'Имя пользователяне заполнено' });
-            if (!password_1)
-                return res.send({ status: 'error', error: 'Пароль не заполнен' });
-            if (!fullName_1)
-                return res.send({ status: 'error', error: 'Имя не заполнено' });
+            if (!_.trim(username_1) || !_.trim(password_1) || !_.trim(fullName_1))
+                return res.send({ status: 'error', error: 'Не все поля заполнены' });
+            if (_.trim(username_1).length < 4)
+                return res.send({ status: 'error', error: 'Имя пользователя должно содержать более 3 символов' });
+            if (_.trim(password_1).length < 4)
+                return res.send({ status: 'error', error: 'Пароль должен содержать более 3 символов' });
+            if (_.trim(fullName_1).length < 2)
+                return res.send({ status: 'error', error: 'Имя и фамилия должны содержать более 1 символа' });
             UserController.isUsernameIsFree('username')
                 .then(function (isFree) {
                 if (!isFree)
@@ -82,7 +85,7 @@ var UserController = (function () {
                     userModelInstance
                         .save()
                         .then(function (doc) {
-                        jwt.sign({ user_id: doc._id, username: username_1 }, index_1.default.JWT_KEY, function (err, token) {
+                        jwt.sign({ user_id: doc._id, username: username_1 }, config_1.default.JWT_KEY, function (err, token) {
                             res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                                 maxAge: 60 * 60 * 24 * 7,
                                 path: '/',
@@ -139,7 +142,7 @@ var UserController = (function () {
                             console.log(query);
                             UserModel_1.default.updateOne({ _id: req.auth.user_id }, { $set: query })
                                 .then(function (onResolved) {
-                                jwt.sign({ username: newUsername ? newUsername : oldUsername, user_id: req.auth.user_id }, index_1.default.JWT_KEY, function (err, token) {
+                                jwt.sign({ username: newUsername ? newUsername : oldUsername, user_id: req.auth.user_id }, config_1.default.JWT_KEY, function (err, token) {
                                     res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                                         maxAge: 60 * 60 * 24 * 7,
                                         path: '/',

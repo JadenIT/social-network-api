@@ -55,14 +55,14 @@ class NewsController {
             let end = page * perpage
             let start = end - (perpage - 1) - 1
 
-            UserModel.findOne({ username: username }, { subscriptions: 1 }, function(error: any, doc: any) {
+            UserModel.findOne({ username: username }, { subscriptions: 1 }, function (error: any, doc: any) {
                 if (error) throw error
                 const { subscriptions } = doc || []
 
                 if (!subscriptions) return res.send([])
 
                 NewsController.getNewsByArrOfSubscriptions(subscriptions)
-                    .then((news: any) => res.send({news: news.splice(start, perpage}))
+                    .then((news: any) => res.send({ news: news.splice(start, perpage) }))
                     .catch((error: any) => res.send({ status: 'error', error }))
             })
         } catch (error) {

@@ -3,7 +3,7 @@ const multerS3 = require('multer-s3')
 var AWS = require('aws-sdk')
 const fs = require('fs')
 
-import Config from '../config/index'
+import Config from '../config'
 
 AWS.config.update({
     accessKeyId: Config.AWS_accessKeyId,
@@ -24,10 +24,10 @@ var storage = multerS3({
     s3,
     bucket: myBucket,
     acl: 'public-read',
-    metadata: function(req: any, file: any, cb: any) {
+    metadata: function (req: any, file: any, cb: any) {
         cb(null, { fieldName: 'TESTING_META_DATA!' })
     },
-    key: function(req: any, file: any, cb: any) {
+    key: function (req: any, file: any, cb: any) {
         const fileName = (Date.now().toString() + file.originalname).replace(/\s/g, '')
         cb(null, fileName)
     }
@@ -37,7 +37,7 @@ const upload = multer({
     checkFileType,
     storage: storage,
     limits: { fileSize: 1 * 1024 * 1024 },
-    fileFilter: function(req: any, file: any, cb: any) {
+    fileFilter: function (req: any, file: any, cb: any) {
         checkFileType(file, cb)
     }
 }).any()

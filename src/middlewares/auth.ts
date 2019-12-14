@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 const jwt = require('jsonwebtoken')
-import Config from '../config/index'
+import Config from '../config'
 const cookie = require('cookie')
 
 export default function auth(req: Request, res: Response, next: NextFunction) {

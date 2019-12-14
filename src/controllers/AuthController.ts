@@ -3,17 +3,22 @@ const cookie = require('cookie')
 import UserModel from '../models/UserModel'
 import { Request, Response } from 'express'
 const jwt = require('jsonwebtoken')
-import Config from '../config/index'
+const _ = require('lodash')
+import Config from '../config'
 
 class AuthController {
     public login(req: Request, res: Response) {
         try {
             const { username, password } = req.body
-            UserModel.findOne({ username }, function(err: any, doc: any) {
+            // if (!_.trim(username) || !_.trim(password)) return res.send({ status: 'error', error: 'Пароль или имя пользователя не заполнено' })
+
+
+            UserModel.findOne({ username }, function (err: any, doc: any) {
                 if (!doc) return res.send({ status: 'error', error: 'Incorrect username' })
                 if (err) return res.send({ status: 'error', error: err })
-                bcrypt.compare(password, doc.password, function(err: any, hash: any) {
+                bcrypt.compare(password, doc.password, function (err: any, hash: any) {
                     if (!hash) return res.send({ status: 'error', error: 'Incorrect password' })
+
                     jwt.sign({ user_id: doc._id, username: username }, Config.JWT_KEY, (err: any, token: any) => {
                         res.setHeader(
                             'Set-Cookie',

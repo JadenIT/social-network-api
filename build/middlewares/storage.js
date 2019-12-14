@@ -3,10 +3,10 @@ var multer = require('multer');
 var multerS3 = require('multer-s3');
 var AWS = require('aws-sdk');
 var fs = require('fs');
-var index_1 = require("../config/index");
+var config_1 = require("../config");
 AWS.config.update({
-    accessKeyId: index_1.default.AWS_accessKeyId,
-    secretAccessKey: index_1.default.AWS_secretAccessKey
+    accessKeyId: config_1.default.AWS_accessKeyId,
+    secretAccessKey: config_1.default.AWS_secretAccessKey
 });
 var s3 = new AWS.S3();
 var myBucket = 'social-network-1601';

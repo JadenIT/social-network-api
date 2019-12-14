@@ -1,11 +1,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
-var mongoose = require('mongoose');
-var index_1 = require("../config/index");
-mongoose.connect(index_1.default.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, function (err) {
-    if (err)
-        throw err;
-});
-var userSchema = new mongoose.Schema({
+var config_1 = require("../config");
+var userSchema = new config_1.default.mongoose.Schema({
     about: {
         type: String,
         default: null
@@ -39,5 +34,5 @@ var userSchema = new mongoose.Schema({
         type: Array
     }
 });
-var UserModel = mongoose.model('users', userSchema);
+var UserModel = config_1.default.mongoose.model('users', userSchema);
 exports.default = UserModel;

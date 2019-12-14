@@ -1,9 +1,10 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const cookie = require('cookie')
+const _ = require('lodash')
 import UserModel from '../models/UserModel'
 import { Request, Response } from 'express'
-import Config from '../config/index'
+import Config from '../config'
 import upload from '../middlewares/storage'
 
 class UserController {
@@ -31,9 +32,12 @@ class UserController {
     public createUser(req: Request, res: Response) {
         try {
             const { fullName, username, password } = req.body
-            if (!username) return res.send({ status: 'error', error: 'Имя пользователяне заполнено' })
-            if (!password) return res.send({ status: 'error', error: 'Пароль не заполнен' })
-            if (!fullName) return res.send({ status: 'error', error: 'Имя не заполнено' })
+            if (!_.trim(username) || !_.trim(password) || !_.trim(fullName)) return res.send({ status: 'error', error: 'Не все поля заполнены' })
+
+            if(_.trim(username).length < 4)  return res.send({ status: 'error', error: 'Имя пользователя должно содержать более 3 символов' })
+            if(_.trim(password).length < 4)  return res.send({ status: 'error', error: 'Пароль должен содержать более 3 символов' })
+            if(_.trim(fullName).length < 2)  return res.send({ status: 'error', error: 'Имя и фамилия должны содержать более 1 символа' })
+
             UserController.isUsernameIsFree('username')
                 .then(isFree => {
                     if (!isFree) return res.send({ status: 'error', error: 'Имя занято' })
@@ -159,7 +163,7 @@ class UserController {
         try {
             const { usernameToSubscribeID } = req.body
             const usernameID = req.auth.user_id
-            UserModel.findOne({ _id: usernameID }, function(error: any, doc: any) {
+            UserModel.findOne({ _id: usernameID }, function (error: any, doc: any) {
                 const { subscriptions } = doc
 
                 if (subscriptions.includes(usernameToSubscribeID)) return res.send({ status: 'error', error: 'Already subscribed' })
