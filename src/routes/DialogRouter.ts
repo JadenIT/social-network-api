@@ -1,7 +1,7 @@
-import { Router, Request, Response } from 'express'
+import { RouterInterface, Req, Res } from '../interfaces/index'
 import DialogController from '../controllers/DialogController'
-import RouterInterface from '../interfaces/Router'
 import auth from '../middlewares/auth'
+import { Router } from 'express'
 
 class DialogRouter implements RouterInterface {
     router: Router
@@ -9,14 +9,14 @@ class DialogRouter implements RouterInterface {
         this.router = Router()
         this.routes()
     }
-    createDialog(req: Request, res: Response) {
+    createDialog(req: Req, res: Res) {
         const { users } = req.body
         DialogController.createDialog(users)
             .then(dialogID => res.send({ dialogID }))
             .catch(e => res.end({ error: e }))
     }
 
-    createMessage(req: Request, res: Response): void {
+    createMessage(req: Req, res: Res): void {
         const { message, dialogID } = req.body
         const { username } = req.auth
         DialogController.createMessage(username, message, dialogID)
@@ -24,7 +24,7 @@ class DialogRouter implements RouterInterface {
             .catch(error => res.send({ error }))
     }
 
-    getDialogsList(req: Request, res: Response) {
+    getDialogsList(req: Req, res: Res) {
         const username = req.auth.username
         const query = req.query.query
         DialogController.getDialogsList(username, query)
@@ -32,7 +32,7 @@ class DialogRouter implements RouterInterface {
             .catch(error => res.send({ error }))
     }
 
-    getDialog(req: Request, res: Response): void {
+    getDialog(req: Req, res: Res): void {
         const { dialogID } = req.query
         const { username } = req.auth
         DialogController.getDialog(dialogID, username)

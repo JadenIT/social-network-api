@@ -1,6 +1,6 @@
 import AuthController from '../controllers/AuthController'
 import { Router } from 'express'
-import RouterInterface from '../interfaces/Router'
+import { RouterInterface } from '../interfaces/index'
 
 class AuthRouter implements RouterInterface {
     router: Router

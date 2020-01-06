@@ -1,7 +1,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
-var express_1 = require("express");
 var DialogController_1 = require("../controllers/DialogController");
 var auth_1 = require("../middlewares/auth");
+var express_1 = require("express");
 var DialogRouter = (function () {
     function DialogRouter() {
         this.router = express_1.Router();

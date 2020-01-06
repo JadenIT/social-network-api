@@ -1,8 +1,8 @@
 import UserModel from '../models/UserModel'
-import { Request, Response } from 'express'
+import { Res, Req } from '../interfaces/index'
 
 class SearchController {
-    public searchByQueryForUsernameOrFullName(req: Request, res: Response) {
+    public searchByQueryForUsernameOrFullName(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
             const { query } = req.query
             const q = new RegExp(query, 'i')

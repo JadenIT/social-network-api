@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import SearchController from '../controllers/SearchController'
-import RouterInterface from '../interfaces/Router'
+import { RouterInterface } from '../interfaces/index'
 import auth from '../middlewares/auth'
 
 class SearchRouter implements RouterInterface {

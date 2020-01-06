@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import UserController from '../controllers/UserController'
-import RouterInterface from '../interfaces/Router'
+import { RouterInterface } from '../interfaces/index'
 import auth from '../middlewares/auth'
 
 class UserRouter implements RouterInterface {

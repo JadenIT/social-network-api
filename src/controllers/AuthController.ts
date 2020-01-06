@@ -1,13 +1,13 @@
 const bcrypt = require('bcrypt')
 const cookie = require('cookie')
 import UserModel from '../models/UserModel'
-import { Request, Response } from 'express'
+import { Res, Req } from '../interfaces/index'
 const jwt = require('jsonwebtoken')
 const _ = require('lodash')
 import Config from '../config'
 
 class AuthController {
-    public login(req: Request, res: Response) {
+    public login(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
             const { username, password } = req.body
             if (!_.trim(username) || !_.trim(password)) return reject('Не все поля заполнены')
@@ -31,7 +31,7 @@ class AuthController {
         }).then(response => res.send({ status: 'ok' })).catch(error => res.send({ status: 'error', error }))
     }
 
-    public Authorize(req: Request, res: Response) {
+    public Authorize(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
             const { token } = req.cookies
             if (!token) return res.send({ isAuthorized: false, token: null })

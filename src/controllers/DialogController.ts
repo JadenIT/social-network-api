@@ -96,7 +96,7 @@ class DialogController {
                 let newObj = {
                     messages: res.messages,
                     user: '',
-                    users: [],
+                    users: Array,
                 }
                 res.users = res.users.map((el: any) => ObjectId(el))
                 UserModel.find({ _id: res.users }, function (err: any, docs: any) {

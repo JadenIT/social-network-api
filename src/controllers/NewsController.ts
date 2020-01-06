@@ -1,5 +1,5 @@
 import UserModel from '../models/UserModel'
-import { Request, Response } from 'express'
+import { Res, Req } from '../interfaces/index'
 
 class NewsController {
     static getNewsByArrOfSubscriptions(arr: Array<String>) {
@@ -18,8 +18,8 @@ class NewsController {
                 .then((response: any) => {
                     let newArr: any = []
 
-                    response.map(el => {
-                        el.posts.map(el2 => {
+                    response.map((el: any) => {
+                        el.posts.map((el2: any) => {
                             delete el2.username
                             delete el2.avatar
 
@@ -32,7 +32,7 @@ class NewsController {
                         })
                     })
 
-                    newArr.sort((a, b) => {
+                    newArr.sort((a: any, b: any) => {
                         if (a.post.timestamp > b.post.timestamp) {
                             return -1
                         } else {
@@ -46,7 +46,7 @@ class NewsController {
         })
     }
 
-    public getNewsByUsername(req: Request, res: Response) {
+    public getNewsByUsername(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
             const { page, perpage } = req.query
             const username = req.auth.username

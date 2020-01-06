@@ -147,7 +147,7 @@ var DialogController = (function () {
                 var newObj = {
                     messages: res.messages,
                     user: '',
-                    users: [],
+                    users: Array,
                 };
                 res.users = res.users.map(function (el) { return ObjectId(el); });
                 UserModel_1.default.find({ _id: res.users }, function (err, docs) {

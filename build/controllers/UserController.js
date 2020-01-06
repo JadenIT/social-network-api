@@ -264,7 +264,7 @@ var UserController = (function () {
                         return resolve(newArr.sort(function () { return Math.random() - 0.5; }));
                     }
                 });
-            });
+            }).limit(16);
         }).then(function (Arr) { return res.send({ suggestions: Arr }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     return UserController;

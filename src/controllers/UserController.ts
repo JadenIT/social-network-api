@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken')
 const cookie = require('cookie')
 const _ = require('lodash')
 import UserModel from '../models/UserModel'
-import { Request, Response } from 'express'
+import { Res, Req, User } from '../interfaces/index'
 import Config from '../config'
 import upload from '../middlewares/storage'
 
@@ -18,7 +18,7 @@ class UserController {
         })
     }
 
-    public logout(req: Request, res: Response) {
+    public logout(req: Req, res: Res) {
         res.setHeader(
             'Set-Cookie',
             cookie.serialize('token', null, {
@@ -29,7 +29,7 @@ class UserController {
         res.send({ status: 'ok' })
     }
 
-    public createUser(req: Request, res: Response) {
+    public createUser(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
             const { fullName, username, password } = req.body
             if (!_.trim(username) || !_.trim(password) || !_.trim(fullName)) return res.send({ status: 'error', error: 'Не все поля заполнены' })
@@ -64,13 +64,15 @@ class UserController {
         }).then(response => res.send({ status: 'ok' })).catch(error => res.send({ status: 'error', error }))
     }
 
-    public updateUser(req: Request, res: Response) {
+    public updateUser(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
             upload(req, res, async (err: Error) => {
                 if (err) return reject('Произошла ошибка, скорее всего файл слишком большой')
                 const { oldUsername, newUsername, newPassword, newAbout, newFullname } = req.body
                 const fileURL = req.files[0] ? req.files[0].location : null
-                let query = {}
+                
+                let query: User = {}
+
                 if (fileURL) query.avatar = fileURL.toString('base64')
 
                 if (newFullname) {
@@ -97,7 +99,7 @@ class UserController {
                         (error: any) => res.send({ status: 'error', error })
                     )
                 }
-                UserModel.updateOne({ _id: req.auth.user_id }, { $set: query }, (error, result) => {
+                UserModel.updateOne({ _id: req.auth.user_id }, { $set: query }, (error: any, result: any) => {
                     if (error) return reject(error)
                     jwt.sign({ username: newUsername ? newUsername : oldUsername, user_id: req.auth.user_id }, Config.JWT_KEY, (err: any, token: any) => {
                         res.setHeader(
@@ -114,7 +116,7 @@ class UserController {
         }).then(response => res.send({ status: 'ok' })).catch(error => res.send({ status: 'error', error }))
     }
 
-    public getUserByUsername(req: Request, res: Response) {
+    public getUserByUsername(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
             const { username } = req.params
             UserModel.findOne({ username: username }, { password: 0 }, (error: any, doc: any) => {
@@ -140,7 +142,7 @@ class UserController {
         })
     }
 
-    public subscribeToUser(req: Request, res: Response) {
+    public subscribeToUser(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
             const { usernameToSubscribeID } = req.body
             const usernameID = req.auth.user_id
@@ -161,7 +163,7 @@ class UserController {
         }).then(response => res.send({ status: 'ok' })).catch(error => res.send({ status: 'error', error }))
     }
 
-    public unSubscribeFromUser(req: Request, res: Response) {
+    public unSubscribeFromUser(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
             const { usernameToSubscribeID } = req.body
             const usernameID = req.auth.user_id
@@ -182,13 +184,13 @@ class UserController {
         }).then(response => res.send({ status: 'ok' })).catch(error => res.send({ status: 'error', error }))
     }
 
-    public getSubscriptionsByUsername(req: Request, res: Response) {
+    public getSubscriptionsByUsername(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
             const { username } = req.params
-            UserModel.findOne({ username }, { subscriptions: 1, _id: 0 }, (error, doc) => {
+            UserModel.findOne({ username }, { subscriptions: 1, _id: 0 }, (error: any, doc: any) => {
                 if (error) reject(error)
                 if (!doc) return resolve([])
-                UserModel.find({ _id: { $in: doc.subscriptions } }, { username: 1, avatar: 1, fullname: 1, _id: 0 }, (error, docs) => {
+                UserModel.find({ _id: { $in: doc.subscriptions } }, { username: 1, avatar: 1, fullname: 1, _id: 0 }, (error: any, docs: any) => {
                     if (error) reject(error)
                     resolve(docs)
                 })
@@ -196,12 +198,12 @@ class UserController {
         }).then(Arr => res.send({ status: 'ok', subscriptions: Arr })).catch(error => res.send({ status: 'error', error }))
     }
 
-    public getSubscribersByUsername(req: Request, res: Response) {
+    public getSubscribersByUsername(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
             const { username } = req.params
-            UserModel.findOne({ username }, { subscribers: 1, _id: 0 }, (error, doc) => {
+            UserModel.findOne({ username }, { subscribers: 1, _id: 0 }, (error: any, doc: any) => {
                 if (!doc) return resolve([])
-                UserModel.find({ _id: { $in: doc.subscribers } }, { username: 1, avatar: 1, fullname: 1 }, (error, docs) => {
+                UserModel.find({ _id: { $in: doc.subscribers } }, { username: 1, avatar: 1, fullname: 1 }, (error: any, docs: any) => {
                     if (error) return reject(error)
                     resolve(docs)
                 })
@@ -209,7 +211,7 @@ class UserController {
         }).then(Arr => res.send({ subscribers: Arr })).catch(error => res.send({ status: 'error', error }))
     }
 
-    public suggestionsByUsername(req: Request, res: Response) {
+    public suggestionsByUsername(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
             const { username } = req.query
             UserModel.find({ username: { $not: { $eq: username } } }, (error: any, docs: any) => {
@@ -222,7 +224,7 @@ class UserController {
                         return resolve(newArr.sort(() => Math.random() - 0.5))
                     }
                 })
-            })
+            }).limit(16)
         }).then(Arr => res.send({ suggestions: Arr })).catch(error => res.send({ status: 'error', error }))
     }
 }

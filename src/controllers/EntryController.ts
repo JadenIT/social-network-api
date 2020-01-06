@@ -1,11 +1,11 @@
 const uniqid = require('uniqid')
-import { Request, Response } from 'express'
+import { Res, Req } from '../interfaces/index'
 import upload from '../middlewares/storage'
 import UserController from './UserController'
 import UserModel from '../models/UserModel'
 
 class EntryController {
-    public create(req: Request, res: Response) {
+    public create(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
             upload(req, res, (err: any) => {
                 if (err) return reject('Произошла ошибка, скорее всего файл слишком большой')
@@ -24,7 +24,7 @@ class EntryController {
         }).then(response => res.send({ status: 'ok' })).catch(error => res.send({ status: 'error', error }))
     }
 
-    public like(req: Request, res: Response) {
+    public like(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
             const { usernamePostedPostId, postID } = req.body
             const usernameID = req.auth.user_id
@@ -46,7 +46,7 @@ class EntryController {
         }).then(response => res.send({ status: 'ok' })).catch(error => res.send({ status: 'error', error }))
     }
 
-    public dislike(req: Request, res: Response) {
+    public dislike(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
             const { usernamePostedPostID, postID } = req.body
             const usernameID = req.auth.user_id

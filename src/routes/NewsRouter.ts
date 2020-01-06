@@ -1,6 +1,6 @@
 import NewsController from '../controllers/NewsController'
 import { Router } from 'express'
-import RouterInterface from '../interfaces/Router'
+import { RouterInterface } from '../interfaces/index'
 import auth from '../middlewares/auth'
 
 class NewsRouter implements RouterInterface {
