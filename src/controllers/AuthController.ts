@@ -8,16 +8,14 @@ import Config from '../config'
 
 class AuthController {
     public login(req: Request, res: Response) {
-        try {
+        return new Promise((resolve, reject) => {
             const { username, password } = req.body
-            if (!_.trim(username) || !_.trim(password)) return res.send({ status: 'error', error: 'Не все поля заполнены' })
-
+            if (!_.trim(username) || !_.trim(password)) return reject('Не все поля заполнены')
             UserModel.findOne({ username }, function (err: any, doc: any) {
-                if (!doc) return res.send({ status: 'error', error: 'Неправильное имя пользователя' })
-                if (err) return res.send({ status: 'error', error: err })
+                if (!doc) return reject('Неправильное имя пользователя')
+                if (err) return reject(err)
                 bcrypt.compare(password, doc.password, function (err: any, hash: any) {
-                    if (!hash) return res.send({ status: 'error', error: 'Неверный пароль' })
-
+                    if (!hash) return reject('Неверный пароль')
                     jwt.sign({ user_id: doc._id, username: username }, Config.JWT_KEY, (err: any, token: any) => {
                         res.setHeader(
                             'Set-Cookie',
@@ -26,29 +24,25 @@ class AuthController {
                                 path: '/',
                             })
                         )
-                        res.send({ status: 'ok' })
+                        resolve()
                     })
                 })
             })
-        } catch (e) {
-            res.send({ status: 'error', error: e })
-        }
+        }).then(response => res.send({ status: 'ok' })).catch(error => res.send({ status: 'error', error }))
     }
 
     public Authorize(req: Request, res: Response) {
-        try {
+        return new Promise((resolve, reject) => {
             const { token } = req.cookies
             if (!token) return res.send({ isAuthorized: false, token: null })
             jwt.verify(token, Config.JWT_KEY, (err: any, decoded: any) => {
-                if (err) throw err
-                res.send({
+                if (err) reject(err)
+                resolve({
                     isAuthorized: decoded,
                     token: token,
                 })
             })
-        } catch (e) {
-            res.send({ status: 'error', error: e })
-        }
+        }).then(response => res.send(response)).catch(error => res.send({ status: 'error', error }))
     }
 }
 

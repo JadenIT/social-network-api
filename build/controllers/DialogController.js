@@ -70,12 +70,8 @@ var DialogController = (function () {
     DialogController.prototype.createMessage = function (username, message, roomID) {
         return new Promise(function (resolve, reject) {
             DialogModel_1.default.updateOne({ _id: roomID }, {
-                $push: {
-                    messages: { message: message, username: username, timestamp: Date.now() },
-                },
-                $set: {
-                    lastVisit: Date.now(),
-                },
+                $push: { messages: { message: message, username: username, timestamp: Date.now() }, },
+                $set: { lastVisit: Date.now(), },
             }, function (err, res) {
                 if (err)
                     return reject(err);

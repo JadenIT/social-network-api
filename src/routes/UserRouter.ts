@@ -10,7 +10,7 @@ class UserRouter implements RouterInterface {
         this.router = Router()
         this.routes()
     }
-
+    
     routes() {
         this.router.post('/', UserController.createUser)
         this.router.get('/:username', auth, UserController.getUserByUsername)

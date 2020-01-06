@@ -9,49 +9,43 @@ var AuthController = (function () {
     function AuthController() {
     }
     AuthController.prototype.login = function (req, res) {
-        try {
-            var _a = req.body, username_1 = _a.username, password_1 = _a.password;
-            if (!_.trim(username_1) || !_.trim(password_1))
-                return res.send({ status: 'error', error: 'Не все поля заполнены' });
-            UserModel_1.default.findOne({ username: username_1 }, function (err, doc) {
+        return new Promise(function (resolve, reject) {
+            var _a = req.body, username = _a.username, password = _a.password;
+            if (!_.trim(username) || !_.trim(password))
+                return reject('Не все поля заполнены');
+            UserModel_1.default.findOne({ username: username }, function (err, doc) {
                 if (!doc)
-                    return res.send({ status: 'error', error: 'Неправильное имя пользователя' });
+                    return reject('Неправильное имя пользователя');
                 if (err)
-                    return res.send({ status: 'error', error: err });
-                bcrypt.compare(password_1, doc.password, function (err, hash) {
+                    return reject(err);
+                bcrypt.compare(password, doc.password, function (err, hash) {
                     if (!hash)
-                        return res.send({ status: 'error', error: 'Неверный пароль' });
-                    jwt.sign({ user_id: doc._id, username: username_1 }, config_1.default.JWT_KEY, function (err, token) {
+                        return reject('Неверный пароль');
+                    jwt.sign({ user_id: doc._id, username: username }, config_1.default.JWT_KEY, function (err, token) {
                         res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                             maxAge: 60 * 60 * 24 * 7,
                             path: '/',
                         }));
-                        res.send({ status: 'ok' });
+                        resolve();
                     });
                 });
             });
-        }
-        catch (e) {
-            res.send({ status: 'error', error: e });
-        }
+        }).then(function (response) { return res.send({ status: 'ok' }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     AuthController.prototype.Authorize = function (req, res) {
-        try {
-            var token_1 = req.cookies.token;
-            if (!token_1)
+        return new Promise(function (resolve, reject) {
+            var token = req.cookies.token;
+            if (!token)
                 return res.send({ isAuthorized: false, token: null });
-            jwt.verify(token_1, config_1.default.JWT_KEY, function (err, decoded) {
+            jwt.verify(token, config_1.default.JWT_KEY, function (err, decoded) {
                 if (err)
-                    throw err;
-                res.send({
+                    reject(err);
+                resolve({
                     isAuthorized: decoded,
-                    token: token_1,
+                    token: token,
                 });
             });
-        }
-        catch (e) {
-            res.send({ status: 'error', error: e });
-        }
+        }).then(function (response) { return res.send(response); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     return AuthController;
 }());

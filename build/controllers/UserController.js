@@ -64,55 +64,50 @@ var UserController = (function () {
         res.send({ status: 'ok' });
     };
     UserController.prototype.createUser = function (req, res) {
-        try {
-            var _a = req.body, fullName_1 = _a.fullName, username_1 = _a.username, password_1 = _a.password;
-            if (!_.trim(username_1) || !_.trim(password_1) || !_.trim(fullName_1))
+        return new Promise(function (resolve, reject) {
+            var _a = req.body, fullName = _a.fullName, username = _a.username, password = _a.password;
+            if (!_.trim(username) || !_.trim(password) || !_.trim(fullName))
                 return res.send({ status: 'error', error: 'Не все поля заполнены' });
-            if (_.trim(username_1).length < 4)
-                return res.send({ status: 'error', error: 'Имя пользователя должно содержать более 3 символов' });
-            if (_.trim(password_1).length < 4)
-                return res.send({ status: 'error', error: 'Пароль должен содержать более 3 символов' });
-            if (_.trim(fullName_1).length < 2)
-                return res.send({ status: 'error', error: 'Имя и фамилия должны содержать более 1 символа' });
+            if (_.trim(username).length < 4)
+                return reject('Имя пользователя должно содержать более 3 символов');
+            if (_.trim(password).length < 4)
+                return reject('Пароль должен содержать более 3 символов');
+            if (_.trim(fullName).length < 2)
+                return reject('Имя и фамилия должны содержать более 1 символа');
             UserController.isUsernameIsFree('username')
                 .then(function (isFree) {
                 if (!isFree)
-                    return res.send({ status: 'error', error: 'Имя занято' });
+                    return reject('Имя занято');
                 bcrypt
-                    .hash(password_1, 10)
+                    .hash(password, 10)
                     .then(function (hash) {
-                    var userModelInstance = new UserModel_1.default({ fullname: fullName_1, username: username_1, password: hash });
-                    userModelInstance
-                        .save()
-                        .then(function (doc) {
-                        jwt.sign({ user_id: doc._id, username: username_1 }, config_1.default.JWT_KEY, function (err, token) {
+                    var userModelInstance = new UserModel_1.default({ fullname: fullName, username: username, password: hash });
+                    userModelInstance.save().then(function (doc) {
+                        jwt.sign({ user_id: doc._id, username: username }, config_1.default.JWT_KEY, function (err, token) {
                             res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                                 maxAge: 60 * 60 * 24 * 7,
                                 path: '/',
                             }));
-                            res.send({ status: 'ok' });
+                            resolve();
                         });
                     })
-                        .catch(function (error) { return res.send({ status: 'error', error: error }); });
+                        .catch(function (err) { return reject(err); });
                 })
-                    .catch(function (error) { return res.send({ status: 'error', error: error }); });
+                    .catch(function (err) { return reject(err); });
             })
-                .catch(function (error) { return res.send({ status: 'error', error: error }); });
-        }
-        catch (error) {
-            res.send({ status: 'error', error: error });
-        }
+                .catch(function (err) { return reject(err); });
+        }).then(function (response) { return res.send({ status: 'ok' }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     UserController.prototype.updateUser = function (req, res) {
         var _this = this;
-        try {
+        return new Promise(function (resolve, reject) {
             storage_1.default(req, res, function (err) { return __awaiter(_this, void 0, void 0, function () {
                 var _a, oldUsername, newUsername, newPassword, newAbout, newFullname, fileURL, query;
                 return __generator(this, function (_b) {
                     switch (_b.label) {
                         case 0:
                             if (err)
-                                return [2, res.send({ status: 'error', error: 'Произошла ошибка, скорее всего файл слишком большой' })];
+                                return [2, reject('Произошла ошибка, скорее всего файл слишком большой')];
                             _a = req.body, oldUsername = _a.oldUsername, newUsername = _a.newUsername, newPassword = _a.newPassword, newAbout = _a.newAbout, newFullname = _a.newFullname;
                             fileURL = req.files[0] ? req.files[0].location : null;
                             query = {};
@@ -120,68 +115,55 @@ var UserController = (function () {
                                 query.avatar = fileURL.toString('base64');
                             if (newFullname) {
                                 if (_.trim(newFullname).length < 2)
-                                    return [2, res.send({ status: 'error', error: 'Имя и фамилия должны содержать более 1 символа' })];
+                                    return [2, reject('Имя и фамилия должны содержать более 1 символа')];
                                 query.fullname = newFullname;
                             }
                             !newAbout ? (query.about = '') : (query.about = newAbout);
                             if (!newUsername) return [3, 2];
                             if (_.trim(newUsername).length < 4)
-                                return [2, res.send({ status: 'error', error: 'Имя пользователя должно содержать более 3 символов' })];
+                                return [2, reject('Имя пользователя должно содержать более 3 символов')];
                             return [4, UserController.isUsernameIsFree(newUsername)
                                     .then(function (onResolved) {
                                     if (!onResolved)
-                                        return res.send({ status: 'error', error: 'Имя занято' });
+                                        return reject('Имя занято');
                                     query.username = newUsername;
                                 })
-                                    .catch(function (err) { return res.send({ status: 'error', err: err }); })];
+                                    .catch(function (err) { return reject(err); })];
                         case 1:
                             _b.sent();
                             _b.label = 2;
                         case 2:
                             if (!newPassword) return [3, 4];
                             if (_.trim(newPassword).length < 4)
-                                return [2, res.send({ status: 'error', error: 'Пароль должен содержать более 3 символов' })];
+                                return [2, reject('Пароль должен содержать более 3 символов')];
                             return [4, bcrypt.hash(newPassword, 10).then(function (hash) { return (query.password = hash); }, function (error) { return res.send({ status: 'error', error: error }); })];
                         case 3:
                             _b.sent();
                             _b.label = 4;
                         case 4:
-                            UserModel_1.default.updateOne({ _id: req.auth.user_id }, { $set: query })
-                                .then(function (onResolved) {
+                            UserModel_1.default.updateOne({ _id: req.auth.user_id }, { $set: query }, function (error, result) {
+                                if (error)
+                                    return reject(error);
                                 jwt.sign({ username: newUsername ? newUsername : oldUsername, user_id: req.auth.user_id }, config_1.default.JWT_KEY, function (err, token) {
                                     res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                                         maxAge: 60 * 60 * 24 * 7,
                                         path: '/',
                                     }));
-                                    res.send({ status: 'ok' });
+                                    resolve();
                                 });
-                            })
-                                .catch(function (error) { return res.send({ status: 'error', error: error }); });
+                            });
                             return [2];
                     }
                 });
             }); });
-        }
-        catch (error) {
-            res.send({ status: 'error', error: error });
-        }
+        }).then(function (response) { return res.send({ status: 'ok' }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     UserController.prototype.getUserByUsername = function (req, res) {
-        try {
+        return new Promise(function (resolve, reject) {
             var username = req.params.username;
-            UserModel_1.default.findOne({ username: username }, {
-                _id: 1,
-                username: 1,
-                fullname: 1,
-                posts: 1,
-                avatar: 1,
-                subscribers: 1,
-                subscriptions: 1,
-                news: 1,
-                about: 1,
-            }, function (error, doc) {
+            UserModel_1.default.findOne({ username: username }, { password: 0 }, function (error, doc) {
                 if (error)
-                    return res.send({ status: 'error', error: error });
+                    return reject(error);
                 doc &&
                     doc.posts.sort(function (a, b) {
                         if (a.timestamp > b.timestamp) {
@@ -191,12 +173,9 @@ var UserController = (function () {
                             return 1;
                         }
                     });
-                res.send({ user: doc });
+                resolve(doc);
             });
-        }
-        catch (error) {
-            res.send({ status: 'error', error: error });
-        }
+        }).then(function (user) { return res.send({ user: user }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     UserController.prototype.getUserIdByUsername = function (username) {
         return new Promise(function (resolve, reject) {
@@ -206,122 +185,87 @@ var UserController = (function () {
         });
     };
     UserController.prototype.subscribeToUser = function (req, res) {
-        try {
-            var usernameToSubscribeID_1 = req.body.usernameToSubscribeID;
-            var usernameID_1 = req.auth.user_id;
-            UserModel_1.default.findOne({ _id: usernameID_1 }, function (error, doc) {
+        return new Promise(function (resolve, reject) {
+            var usernameToSubscribeID = req.body.usernameToSubscribeID;
+            var usernameID = req.auth.user_id;
+            UserModel_1.default.findOne({ _id: usernameID }, function (error, doc) {
                 var subscriptions = doc.subscriptions;
-                if (subscriptions.includes(usernameToSubscribeID_1))
+                if (subscriptions.includes(usernameToSubscribeID))
                     return res.send({ status: 'error', error: 'Already subscribed' });
-                UserModel_1.default.updateOne({ _id: usernameID_1 }, { $push: { subscriptions: usernameToSubscribeID_1 } }, function (error) {
+                UserModel_1.default.updateOne({ _id: usernameID }, { $push: { subscriptions: usernameToSubscribeID } }, function (error) {
                     if (error)
                         return res.send({ status: 'error', error: error });
-                    UserModel_1.default.updateOne({ _id: usernameToSubscribeID_1 }, {
-                        $push: {
-                            subscribers: usernameID_1,
-                        },
-                    }, function (error) {
+                    UserModel_1.default.updateOne({ _id: usernameToSubscribeID }, { $push: { subscribers: usernameID, }, }, function (error) {
                         if (error)
-                            return res.send({ status: 'error', error: error });
-                        res.send({ status: 'ok' });
+                            return reject(error);
+                        resolve();
                     });
                 });
             });
-        }
-        catch (error) {
-            res.send({ status: 'error', error: error });
-        }
+        }).then(function (response) { return res.send({ status: 'ok' }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     UserController.prototype.unSubscribeFromUser = function (req, res) {
-        try {
-            var usernameToSubscribeID_2 = req.body.usernameToSubscribeID;
-            var usernameID_2 = req.auth.user_id;
-            UserModel_1.default.updateOne({ _id: usernameID_2 }, {
-                $pull: {
-                    subscriptions: usernameToSubscribeID_2,
-                },
-            }, function (error) {
+        return new Promise(function (resolve, reject) {
+            var usernameToSubscribeID = req.body.usernameToSubscribeID;
+            var usernameID = req.auth.user_id;
+            UserModel_1.default.updateOne({ _id: usernameID }, { $pull: { subscriptions: usernameToSubscribeID }, }, function (error) {
                 if (error)
-                    return res.send({ status: 'error', error: error });
-                UserModel_1.default.updateOne({ _id: usernameToSubscribeID_2 }, {
-                    $pull: {
-                        subscribers: usernameID_2,
-                    },
-                }, function (error) {
+                    return reject(error);
+                UserModel_1.default.updateOne({ _id: usernameToSubscribeID }, { $pull: { subscribers: usernameID, }, }, function (error) {
                     if (error)
-                        throw error;
-                    res.send({ status: 'ok' });
+                        return reject(error);
+                    resolve();
                 });
             });
-        }
-        catch (error) {
-            res.send({ status: 'error', error: error });
-        }
+        }).then(function (response) { return res.send({ status: 'ok' }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     UserController.prototype.getSubscriptionsByUsername = function (req, res) {
-        try {
+        return new Promise(function (resolve, reject) {
             var username = req.params.username;
-            UserModel_1.default.findOne({ username: username }, { subscriptions: 1, _id: 0 })
-                .then(function (result) {
-                if (!result)
-                    return res.send([]);
-                UserModel_1.default.find({ _id: { $in: result.subscriptions } }, { username: 1, avatar: 1, fullname: 1, _id: 0 })
-                    .then(function (result) { return res.send({ status: 'ok', subscriptions: result }); })
-                    .catch(function (error) { return res.send({ status: 'error', error: error }); });
-            })
-                .catch(function (error) { return res.send({ status: 'error', error: error }); });
-        }
-        catch (error) {
-            res.send({ status: 'error', error: error });
-        }
+            UserModel_1.default.findOne({ username: username }, { subscriptions: 1, _id: 0 }, function (error, doc) {
+                if (error)
+                    reject(error);
+                if (!doc)
+                    return resolve([]);
+                UserModel_1.default.find({ _id: { $in: doc.subscriptions } }, { username: 1, avatar: 1, fullname: 1, _id: 0 }, function (error, docs) {
+                    if (error)
+                        reject(error);
+                    resolve(docs);
+                });
+            });
+        }).then(function (Arr) { return res.send({ status: 'ok', subscriptions: Arr }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     UserController.prototype.getSubscribersByUsername = function (req, res) {
-        try {
+        return new Promise(function (resolve, reject) {
             var username = req.params.username;
-            UserModel_1.default.findOne({ username: username }, { subscribers: 1, _id: 0 })
-                .then(function (result) {
-                if (!result)
-                    return res.send([]);
-                UserModel_1.default.find({ _id: { $in: result.subscribers } }, { username: 1, avatar: 1, fullname: 1, _id: 0 })
-                    .then(function (result) { return res.send({ status: 'ok', subscribers: result }); })
-                    .catch(function (error) { return res.send({ status: 'error', error: error }); });
-            })
-                .catch(function (error) { return res.send({ status: 'error', error: error }); });
-        }
-        catch (error) {
-            res.send({ status: 'error', error: error });
-        }
+            UserModel_1.default.findOne({ username: username }, { subscribers: 1, _id: 0 }, function (error, doc) {
+                if (!doc)
+                    return resolve([]);
+                UserModel_1.default.find({ _id: { $in: doc.subscribers } }, { username: 1, avatar: 1, fullname: 1 }, function (error, docs) {
+                    if (error)
+                        return reject(error);
+                    resolve(docs);
+                });
+            });
+        }).then(function (Arr) { return res.send({ subscribers: Arr }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     UserController.prototype.suggestionsByUsername = function (req, res) {
-        try {
+        return new Promise(function (resolve, reject) {
             var username = req.query.username;
-            UserModel_1.default.aggregate([
-                {
-                    $match: {
-                        $and: [{ username: { $not: { $eq: username } } }],
-                    },
-                },
-                {
-                    $sort: {
-                        subscribers: -1,
-                    },
-                },
-            ], function (error, docs) {
+            UserModel_1.default.find({ username: { $not: { $eq: username } } }, function (error, docs) {
                 if (error)
-                    return res.send({ status: 'error', error: error });
+                    return reject(error);
                 if (docs.length === 0)
-                    return res.send([]);
+                    return resolve([]);
                 var newArr = [];
                 docs.map(function (el, i) {
                     newArr.push({ username: el.username, fullname: el.fullname, avatar: el.avatar });
-                    if (i + 1 == docs.length)
-                        return res.send({ suggestions: newArr });
+                    if (i + 1 == docs.length) {
+                        return resolve(newArr.sort(function () { return Math.random() - 0.5; }));
+                    }
                 });
-            }).limit(10);
-        }
-        catch (error) {
-            res.send({ status: 'error', error: error });
-        }
+            });
+        }).then(function (Arr) { return res.send({ suggestions: Arr }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     return UserController;
 }());

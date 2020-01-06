@@ -3,26 +3,17 @@ import { Request, Response } from 'express'
 
 class SearchController {
     public searchByQueryForUsernameOrFullName(req: Request, res: Response) {
-        try {
+        return new Promise((resolve, reject) => {
             const { query } = req.query
             const q = new RegExp(query, 'i')
             UserModel.find(
-                {
-                    $or: [{ username: q }, { fullname: q }],
-                },
-                {
-                    username: 1,
-                    fullname: 1,
-                    avatar: 1,
-                },
-                (error: any, docs: any) => {
-                    if (error) res.send({ status: 'error', error })
-                    res.send({ search: docs })
+                { $or: [{ username: q }, { fullname: q }], },
+                { password: 0 }, (err: any, docs: any) => {
+                    if (err) reject(err)
+                    resolve(docs)
                 }
             )
-        } catch (error) {
-            res.send({ status: 'error', error })
-        }
+        }).then(Arr => res.send({ search: Arr }))
     }
 }
 

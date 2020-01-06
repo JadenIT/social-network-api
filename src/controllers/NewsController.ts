@@ -42,32 +42,25 @@ class NewsController {
 
                     resolve(newArr)
                 })
-                .catch((error: any) => {
-                    reject(error)
-                })
+                .catch((error: any) => reject(error))
         })
     }
 
     public getNewsByUsername(req: Request, res: Response) {
-        try {
+        return new Promise((resolve, reject) => {
             const { page, perpage } = req.query
             const username = req.auth.username
             let end = page * perpage
             let start = end - (perpage - 1) - 1
-
-            UserModel.findOne({ username: username }, { subscriptions: 1 }, function (error: any, doc: any) {
-                if (error) throw error
+            UserModel.findOne({ username: username }, { subscriptions: 1 }, function (err: any, doc: any) {
+                if (err) reject(err)
                 const { subscriptions } = doc || []
-
-                if (!subscriptions) return res.send([])
-
+                if (!subscriptions) return resolve([])
                 NewsController.getNewsByArrOfSubscriptions(subscriptions)
-                    .then((news: any) => res.send({ news: news.splice(start, perpage) }))
-                    .catch((error: any) => res.send({ status: 'error', error }))
+                    .then((news: any) => resolve(news.splice(start, perpage)))
+                    .catch((err: any) => reject(err))
             })
-        } catch (error) {
-            res.send({ status: 'error', error })
-        }
+        }).then(news => res.send({ news: news })).catch(error => res.send({ status: 'error', error }))
     }
 }
 
