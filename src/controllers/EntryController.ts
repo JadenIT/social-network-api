@@ -1,8 +1,10 @@
 const uniqid = require('uniqid')
+const ObjectId = require('mongodb').ObjectID;
 import { Res, Req } from '../interfaces/index'
 import upload from '../middlewares/storage'
 import UserController from './UserController'
 import UserModel from '../models/UserModel'
+
 
 class EntryController {
     public create(req: Req, res: Res) {
@@ -28,16 +30,28 @@ class EntryController {
         return new Promise((resolve, reject) => {
             const { usernamePostedPostId, postID } = req.body
             const usernameID = req.auth.user_id
+            console.log(usernamePostedPostId, postID)
             UserModel.find(
-                { $and: [{ _id: { $eq: { usernamePostedPostId } } }, { 'posts._id': { $eq: postID } }, { 'posts.likedBy._id': { $eq: usernameID } }] },
+                {
+                    $and: [
+                        { _id: { $eq: usernamePostedPostId } },
+                        { 'posts._id': { $eq: postID } },
+                        { 'posts.likedBy._id': { $eq: usernameID } }
+                    ]
+                },
                 { posts: 1 },
                 (err: any, doc: any) => {
                     if (err) reject(err)
-                    if (doc) return reject('Already liked')
+                    if (doc && doc.lingth > 0) return reject('Already liked')
                     UserModel.updateOne(
-                        { $and: [{ _id: { $eq: usernamePostedPostId } }, { 'posts._id': { $eq: postID } }] },
+                        {
+                            $and: [
+                                { _id: { $eq: usernamePostedPostId } },
+                                { 'posts._id': { $eq: postID } }
+                            ]
+                        },
                         { $push: { 'posts.$.likedBy': { _id: usernameID } } }, (err: any, doc: any) => {
-                            if (err) reject(err)
+                            if (err) reject('err')
                             resolve()
                         }
                     )

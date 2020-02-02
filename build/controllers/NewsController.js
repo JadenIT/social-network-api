@@ -8,7 +8,7 @@ var NewsController = (function () {
             if (arr.length <= 0)
                 return resolve([]);
             UserModel_1.default.find({ _id: { $in: arr } }, {
-                _id: 0,
+                _id: 1,
                 username: 1,
                 avatar: 1,
                 fullname: 1,
@@ -21,6 +21,7 @@ var NewsController = (function () {
                         delete el2.username;
                         delete el2.avatar;
                         newArr.push({
+                            _id: el._id,
                             username: el.username,
                             fullname: el.fullname,
                             avatar: el.avatar,

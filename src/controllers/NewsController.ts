@@ -8,7 +8,7 @@ class NewsController {
             UserModel.find(
                 { _id: { $in: arr } },
                 {
-                    _id: 0,
+                    _id: 1,
                     username: 1,
                     avatar: 1,
                     fullname: 1,
@@ -24,6 +24,7 @@ class NewsController {
                             delete el2.avatar
 
                             newArr.push({
+                                _id: el._id,
                                 username: el.username,
                                 fullname: el.fullname,
                                 avatar: el.avatar,

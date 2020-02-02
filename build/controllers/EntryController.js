@@ -1,5 +1,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var uniqid = require('uniqid');
+var ObjectId = require('mongodb').ObjectID;
 var storage_1 = require("../middlewares/storage");
 var UserController_1 = require("./UserController");
 var UserModel_1 = require("../models/UserModel");
@@ -27,14 +28,26 @@ var EntryController = (function () {
         return new Promise(function (resolve, reject) {
             var _a = req.body, usernamePostedPostId = _a.usernamePostedPostId, postID = _a.postID;
             var usernameID = req.auth.user_id;
-            UserModel_1.default.find({ $and: [{ _id: { $eq: { usernamePostedPostId: usernamePostedPostId } } }, { 'posts._id': { $eq: postID } }, { 'posts.likedBy._id': { $eq: usernameID } }] }, { posts: 1 }, function (err, doc) {
+            console.log(usernamePostedPostId, postID);
+            UserModel_1.default.find({
+                $and: [
+                    { _id: { $eq: usernamePostedPostId } },
+                    { 'posts._id': { $eq: postID } },
+                    { 'posts.likedBy._id': { $eq: usernameID } }
+                ]
+            }, { posts: 1 }, function (err, doc) {
                 if (err)
                     reject(err);
-                if (doc)
+                if (doc && doc.lingth > 0)
                     return reject('Already liked');
-                UserModel_1.default.updateOne({ $and: [{ _id: { $eq: usernamePostedPostId } }, { 'posts._id': { $eq: postID } }] }, { $push: { 'posts.$.likedBy': { _id: usernameID } } }, function (err, doc) {
+                UserModel_1.default.updateOne({
+                    $and: [
+                        { _id: { $eq: usernamePostedPostId } },
+                        { 'posts._id': { $eq: postID } }
+                    ]
+                }, { $push: { 'posts.$.likedBy': { _id: usernameID } } }, function (err, doc) {
                     if (err)
-                        reject(err);
+                        reject('err');
                     resolve();
                 });
             });
