@@ -186,16 +186,16 @@ var UserController = (function () {
     };
     UserController.prototype.subscribeToUser = function (req, res) {
         return new Promise(function (resolve, reject) {
-            var usernameToSubscribeID = req.body.usernameToSubscribeID;
+            var user_id = req.body.user_id;
             var usernameID = req.auth.user_id;
             UserModel_1.default.findOne({ _id: usernameID }, function (error, doc) {
                 var subscriptions = doc.subscriptions;
-                if (subscriptions.includes(usernameToSubscribeID))
+                if (subscriptions.includes(user_id))
                     return res.send({ status: 'error', error: 'Already subscribed' });
-                UserModel_1.default.updateOne({ _id: usernameID }, { $push: { subscriptions: usernameToSubscribeID } }, function (error) {
+                UserModel_1.default.updateOne({ _id: usernameID }, { $push: { subscriptions: user_id } }, function (error) {
                     if (error)
                         return res.send({ status: 'error', error: error });
-                    UserModel_1.default.updateOne({ _id: usernameToSubscribeID }, { $push: { subscribers: usernameID, }, }, function (error) {
+                    UserModel_1.default.updateOne({ _id: user_id }, { $push: { subscribers: usernameID, }, }, function (error) {
                         if (error)
                             return reject(error);
                         resolve();
@@ -206,12 +206,12 @@ var UserController = (function () {
     };
     UserController.prototype.unSubscribeFromUser = function (req, res) {
         return new Promise(function (resolve, reject) {
-            var usernameToSubscribeID = req.body.usernameToSubscribeID;
+            var user_id = req.body.user_id;
             var usernameID = req.auth.user_id;
-            UserModel_1.default.updateOne({ _id: usernameID }, { $pull: { subscriptions: usernameToSubscribeID }, }, function (error) {
+            UserModel_1.default.updateOne({ _id: usernameID }, { $pull: { subscriptions: user_id }, }, function (error) {
                 if (error)
                     return reject(error);
-                UserModel_1.default.updateOne({ _id: usernameToSubscribeID }, { $pull: { subscribers: usernameID, }, }, function (error) {
+                UserModel_1.default.updateOne({ _id: user_id }, { $pull: { subscribers: usernameID, }, }, function (error) {
                     if (error)
                         return reject(error);
                     resolve();

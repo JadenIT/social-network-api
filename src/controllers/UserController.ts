@@ -144,15 +144,16 @@ class UserController {
 
     public subscribeToUser(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
-            const { usernameToSubscribeID } = req.body
+            /* user_id is username to subscriber */
+            const { user_id } = req.body
             const usernameID = req.auth.user_id
             UserModel.findOne({ _id: usernameID }, function (error: any, doc: any) {
                 const { subscriptions } = doc
-                if (subscriptions.includes(usernameToSubscribeID)) return res.send({ status: 'error', error: 'Already subscribed' })
-                UserModel.updateOne({ _id: usernameID }, { $push: { subscriptions: usernameToSubscribeID } }, (error: any) => {
+                if (subscriptions.includes(user_id)) return res.send({ status: 'error', error: 'Already subscribed' })
+                UserModel.updateOne({ _id: usernameID }, { $push: { subscriptions: user_id } }, (error: any) => {
                     if (error) return res.send({ status: 'error', error })
                     UserModel.updateOne(
-                        { _id: usernameToSubscribeID },
+                        { _id: user_id },
                         { $push: { subscribers: usernameID, }, }, (error: any) => {
                             if (error) return reject(error)
                             resolve()
@@ -165,15 +166,16 @@ class UserController {
 
     public unSubscribeFromUser(req: Req, res: Res) {
         return new Promise((resolve, reject) => {
-            const { usernameToSubscribeID } = req.body
+            /* user_id is username to unsubscriber */
+            const { user_id } = req.body
             const usernameID = req.auth.user_id
             UserModel.updateOne(
                 { _id: usernameID },
-                { $pull: { subscriptions: usernameToSubscribeID }, },
+                { $pull: { subscriptions: user_id }, },
                 (error: any) => {
                     if (error) return reject(error)
                     UserModel.updateOne(
-                        { _id: usernameToSubscribeID },
+                        { _id: user_id },
                         { $pull: { subscribers: usernameID, }, },
                         (error: any) => {
                             if (error) return reject(error)
