@@ -36,7 +36,7 @@ var storage = multerS3({
 const upload = multer({
     checkFileType,
     storage: storage,
-    limits: { fileSize: 1 * 1024 * 1024 },
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: function (req: any, file: any, cb: any) {
         checkFileType(file, cb)
     }
