@@ -3,13 +3,13 @@ var multer = require('multer');
 var multerS3 = require('multer-s3');
 var AWS = require('aws-sdk');
 var fs = require('fs');
-var config_1 = require("../config");
+var index_1 = require("../config/index");
 AWS.config.update({
-    accessKeyId: config_1.default.AWS_accessKeyId,
-    secretAccessKey: config_1.default.AWS_secretAccessKey
+    accessKeyId: index_1.default.AWSAccessKeyId,
+    secretAccessKey: index_1.default.AWSSecretKey
 });
 var s3 = new AWS.S3();
-var myBucket = 'social-network-1601';
+var myBucket = index_1.default.AWSBucket;
 if (!fs.existsSync('./uploads'))
     fs.mkdirSync('./uploads');
 var checkFileType = function (file, cb) {
@@ -22,7 +22,7 @@ var storage = multerS3({
     bucket: myBucket,
     acl: 'public-read',
     metadata: function (req, file, cb) {
-        cb(null, { fieldName: 'TESTING_META_DATA!' });
+        cb(null, { fieldName: '...' });
     },
     key: function (req, file, cb) {
         var fileName = (Date.now().toString() + file.originalname).replace(/\s/g, '');
@@ -32,7 +32,7 @@ var storage = multerS3({
 var upload = multer({
     checkFileType: checkFileType,
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: function (req, file, cb) {
         checkFileType(file, cb);
     }

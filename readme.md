@@ -1,9 +1,7 @@
-.env
-
-CLIENT=http://192.168.1.67:3000
-JWT_KEY=Some key
-
-USER_USERNAME_MIN_LENGTH=
-USER_FULLNAME_MIN_LENGTH=
-USER_PASSWORD_MIN_LENGTH=
+.env file musy have this properties
 MONGO_DB_URI=
+AWSAccessKeyId=
+AWSSecretKey=
+CLIENT_URL=
+JWT_KEY=
+AWSBucket=

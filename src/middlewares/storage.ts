@@ -3,15 +3,15 @@ const multerS3 = require('multer-s3')
 var AWS = require('aws-sdk')
 const fs = require('fs')
 
-import Config from '../config'
+import Config from '../config/index'
 
 AWS.config.update({
-    accessKeyId: Config.AWS_accessKeyId,
-    secretAccessKey: Config.AWS_secretAccessKey
+    accessKeyId: Config.AWSAccessKeyId,
+    secretAccessKey: Config.AWSSecretKey
 })
 
 var s3 = new AWS.S3()
-var myBucket = 'social-network-1601'
+var myBucket = Config.AWSBucket
 
 if (!fs.existsSync('./uploads')) fs.mkdirSync('./uploads')
 
@@ -25,7 +25,7 @@ var storage = multerS3({
     bucket: myBucket,
     acl: 'public-read',
     metadata: function (req: any, file: any, cb: any) {
-        cb(null, { fieldName: 'TESTING_META_DATA!' })
+        cb(null, { fieldName: '...' })
     },
     key: function (req: any, file: any, cb: any) {
         const fileName = (Date.now().toString() + file.originalname).replace(/\s/g, '')
@@ -36,7 +36,7 @@ var storage = multerS3({
 const upload = multer({
     checkFileType,
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: function (req: any, file: any, cb: any) {
         checkFileType(file, cb)
     }
