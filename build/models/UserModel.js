@@ -1,6 +1,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var config_1 = require("../config");
-var userSchema = new config_1.default.mongoose.Schema({
+var userSchema = new config_1.default.MONGOOSE.Schema({
     about: {
         type: String,
         default: null
@@ -34,5 +34,5 @@ var userSchema = new config_1.default.mongoose.Schema({
         type: Array
     }
 });
-var UserModel = config_1.default.mongoose.model('users', userSchema);
+var UserModel = config_1.default.MONGOOSE.model('users', userSchema);
 exports.default = UserModel;

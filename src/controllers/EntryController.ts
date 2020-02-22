@@ -1,5 +1,6 @@
 const uniqid = require('uniqid')
 const ObjectId = require('mongodb').ObjectID;
+
 import { Res, Req } from '../interfaces/index'
 import upload from '../middlewares/storage'
 import UserController from './UserController'

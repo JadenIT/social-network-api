@@ -3,13 +3,13 @@ var multer = require('multer');
 var multerS3 = require('multer-s3');
 var AWS = require('aws-sdk');
 var fs = require('fs');
-var index_1 = require("../config/index");
+var config_1 = require("../config");
 AWS.config.update({
-    accessKeyId: index_1.default.AWSAccessKeyId,
-    secretAccessKey: index_1.default.AWSSecretKey
+    accessKeyId: config_1.default.AWS_ACCESS_KEY_ID,
+    secretAccessKey: config_1.default.AWS_SECRET_KEY
 });
 var s3 = new AWS.S3();
-var myBucket = index_1.default.AWSBucket;
+var myBucket = config_1.default.AWS_BUCKET;
 if (!fs.existsSync('./uploads'))
     fs.mkdirSync('./uploads');
 var checkFileType = function (file, cb) {

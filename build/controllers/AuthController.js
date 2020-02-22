@@ -1,9 +1,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var bcrypt = require('bcrypt');
 var cookie = require('cookie');
-var UserModel_1 = require("../models/UserModel");
 var jwt = require('jsonwebtoken');
 var _ = require('lodash');
+var UserModel_1 = require("../models/UserModel");
 var config_1 = require("../config");
 var AuthController = (function () {
     function AuthController() {

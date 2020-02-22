@@ -3,15 +3,15 @@ const multerS3 = require('multer-s3')
 var AWS = require('aws-sdk')
 const fs = require('fs')
 
-import Config from '../config/index'
+import Config from '../config'
 
 AWS.config.update({
-    accessKeyId: Config.AWSAccessKeyId,
-    secretAccessKey: Config.AWSSecretKey
+    accessKeyId: Config.AWS_ACCESS_KEY_ID,
+    secretAccessKey: Config.AWS_SECRET_KEY
 })
 
 var s3 = new AWS.S3()
-var myBucket = Config.AWSBucket
+var myBucket = Config.AWS_BUCKET
 
 if (!fs.existsSync('./uploads')) fs.mkdirSync('./uploads')
 

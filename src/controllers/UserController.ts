@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const cookie = require('cookie')
 const _ = require('lodash')
+
 import UserModel from '../models/UserModel'
 import { Res, Req, User } from '../interfaces/index'
 import Config from '../config'
@@ -70,7 +71,7 @@ class UserController {
                 if (err) return reject('Произошла ошибка, скорее всего файл слишком большой')
                 const { oldUsername, newUsername, newPassword, newAbout, newFullname } = req.body
                 const fileURL = req.files[0] ? req.files[0].location : null
-                
+
                 let query: User = {}
 
                 if (fileURL) query.avatar = fileURL.toString('base64')

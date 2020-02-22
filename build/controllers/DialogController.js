@@ -36,10 +36,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var _ = require('lodash');
-var UserModel_1 = require("../models/UserModel");
-var DialogModel_1 = require("../models/DialogModel");
 var mongoose = require('mongoose');
 var ObjectId = mongoose.Types.ObjectId;
+var UserModel_1 = require("../models/UserModel");
+var DialogModel_1 = require("../models/DialogModel");
 var DialogController = (function () {
     function DialogController() {
     }
@@ -146,7 +146,6 @@ var DialogController = (function () {
                     return resolve([]);
                 var newObj = {
                     messages: res.messages,
-                    user: '',
                     users: Array,
                 };
                 res.users = res.users.map(function (el) { return ObjectId(el); });

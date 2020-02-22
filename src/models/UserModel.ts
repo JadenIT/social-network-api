@@ -1,6 +1,6 @@
 import Config from '../config'
 
-const userSchema = new Config.mongoose.Schema({
+const userSchema = new Config.MONGOOSE.Schema({
     about: {
         type: String,
         default: null
@@ -34,6 +34,6 @@ const userSchema = new Config.mongoose.Schema({
         type: Array
     }
 })
-const UserModel = Config.mongoose.model('users', userSchema)
+const UserModel = Config.MONGOOSE.model('users', userSchema)
 
 export default UserModel

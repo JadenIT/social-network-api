@@ -1,8 +1,9 @@
 const _ = require('lodash')
-import UserModel from '../models/UserModel'
-import DialogModel from '../models/DialogModel'
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
+
+import UserModel from '../models/UserModel'
+import DialogModel from '../models/DialogModel'
 
 class DialogController {
     public createDialog(users: Array<String>) {
@@ -95,7 +96,6 @@ class DialogController {
                 if (!res) return resolve([])
                 let newObj = {
                     messages: res.messages,
-                    user: '',
                     users: Array,
                 }
                 res.users = res.users.map((el: any) => ObjectId(el))

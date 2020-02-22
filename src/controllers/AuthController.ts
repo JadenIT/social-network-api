@@ -1,9 +1,10 @@
 const bcrypt = require('bcrypt')
 const cookie = require('cookie')
-import UserModel from '../models/UserModel'
-import { Res, Req } from '../interfaces/index'
 const jwt = require('jsonwebtoken')
 const _ = require('lodash')
+
+import UserModel from '../models/UserModel'
+import { Res, Req } from '../interfaces/index'
 import Config from '../config'
 
 class AuthController {
