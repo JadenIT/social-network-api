@@ -74,6 +74,16 @@ class EntryController {
             )
         }).then(response => res.send({ status: 'ok' })).catch(error => res.send({ status: 'error', error }))
     }
+
+    public delete(req: Req, res: Res) {
+        return new Promise((resolve, reject) => {
+            const username = req.auth.username
+            const { postID } = req.body
+            UserModel.updateOne({ username }, { $pull: { posts: { _id: postID } } }).then((doc: any) => {
+                resolve(postID)
+            }).catch((err: any) => reject(err))
+        }).then(postID => res.send({ status: 'ok', deletedPost: postID })).catch(error => res.send({ status: 'error', error }))
+    }
 }
 
 const EntryControllerInstance: EntryController = new EntryController()

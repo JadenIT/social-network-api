@@ -14,6 +14,7 @@ class EntryRouter implements RouterInterface {
         this.router.post('/', auth, EntryController.create)
         this.router.post('/like', auth, EntryController.like)
         this.router.post('/dislike', auth, EntryController.dislike)
+        this.router.post('/delete', auth, EntryController.delete)
     }
 }
 

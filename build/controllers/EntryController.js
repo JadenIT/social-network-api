@@ -64,6 +64,15 @@ var EntryController = (function () {
             });
         }).then(function (response) { return res.send({ status: 'ok' }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
+    EntryController.prototype.delete = function (req, res) {
+        return new Promise(function (resolve, reject) {
+            var username = req.auth.username;
+            var postID = req.body.postID;
+            UserModel_1.default.updateOne({ username: username }, { $pull: { posts: { _id: postID } } }).then(function (doc) {
+                resolve(postID);
+            }).catch(function (err) { return reject(err); });
+        }).then(function (postID) { return res.send({ status: 'ok', deletedPost: postID }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
+    };
     return EntryController;
 }());
 var EntryControllerInstance = new EntryController();
