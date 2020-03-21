@@ -89,11 +89,13 @@ var DialogController = (function () {
                 var newArr = [];
                 DialogModel_1.default.find({ _id: { $in: doc.messages } }, { messages: 0 }, function (err, docs) {
                     return __awaiter(this, void 0, void 0, function () {
+                        var i;
                         var _this = this;
                         return __generator(this, function (_a) {
                             if (err)
                                 throw err;
-                            docs.map(function (el, i) { return __awaiter(_this, void 0, void 0, function () {
+                            i = 0;
+                            docs.map(function (el) { return __awaiter(_this, void 0, void 0, function () {
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
                                         case 0:
@@ -126,6 +128,8 @@ var DialogController = (function () {
                                                 });
                                                 return [2, resolve(newArr)];
                                             }
+                                            else
+                                                i++;
                                             return [2];
                                     }
                                 });

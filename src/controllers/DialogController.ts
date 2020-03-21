@@ -56,7 +56,8 @@ class DialogController {
                 let newArr: any = []
                 DialogModel.find({ _id: { $in: doc.messages } }, { messages: 0 }, async function (err: any, docs: any) {
                     if (err) throw err
-                    docs.map(async (el: any, i: any) => {
+                    let i = 0
+                    docs.map(async (el: any) => {
                         /* Force every user id to be ObjectId as mongoose requires it */
                         el.users = el.users.map((el: any) => ObjectId(el))
                         /* If query, searching with Regular Expression */
@@ -83,6 +84,7 @@ class DialogController {
                             })
                             return resolve(newArr)
                         }
+                        else i++
                     })
                 })
             })
