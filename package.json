@@ -4,10 +4,8 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "test": "jest build/test",
-        "start": " node ./build/index.js",
-        "compile": "tsc -w",
-        "dev": "nodemon ./build/index.js"
+        "start": " nodemon ./build/index.js",
+        "compile": "tsc -w"
     },
     "repository": {
         "type": "git",
@@ -40,6 +38,7 @@
         "multer-s3": "^2.9.0",
         "nodemon": "^1.19.4",
         "npm": "^6.11.3",
+        "npm-run-all": "^4.1.5",
         "randomstring": "^1.1.5",
         "socket.io": "^2.3.0",
         "typescript": "^3.6.4",
