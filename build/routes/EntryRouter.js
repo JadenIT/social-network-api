@@ -12,6 +12,7 @@ var EntryRouter = (function () {
         this.router.post('/like', auth_1.default, EntryController_1.default.like);
         this.router.post('/dislike', auth_1.default, EntryController_1.default.dislike);
         this.router.post('/delete', auth_1.default, EntryController_1.default.delete);
+        this.router.get('/favorites', auth_1.default, EntryController_1.default.favorites);
     };
     return EntryRouter;
 }());

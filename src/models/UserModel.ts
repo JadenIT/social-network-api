@@ -29,7 +29,7 @@ const userSchema = new Config.MONGOOSE.Schema({
     subscriptions: {
         type: Array
     },
-    news: Array,
+    favorites: Array,
     messages: {
         type: Array
     }

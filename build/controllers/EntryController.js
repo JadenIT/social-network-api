@@ -15,63 +15,87 @@ var EntryController = (function () {
                 var username = req.auth.username;
                 var fileURL = req.files[0] ? req.files[0].location : null;
                 UserController_1.default.getUserIdByUsername(username).then(function (_id) {
-                    UserModel_1.default.updateOne({ username: username }, { $push: { posts: { author: _id, _id: uniqid(), text: req.body.text, username: username, timestamp: Date.now(), likedBy: [], fileURL: fileURL }, }, }, function (err, result) {
+                    UserModel_1.default.updateOne({ username: username }, { $push: { posts: { author: _id, _id: uniqid(), text: req.body.text, username: username, timestamp: Date.now(), likedBy: [], fileURL: fileURL } } }, function (err, result) {
                         if (err)
                             return reject(err);
                         resolve();
                     });
                 });
             });
-        }).then(function (response) { return res.send({ status: 'ok' }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
+        })
+            .then(function (response) { return res.send({ status: 'ok' }); })
+            .catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     EntryController.prototype.like = function (req, res) {
         return new Promise(function (resolve, reject) {
             var _a = req.body, usernamePostedPostId = _a.usernamePostedPostId, postID = _a.postID;
             var usernameID = req.auth.user_id;
-            console.log(usernamePostedPostId, postID);
             UserModel_1.default.find({
-                $and: [
-                    { _id: { $eq: usernamePostedPostId } },
-                    { 'posts._id': { $eq: postID } },
-                    { 'posts.likedBy._id': { $eq: usernameID } }
-                ]
+                $and: [{ _id: { $eq: usernamePostedPostId } }, { 'posts._id': { $eq: postID } }, { 'posts.likedBy._id': { $eq: usernameID } }],
             }, { posts: 1 }, function (err, doc) {
                 if (err)
                     reject(err);
                 if (doc && doc.lingth > 0)
                     return reject('Already liked');
                 UserModel_1.default.updateOne({
-                    $and: [
-                        { _id: { $eq: usernamePostedPostId } },
-                        { 'posts._id': { $eq: postID } }
-                    ]
+                    $and: [{ _id: { $eq: usernamePostedPostId } }, { 'posts._id': { $eq: postID } }],
                 }, { $push: { 'posts.$.likedBy': { _id: usernameID } } }, function (err, doc) {
                     if (err)
                         reject('err');
-                    resolve();
+                    UserModel_1.default.updateOne({ _id: usernameID }, { $push: { favorites: postID } })
+                        .then(function (doc) {
+                        resolve();
+                    })
+                        .catch(function (err) { return reject(err); });
                 });
             });
-        }).then(function (response) { return res.send({ status: 'ok' }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
+        })
+            .then(function (response) { return res.send({ status: 'ok' }); })
+            .catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     EntryController.prototype.dislike = function (req, res) {
         return new Promise(function (resolve, reject) {
             var _a = req.body, usernamePostedPostID = _a.usernamePostedPostID, postID = _a.postID;
             var usernameID = req.auth.user_id;
-            UserModel_1.default.updateOne({ _id: { $eq: usernamePostedPostID }, 'posts._id': { $eq: postID } }, { $pull: { 'posts.$.likedBy': { _id: usernameID } }, }, function (err, doc) {
+            UserModel_1.default.updateOne({ _id: { $eq: usernamePostedPostID }, 'posts._id': { $eq: postID } }, { $pull: { 'posts.$.likedBy': { _id: usernameID } } }, function (err, doc) {
                 if (err)
                     reject(err);
-                resolve();
+                UserModel_1.default.updateOne({ _id: usernameID }, { $pull: { favorites: postID } }, function (err, doc) {
+                    resolve();
+                });
             });
-        }).then(function (response) { return res.send({ status: 'ok' }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
+        })
+            .then(function (response) { return res.send({ status: 'ok' }); })
+            .catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     EntryController.prototype.delete = function (req, res) {
         return new Promise(function (resolve, reject) {
             var username = req.auth.username;
             var postID = req.body.postID;
-            UserModel_1.default.updateOne({ username: username }, { $pull: { posts: { _id: postID } } }).then(function (doc) {
+            UserModel_1.default.updateOne({ username: username }, { $pull: { posts: { _id: postID } } })
+                .then(function (doc) {
                 resolve(postID);
-            }).catch(function (err) { return reject(err); });
-        }).then(function (postID) { return res.send({ status: 'ok', deletedPost: postID }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
+            })
+                .catch(function (err) { return reject(err); });
+        })
+            .then(function (postID) { return res.send({ status: 'ok', deletedPost: postID }); })
+            .catch(function (error) { return res.send({ status: 'error', error: error }); });
+    };
+    EntryController.prototype.favorites = function (req, res) {
+        return new Promise(function (resolve, reject) {
+            var user_id = req.auth.user_id;
+            UserModel_1.default.findOne({ _id: user_id }, function (err, doc) {
+                UserModel_1.default.aggregate([{ $unwind: '$posts' }, { $match: { 'posts._id': { $in: doc.favorites } } }], function (err, docs) {
+                    if (err)
+                        reject(err);
+                    resolve(docs);
+                });
+            });
+        })
+            .then(function (data) {
+            res.send({ status: 'ok', data: data });
+        })
+            .catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     return EntryController;
 }());
