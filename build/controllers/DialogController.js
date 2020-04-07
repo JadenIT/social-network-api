@@ -107,81 +107,71 @@ var DialogController = (function () {
                         var i;
                         var _this = this;
                         return __generator(this, function (_a) {
-                            if (err)
-                                throw err;
-                            i = 0;
-                            docs.map(function (el) { return __awaiter(_this, void 0, void 0, function () {
-                                var docs_1;
-                                return __generator(this, function (_a) {
-                                    switch (_a.label) {
-                                        case 0:
-                                            el.users = el.users.map(function (el) { return ObjectId(el); });
-                                            if (!query) return [3, 2];
-                                            return [4, UserModel_1.default.findOne({
-                                                    $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }, {
-                                                            username: {
-                                                                $regex: query,
-                                                                $options: 'i'
-                                                            }
-                                                        }]
-                                                }, { username: 1, avatar: 1, _id: 0 }, function (err, res) {
-                                                    if (err)
-                                                        return reject(err);
-                                                    if (res)
-                                                        newArr = newArr.concat({
-                                                            username: res.username,
-                                                            dialogID: el._id,
-                                                            avatar: res.avatar,
-                                                            lastVisit: el.lastVisit
-                                                        });
-                                                })];
-                                        case 1:
-                                            _a.sent();
-                                            return [3, 5];
-                                        case 2: return [4, UserModel_1.default.findOne({ $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }] }, {
-                                                username: 1,
-                                                avatar: 1,
-                                                _id: 0
-                                            })];
-                                        case 3:
-                                            docs_1 = _a.sent();
-                                            if (!docs_1) return [3, 5];
-                                            return [4, newArr.concat({
-                                                    username: docs_1.username,
-                                                    dialogID: el._id,
-                                                    avatar: docs_1.avatar,
-                                                    lastVisit: el.lastVisit
-                                                })];
-                                        case 4:
-                                            newArr = _a.sent();
-                                            _a.label = 5;
-                                        case 5:
-                                            if (i + 1 == docs.length) {
-                                                newArr.sort(function (a, b) {
-                                                    if (a.lastVisit > b.lastVisit)
-                                                        return -1;
-                                                    return 1;
-                                                });
-                                                return [2, resolve(newArr)];
-                                            }
-                                            i++;
-                                            return [2];
-                                    }
-                                });
-                            }); });
-                            return [2];
+                            switch (_a.label) {
+                                case 0:
+                                    if (err)
+                                        throw err;
+                                    i = 0;
+                                    return [4, docs.map(function (el) { return __awaiter(_this, void 0, void 0, function () {
+                                            var documents;
+                                            return __generator(this, function (_a) {
+                                                switch (_a.label) {
+                                                    case 0:
+                                                        el.users = el.users.map(function (el) { return ObjectId(el); });
+                                                        if (!query) return [3, 2];
+                                                        return [4, UserModel_1.default.findOne({
+                                                                $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }, {
+                                                                        username: {
+                                                                            $regex: query,
+                                                                            $options: 'i'
+                                                                        }
+                                                                    }]
+                                                            }, { username: 1, avatar: 1, _id: 0 })];
+                                                    case 1:
+                                                        documents = _a.sent();
+                                                        return [3, 4];
+                                                    case 2: return [4, UserModel_1.default.findOne({ $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }] }, {
+                                                            username: 1,
+                                                            avatar: 1,
+                                                            _id: 0
+                                                        })];
+                                                    case 3:
+                                                        documents = _a.sent();
+                                                        _a.label = 4;
+                                                    case 4:
+                                                        if (!documents) return [3, 6];
+                                                        return [4, newArr.concat({
+                                                                username: documents.username,
+                                                                dialogID: el._id,
+                                                                avatar: documents.avatar,
+                                                                lastVisit: el.lastVisit
+                                                            })];
+                                                    case 5:
+                                                        newArr = _a.sent();
+                                                        _a.label = 6;
+                                                    case 6:
+                                                        if (i + 1 == docs.length) {
+                                                            newArr.sort(function (a, b) {
+                                                                if (a.lastVisit > b.lastVisit)
+                                                                    return -1;
+                                                                return 1;
+                                                            });
+                                                            return [2, resolve(newArr)];
+                                                        }
+                                                        i++;
+                                                        return [2];
+                                                }
+                                            });
+                                        }); })];
+                                case 1:
+                                    _a.sent();
+                                    return [2];
+                            }
                         });
                     });
                 });
             });
-        }).then(function (dialogs) {
-            return res
-                .send({ dialogs: dialogs });
-        })
-            .catch(function (error) {
-            return res
-                .send({ error: error });
-        });
+        }).then(function (dialogs) { return res.send({ dialogs: dialogs }); }).catch(function (error) { return res.send({ error: error }); });
     };
     DialogController.prototype.getDialog = function (req, res) {
         var dialogID = req.query.dialogID;
