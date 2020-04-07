@@ -1,37 +1,33 @@
 const io = require('socket.io')
 const jwt = require('jsonwebtoken')
+const axios = require('axios')
 
 import DialogController from './controllers/DialogController'
 import Config from './config'
+import MessageObject from './interfaces/MessageObject'
 
 class Socket {
-    socket: any
+    socket: any;
 
-    constructor(port: any) {
-        this.socket = io.listen(port)
+    constructor(server: any) {
+        this.socket = io(server);
 
         this.socket.on('connection', (client: any) => {
-            client.on('joinRoom', (dialogID: any, username: any) => this.onJoinRoom(client, dialogID))
-            client.on('msgToServer', (msgObj: any) => this.onMessage(client, this.socket, msgObj))
+            client.on('joinRoom', (dialogID: any, username: any) => client.join(dialogID));
+            client.on('msgToServer', (msgObj: any) => this.sendMessage(msgObj));
         })
     }
 
-    private onMessage(client: any, socket: any, msgObj: any) {
-        const { message, roomID, token } = msgObj
-        jwt.verify(token, 'Some key', (err: any, decoded: any) => {
-            if (!decoded) return socket.to(roomID).emit('error', 'incorrect jwt')
-            const username = jwt.verify(token, Config.JWT_KEY, (err: any, decoded: any) => decoded.username)
-            DialogController.createMessage(username, message, roomID)
-                .then((res) => {
-                    msgObj.username = decoded.username
-                    socket.to(roomID).emit('msgToClient', msgObj)
-                })
-                .catch((err) => socket.to(roomID).emit('error', err))
-        })
-    }
-
-    private onJoinRoom(client: any, dialogID: any) {
-        client.join(dialogID)
+    private async sendMessage(msgObj: MessageObject) {
+        const {message, room_id, token} = msgObj;
+        try {
+            const {username} = jwt.verify(token, Config.JWT_KEY);
+            await DialogController.createMessage(room_id, message, username);
+            msgObj.username = username;
+            this.socket.to(room_id).emit('msgToClient', msgObj);
+        } catch (e) {
+            return this.socket.to(room_id).emit('error', 'error');
+        }
     }
 }
 

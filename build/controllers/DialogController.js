@@ -43,7 +43,8 @@ var DialogModel_1 = require("../models/DialogModel");
 var DialogController = (function () {
     function DialogController() {
     }
-    DialogController.prototype.createDialog = function (users) {
+    DialogController.prototype.createDialog = function (req, res) {
+        var users = req.body.users;
         return new Promise(function (resolve, reject) {
             DialogModel_1.default.findOne({ users: users }, function (err, doc) {
                 if (err)
@@ -65,21 +66,35 @@ var DialogController = (function () {
                     });
                 });
             });
-        });
+        }).then(function (dialogID) { return res.send({ dialogID: dialogID }); })
+            .catch(function (e) { return res.end({ error: e }); });
     };
-    DialogController.prototype.createMessage = function (username, message, roomID) {
-        return new Promise(function (resolve, reject) {
-            DialogModel_1.default.updateOne({ _id: roomID }, {
-                $push: { messages: { message: message, username: username, timestamp: Date.now() }, },
-                $set: { lastVisit: Date.now(), },
-            }, function (err, res) {
-                if (err)
-                    return reject(err);
-                resolve();
+    DialogController.prototype.createMessage = function (roomID, message, username) {
+        return __awaiter(this, void 0, void 0, function () {
+            var e_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4, DialogModel_1.default.updateOne({ _id: roomID }, {
+                                $push: { messages: { message: message, username: username, timestamp: Date.now() }, },
+                                $set: { lastVisit: Date.now(), },
+                            })];
+                    case 1:
+                        _a.sent();
+                        return [3, 3];
+                    case 2:
+                        e_1 = _a.sent();
+                        console.log('DialogController.createMessage error');
+                        return [3, 3];
+                    case 3: return [2];
+                }
             });
         });
     };
-    DialogController.prototype.getDialogsList = function (username, query) {
+    DialogController.prototype.getDialogsList = function (req, res) {
+        var username = req.auth.username;
+        var query = req.query.query;
         return new Promise(function (resolve, reject) {
             UserModel_1.default.findOne({ username: username }, { _id: 0 }, function (err, doc) {
                 if (err)
@@ -101,20 +116,41 @@ var DialogController = (function () {
                                         case 0:
                                             el.users = el.users.map(function (el) { return ObjectId(el); });
                                             if (!query) return [3, 2];
-                                            return [4, UserModel_1.default.findOne({ $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }, { username: { $regex: query, $options: 'i' } }] }, { username: 1, avatar: 1, _id: 0 }, function (err, res) {
+                                            return [4, UserModel_1.default.findOne({
+                                                    $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }, {
+                                                            username: {
+                                                                $regex: query,
+                                                                $options: 'i'
+                                                            }
+                                                        }]
+                                                }, { username: 1, avatar: 1, _id: 0 }, function (err, res) {
                                                     if (err)
                                                         return reject(err);
                                                     if (res)
-                                                        newArr = newArr.concat({ username: res.username, dialogID: el._id, avatar: res.avatar, lastVisit: el.lastVisit });
+                                                        newArr = newArr.concat({
+                                                            username: res.username,
+                                                            dialogID: el._id,
+                                                            avatar: res.avatar,
+                                                            lastVisit: el.lastVisit
+                                                        });
                                                 })];
                                         case 1:
                                             _a.sent();
                                             return [3, 4];
-                                        case 2: return [4, UserModel_1.default.findOne({ $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }] }, { username: 1, avatar: 1, _id: 0 }, function (err, res) {
+                                        case 2: return [4, UserModel_1.default.findOne({ $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }] }, {
+                                                username: 1,
+                                                avatar: 1,
+                                                _id: 0
+                                            }, function (err, res) {
                                                 if (err)
                                                     return reject(err);
                                                 if (res)
-                                                    newArr = newArr.concat({ username: res.username, dialogID: el._id, avatar: res.avatar, lastVisit: el.lastVisit });
+                                                    newArr = newArr.concat({
+                                                        username: res.username,
+                                                        dialogID: el._id,
+                                                        avatar: res.avatar,
+                                                        lastVisit: el.lastVisit
+                                                    });
                                             })];
                                         case 3:
                                             _a.sent();
@@ -139,9 +175,12 @@ var DialogController = (function () {
                     });
                 });
             });
-        });
+        }).then(function (dialogs) { return res.send({ dialogs: dialogs }); })
+            .catch(function (error) { return res.send({ error: error }); });
     };
-    DialogController.prototype.getDialog = function (dialogID, username) {
+    DialogController.prototype.getDialog = function (req, res) {
+        var dialogID = req.query.dialogID;
+        var username = req.auth.username;
         return new Promise(function (resolve, reject) {
             DialogModel_1.default.findOne({ _id: dialogID }, { messages: 1, _id: 0, users: 1 }, function (err, res) {
                 if (err)
@@ -158,7 +197,8 @@ var DialogController = (function () {
                     return resolve(newObj);
                 });
             });
-        });
+        }).then(function (dialog) { return res.send({ dialog: dialog }); })
+            .catch(function (error) { return res.send({ error: error }); });
     };
     return DialogController;
 }());

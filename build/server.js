@@ -1,6 +1,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var express = require("express");
 var bodyParser = require("body-parser");
+var http = require("http");
 var UserRouter_1 = require("./routes/UserRouter");
 var EntryRouter_1 = require("./routes/EntryRouter");
 var SearchRouter_1 = require("./routes/SearchRouter");
@@ -9,11 +10,17 @@ var DialogRouter_1 = require("./routes/DialogRouter");
 var NewsRouter_1 = require("./routes/NewsRouter");
 var cookies_1 = require("./middlewares/cookies");
 var cors_1 = require("./middlewares/cors");
+var socket_1 = require("./socket");
 var Server = (function () {
     function Server() {
+        var _this = this;
+        this.httpServer = function () { return _this.server = http.createServer(_this.app); };
+        this.socket = function () { return new socket_1.default(_this.server); };
         this.app = express();
         this.middlewares();
         this.routes();
+        this.httpServer();
+        this.socket();
     }
     Server.prototype.middlewares = function () {
         this.app.use(cookies_1.default);
@@ -33,4 +40,4 @@ var Server = (function () {
     return Server;
 }());
 var ServerInstance = new Server();
-exports.default = ServerInstance;
+exports.default = ServerInstance.server;

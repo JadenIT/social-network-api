@@ -11,8 +11,8 @@ var Config = (function () {
         this.databaseSetUp();
     }
     Config.prototype.databaseSetUp = function () {
-        this.MONGOOSE = mongoose;
-        this.MONGOOSE.connect(this.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, function (err) {
+        this.mongoose = mongoose;
+        this.mongoose.connect(this.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true }, function (err) {
             if (err)
                 console.log('Error while connecting to DB');
         });

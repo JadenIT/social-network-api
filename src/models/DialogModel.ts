@@ -1,11 +1,11 @@
 import Config from '../config'
 
-const DialogSchema = new Config.MONGOOSE.Schema({
+const DialogSchema = new Config.mongoose.Schema({
     users: Array,
     messages: Array,
     lastVisit: Date
 })
 
-const DialogModel = new Config.MONGOOSE.model('dialogs', DialogSchema)
+const DialogModel = new Config.mongoose.model('dialogs', DialogSchema)
 
 export default DialogModel
