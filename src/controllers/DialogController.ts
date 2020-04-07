@@ -54,70 +54,104 @@ class DialogController {
         const username = req.auth.username
         const query = req.query.query
         return new Promise((resolve, reject) => {
-            UserModel.findOne({username}, {_id: 0}, function (err: any, doc: any) {
-                if (err) throw err
-                if (doc.messages.length == 0) return resolve([])
-                let newArr: any = []
-                DialogModel.find({_id: {$in: doc.messages}}, {messages: 0}, async function (err: any, docs: any) {
+                UserModel.findOne({username}, {_id: 0}, function (err: any, doc: any) {
                     if (err) throw err
-                    let i = 0
-                    docs.map(async (el: any) => {
-                        /* Force every user id to be ObjectId as mongoose requires it */
-                        el.users = el.users.map((el: any) => ObjectId(el))
-                        /* If query, searching with Regular Expression */
-                        if (query) {
-                            await UserModel.findOne(
-                                {
-                                    $and: [{_id: {$in: el.users}}, {username: {$ne: username}}, {
-                                        username: {
-                                            $regex: query,
-                                            $options: 'i'
-                                        }
-                                    }]
-                                },
-                                {username: 1, avatar: 1, _id: 0},
-                                function (err: any, res: any) {
-                                    if (err) return reject(err)
-                                    if (res) newArr = newArr.concat({
-                                        username: res.username,
+                    if (doc.messages.length == 0) return resolve([])
+                    let newArr: any = []
+                    DialogModel.find({_id: {$in: doc.messages}}, {messages: 0}, async function (err: any, docs: any) {
+                        if (err) throw err
+                        let i = 0
+                        docs.map(async (el: any) => {
+                            /* Force every user id to be ObjectId as mongoose requires it */
+                            el.users = el.users.map((el: any) => ObjectId(el))
+                            /* If query, searching with Regular Expression */
+                            if (query) {
+                                await UserModel.findOne(
+                                    {
+                                        $and: [{_id: {$in: el.users}}, {username: {$ne: username}}, {
+                                            username: {
+                                                $regex: query,
+                                                $options: 'i'
+                                            }
+                                        }]
+                                    },
+                                    {username: 1, avatar: 1, _id: 0},
+                                    function (err: any, res: any) {
+                                        if (err) return reject(err)
+                                        if (res) newArr = newArr.concat({
+                                            username: res.username,
+                                            dialogID: el._id,
+                                            avatar: res.avatar,
+                                            lastVisit: el.lastVisit
+                                        })
+                                    }
+                                )
+                            } else {
+                                // await UserModel.findOne({$and: [{_id: {$in: el.users}}, {username: {$ne: username}}]}, {
+                                //     username: 1,
+                                //     avatar: 1,
+                                //     _id: 0
+                                // }, function (err: any, res: any) {
+                                //     if (err) return reject(err)
+                                //     if (res) newArr = newArr.concat({
+                                //         username: res.username,
+                                //         dialogID: el._id,
+                                //         avatar: res.avatar,
+                                //         lastVisit: el.lastVisit
+                                //     })
+                                // })
+                                let docs = await UserModel.findOne({$and: [{_id: {$in: el.users}}, {username: {$ne: username}}]}, {
+                                    username: 1,
+                                    avatar: 1,
+                                    _id: 0
+                                })
+
+                                if (docs) {
+                                    newArr = await newArr.concat({
+                                        username: docs.username,
                                         dialogID: el._id,
-                                        avatar: res.avatar,
+                                        avatar: docs.avatar,
                                         lastVisit: el.lastVisit
                                     })
                                 }
-                            )
-                        } else {
-                            await UserModel.findOne({$and: [{_id: {$in: el.users}}, {username: {$ne: username}}]}, {
-                                username: 1,
-                                avatar: 1,
-                                _id: 0
-                            }, function (err: any, res: any) {
-                                if (err) return reject(err)
-                                if (res) newArr = newArr.concat({
-                                    username: res.username,
-                                    dialogID: el._id,
-                                    avatar: res.avatar,
-                                    lastVisit: el.lastVisit
+
+
+                            }
+                            if (i + 1 == docs.length) {
+                                /* Sort by lastVisit field to show newest dialogs */
+                                newArr.sort(function (a: any, b: any) {
+                                    if (a.lastVisit > b.lastVisit) return -1
+                                    return 1
                                 })
-                            })
-                        }
-                        if (i + 1 == docs.length) {
-                            /* Sort by lastVisit field to show newest dialogs */
-                            newArr.sort(function (a: any, b: any) {
-                                if (a.lastVisit > b.lastVisit) return -1
-                                return 1
-                            })
-                            return resolve(newArr)
-                        }
-                        i++;
+                                return resolve(newArr)
+                            }
+                            i++;
+                        })
                     })
                 })
-            })
-        }).then(dialogs => res.send({dialogs}))
-            .catch(error => res.send({error}))
+            }
+        ).then(dialogs
+
+            =>
+            res
+                .send({dialogs})
+        )
+            .catch(error
+
+                =>
+                res
+                    .send({error})
+            )
     }
 
-    public getDialog(req: Req, res: Res) {
+    public
+
+    getDialog(req
+                  :
+                  Req, res
+                  :
+                  Res
+    ) {
         const {dialogID} = req.query
         const {username} = req.auth
         return new Promise((resolve, reject) => {

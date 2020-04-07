@@ -111,6 +111,7 @@ var DialogController = (function () {
                                 throw err;
                             i = 0;
                             docs.map(function (el) { return __awaiter(_this, void 0, void 0, function () {
+                                var docs_1;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
                                         case 0:
@@ -136,26 +137,25 @@ var DialogController = (function () {
                                                 })];
                                         case 1:
                                             _a.sent();
-                                            return [3, 4];
+                                            return [3, 5];
                                         case 2: return [4, UserModel_1.default.findOne({ $and: [{ _id: { $in: el.users } }, { username: { $ne: username } }] }, {
                                                 username: 1,
                                                 avatar: 1,
                                                 _id: 0
-                                            }, function (err, res) {
-                                                if (err)
-                                                    return reject(err);
-                                                if (res)
-                                                    newArr = newArr.concat({
-                                                        username: res.username,
-                                                        dialogID: el._id,
-                                                        avatar: res.avatar,
-                                                        lastVisit: el.lastVisit
-                                                    });
                                             })];
                                         case 3:
-                                            _a.sent();
-                                            _a.label = 4;
+                                            docs_1 = _a.sent();
+                                            if (!docs_1) return [3, 5];
+                                            return [4, newArr.concat({
+                                                    username: docs_1.username,
+                                                    dialogID: el._id,
+                                                    avatar: docs_1.avatar,
+                                                    lastVisit: el.lastVisit
+                                                })];
                                         case 4:
+                                            newArr = _a.sent();
+                                            _a.label = 5;
+                                        case 5:
                                             if (i + 1 == docs.length) {
                                                 newArr.sort(function (a, b) {
                                                     if (a.lastVisit > b.lastVisit)
@@ -174,8 +174,14 @@ var DialogController = (function () {
                     });
                 });
             });
-        }).then(function (dialogs) { return res.send({ dialogs: dialogs }); })
-            .catch(function (error) { return res.send({ error: error }); });
+        }).then(function (dialogs) {
+            return res
+                .send({ dialogs: dialogs });
+        })
+            .catch(function (error) {
+            return res
+                .send({ error: error });
+        });
     };
     DialogController.prototype.getDialog = function (req, res) {
         var dialogID = req.query.dialogID;
