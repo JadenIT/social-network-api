@@ -164,8 +164,7 @@ var DialogController = (function () {
                                                 });
                                                 return [2, resolve(newArr)];
                                             }
-                                            else
-                                                i++;
+                                            i++;
                                             return [2];
                                     }
                                 });

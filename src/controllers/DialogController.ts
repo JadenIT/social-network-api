@@ -108,7 +108,8 @@ class DialogController {
                                 return 1
                             })
                             return resolve(newArr)
-                        } else i++
+                        }
+                        i++;
                     })
                 })
             })
