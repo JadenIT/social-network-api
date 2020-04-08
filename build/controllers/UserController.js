@@ -39,6 +39,7 @@ var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 var cookie = require('cookie');
 var _ = require('lodash');
+var ObjectId = require('mongodb').ObjectId;
 var UserModel_1 = require("../models/UserModel");
 var config_1 = require("../config");
 var storage_1 = require("../middlewares/storage");
@@ -271,10 +272,10 @@ var UserController = (function () {
                         subscriptions = (_a.sent()).subscriptions;
                         if (subscriptions.includes(user_id))
                             return [2, res.send({ status: 'error', error: 'Already subscribed' })];
-                        return [4, UserModel_1.default.updateOne({ _id: usernameID }, { $push: { subscriptions: user_id } })];
+                        return [4, UserModel_1.default.updateOne({ _id: usernameID }, { $push: { subscriptions: ObjectId(user_id) } })];
                     case 2:
                         _a.sent();
-                        return [4, UserModel_1.default.updateOne({ _id: user_id }, { $push: { subscribers: usernameID, } })];
+                        return [4, UserModel_1.default.updateOne({ _id: user_id }, { $push: { subscribers: ObjectId(usernameID), } })];
                     case 3:
                         _a.sent();
                         res.send({ status: 'ok' });

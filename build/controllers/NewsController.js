@@ -1,64 +1,121 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var UserModel_1 = require("../models/UserModel");
 var NewsController = (function () {
     function NewsController() {
     }
     NewsController.getNewsByArrOfSubscriptions = function (arr) {
-        return new Promise(function (resolve, reject) {
-            if (arr.length <= 0)
-                return resolve([]);
-            UserModel_1.default.find({ _id: { $in: arr } }, {
-                _id: 1,
-                username: 1,
-                avatar: 1,
-                fullname: 1,
-                posts: 1,
-            })
-                .then(function (response) {
-                var newArr = [];
-                response.map(function (el) {
-                    el.posts.map(function (el2) {
-                        delete el2.username;
-                        delete el2.avatar;
-                        newArr.push({
-                            _id: el._id,
-                            username: el.username,
-                            fullname: el.fullname,
-                            avatar: el.avatar,
-                            post: el2,
+        return __awaiter(this, void 0, void 0, function () {
+            var response, newArr_1, e_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        if (arr.length <= 0)
+                            return [2, []];
+                        return [4, UserModel_1.default.find({ _id: { $in: arr } })];
+                    case 1:
+                        response = _a.sent();
+                        newArr_1 = [];
+                        response.map(function (el) {
+                            el.posts.map(function (el2) {
+                                delete el2.username;
+                                delete el2.avatar;
+                                newArr_1.push({
+                                    _id: el._id,
+                                    username: el.username,
+                                    fullname: el.fullname,
+                                    avatar: el.avatar,
+                                    post: el2,
+                                });
+                            });
                         });
-                    });
-                });
-                newArr.sort(function (a, b) {
-                    if (a.post.timestamp > b.post.timestamp) {
-                        return -1;
-                    }
-                    else {
-                        return 1;
-                    }
-                });
-                resolve(newArr);
-            })
-                .catch(function (error) { return reject(error); });
+                        newArr_1.sort(function (a, b) {
+                            if (a.post.timestamp > b.post.timestamp) {
+                                return -1;
+                            }
+                            else {
+                                return 1;
+                            }
+                        });
+                        return [2, newArr_1];
+                    case 2:
+                        e_1 = _a.sent();
+                        return [3, 3];
+                    case 3: return [2];
+                }
+            });
         });
     };
     NewsController.prototype.getNewsByUsername = function (req, res) {
-        return new Promise(function (resolve, reject) {
-            var _a = req.query, page = _a.page, perpage = _a.perpage;
-            var username = req.auth.username;
-            var end = page * perpage;
-            var start = end - (perpage - 1) - 1;
-            UserModel_1.default.findOne({ username: username }, { subscriptions: 1 }, function (err, doc) {
-                if (err)
-                    reject(err);
-                var subscriptions = (doc || []).subscriptions;
-                if (!subscriptions)
-                    return resolve([]);
-                NewsController.getNewsByArrOfSubscriptions(subscriptions)
-                    .then(function (news) { return resolve(news.splice(start, perpage)); })
-                    .catch(function (err) { return reject(err); });
+        return __awaiter(this, void 0, void 0, function () {
+            var _a, page, perpage, username, end, start, doc, subscriptions, news, e_2;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _b.trys.push([0, 3, , 4]);
+                        _a = req.query, page = _a.page, perpage = _a.perpage;
+                        username = req.auth.username;
+                        end = page * perpage;
+                        start = end - (perpage - 1) - 1;
+                        return [4, UserModel_1.default.findOne({ username: username }, { subscriptions: 1 })];
+                    case 1:
+                        doc = _b.sent();
+                        subscriptions = (doc || []).subscriptions;
+                        if (!subscriptions)
+                            return [2, res.send({ news: [] })];
+                        return [4, UserModel_1.default.aggregate([
+                                { $match: { _id: { $in: subscriptions } } },
+                                { $unwind: '$posts' },
+                                { $sort: { 'posts.timestamp': 1 } }
+                            ])];
+                    case 2:
+                        news = _b.sent();
+                        res.send({ news: news.splice(start, perpage) });
+                        return [3, 4];
+                    case 3:
+                        e_2 = _b.sent();
+                        res.send({ status: 'Error' });
+                        return [3, 4];
+                    case 4: return [2];
+                }
             });
-        }).then(function (news) { return res.send({ news: news }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
+        });
     };
     return NewsController;
 }());

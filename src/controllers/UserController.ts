@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const cookie = require('cookie')
 const _ = require('lodash')
+const {ObjectId} = require('mongodb');
 
 import UserModel from '../models/UserModel'
 import {Res, Req, User} from '../interfaces/index'
@@ -172,8 +173,8 @@ class UserController {
             const usernameID = req.auth.user_id
             const {subscriptions} = await UserModel.findOne({_id: usernameID});
             if (subscriptions.includes(user_id)) return res.send({status: 'error', error: 'Already subscribed'})
-            await UserModel.updateOne({_id: usernameID}, {$push: {subscriptions: user_id}});
-            await UserModel.updateOne({_id: user_id}, {$push: {subscribers: usernameID,}});
+            await UserModel.updateOne({_id: usernameID}, {$push: {subscriptions: ObjectId(user_id)}});
+            await UserModel.updateOne({_id: user_id}, {$push: {subscribers: ObjectId(usernameID),}});
             res.send({status: 'ok'})
         } catch (e) {
             res.send({status: 'Error'})
