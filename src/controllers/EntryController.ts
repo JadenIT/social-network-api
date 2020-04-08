@@ -1,110 +1,97 @@
-const uniqid = require('uniqid')
-const ObjectId = require('mongodb').ObjectID
+const uniqid = require('uniqid');
+const ObjectId = require('mongodb').ObjectID;
 
-import { Res, Req } from '../interfaces/index'
-import upload from '../middlewares/storage'
-import UserController from './UserController'
-import UserModel from '../models/UserModel'
+import {Res, Req} from '../interfaces/index';
+import upload from '../middlewares/storage';
+import UserController from './UserController';
+import UserModel from '../models/UserModel';
 
 class EntryController {
     public create(req: Req, res: Res) {
-        return new Promise((resolve, reject) => {
-            upload(req, res, (err: any) => {
-                if (err) return reject('Произошла ошибка, скорее всего файл слишком большой')
-                const username = req.auth.username
-                const fileURL = req.files[0] ? req.files[0].location : null
-                UserController.getUserIdByUsername(username).then(_id => {
-                    UserModel.updateOne(
-                        { username: username },
-                        { $push: { posts: { author: _id, _id: uniqid(), text: req.body.text, username, timestamp: Date.now(), likedBy: [], fileURL } } },
-                        (err: any, result: any) => {
-                            if (err) return reject(err)
-                            resolve()
-                        }
-                    )
+        try {
+            upload(req, res, async (err: any) => {
+                if (err) return res.send({
+                    status: "Error",
+                    error: 'Произошла ошибка, скорее всего файл слишком большой'
                 })
-            })
-        })
-            .then(response => res.send({ status: 'ok' }))
-            .catch(error => res.send({ status: 'error', error }))
-    }
-
-    public like(req: Req, res: Res) {
-        return new Promise((resolve, reject) => {
-            const { usernamePostedPostId, postID } = req.body
-            const usernameID = req.auth.user_id
-            UserModel.find(
-                {
-                    $and: [{ _id: { $eq: usernamePostedPostId } }, { 'posts._id': { $eq: postID } }, { 'posts.likedBy._id': { $eq: usernameID } }],
-                },
-                { posts: 1 },
-                (err: any, doc: any) => {
-                    if (err) reject(err)
-                    if (doc && doc.lingth > 0) return reject('Already liked')
-                    UserModel.updateOne(
-                        {
-                            $and: [{ _id: { $eq: usernamePostedPostId } }, { 'posts._id': { $eq: postID } }],
-                        },
-                        { $push: { 'posts.$.likedBy': { _id: usernameID } } },
-                        (err: any, doc: any) => {
-                            if (err) reject('err')
-                            UserModel.updateOne({ _id: usernameID }, { $push: { favorites: postID } })
-                                .then((doc: any) => {
-                                    resolve()
-                                })
-                                .catch((err: any) => reject(err))
+                const username = req.auth.username;
+                const fileURL = req.files[0] ? req.files[0].location : null;
+                const _id = await UserController.getUserIdByUsername(username);
+                await UserModel.updateOne(
+                    {username: username},
+                    {
+                        $push: {
+                            posts: {
+                                author: _id,
+                                _id: uniqid(),
+                                text: req.body.text,
+                                username,
+                                timestamp: Date.now(),
+                                likedBy: [],
+                                fileURL
+                            }
                         }
-                    )
-                }
-            )
-        })
-            .then(response => res.send({ status: 'ok' }))
-            .catch(error => res.send({ status: 'error', error }))
-    }
-
-    public dislike(req: Req, res: Res) {
-        return new Promise((resolve, reject) => {
-            const { usernamePostedPostID, postID } = req.body
-            const usernameID = req.auth.user_id
-            UserModel.updateOne({ _id: { $eq: usernamePostedPostID }, 'posts._id': { $eq: postID } }, { $pull: { 'posts.$.likedBy': { _id: usernameID } } }, (err: any, doc: any) => {
-                if (err) reject(err)
-                UserModel.updateOne({ _id: usernameID }, { $pull: { favorites: postID } }, (err, doc) => {
-                    resolve()
-                })
+                    });
+                res.send({status: 'ok'});
             })
-        })
-            .then(response => res.send({ status: 'ok' }))
-            .catch(error => res.send({ status: 'error', error }))
+        } catch (e) {
+            res.send({status: 'error', e});
+        }
     }
 
-    public delete(req: Req, res: Res) {
-        return new Promise((resolve, reject) => {
+    public async like(req: Req, res: Res) {
+        try {
+            const {usernamePostedPostId, postID} = req.body;
+            const usernameID = req.auth.user_id;
+
+            const doc = await UserModel.find({$and: [{_id: {$eq: usernamePostedPostId}}, {'posts._id': {$eq: postID}}, {'posts.likedBy._id': {$eq: usernameID}}],}, {posts: 1});
+            if (doc && doc.lingth > 0) return res.send({status: 'Error', error: 'Already liked'});
+
+            await UserModel.updateOne({$and: [{_id: {$eq: usernamePostedPostId}}, {'posts._id': {$eq: postID}}],}, {$push: {'posts.$.likedBy': {_id: usernameID}}});
+
+            await UserModel.updateOne({_id: usernameID}, {$push: {favorites: postID}});
+
+            res.send({status: 'ok'});
+        } catch (e) {
+            res.send({status: 'error', e})
+        }
+    }
+
+    public async dislike(req: Req, res: Res) {
+        try {
+            const {usernamePostedPostID, postID} = req.body
+            const usernameID = req.auth.user_id
+            await UserModel.updateOne({
+                _id: {$eq: usernamePostedPostID},
+                'posts._id': {$eq: postID}
+            }, {$pull: {'posts.$.likedBy': {_id: usernameID}}});
+            await UserModel.updateOne({_id: usernameID}, {$pull: {favorites: postID}});
+            return res.send({status: 'ok'})
+        } catch (e) {
+            res.send({status: 'error', e})
+        }
+    }
+
+    public async delete(req: Req, res: Res) {
+        try {
             const username = req.auth.username
-            const { postID } = req.body
-            UserModel.updateOne({ username }, { $pull: { posts: { _id: postID } } })
-                .then((doc: any) => {
-                    resolve(postID)
-                })
-                .catch((err: any) => reject(err))
-        })
-            .then(postID => res.send({ status: 'ok', deletedPost: postID }))
-            .catch(error => res.send({ status: 'error', error }))
+            const {postID} = req.body
+            await UserModel.updateOne({username}, {$pull: {posts: {_id: postID}}});
+            res.send({status: 'ok', deletedPost: postID})
+        } catch (e) {
+            res.send({status: 'error', e})
+        }
     }
 
-    public favorites(req: Req, res: Res) {
-        return new Promise((resolve, reject) => {
+    public async favorites(req: Req, res: Res) {
+        try {
             const user_id = req.auth.user_id
-            UserModel.findOne({ _id: user_id }, (err, doc) => {
-                UserModel.aggregate([{ $unwind: '$posts' }, { $match: { 'posts._id': { $in: doc.favorites } } }], (err, docs) => {
-                    if (err) reject(err)
-                    resolve(docs)
-                })
-            })
-        })
-            .then(data => {
-                res.send({ status: 'ok', data })
-            })
-            .catch(error => res.send({ status: 'error', error }))
+            const doc = await UserModel.findOne({_id: user_id});
+            const docs = await UserModel.aggregate([{$unwind: '$posts'}, {$match: {'posts._id': {$in: doc.favorites}}}]);
+            res.send({status: 'ok', data: docs})
+        } catch (e) {
+            res.send({status: 'error', e})
+        }
     }
 }
 

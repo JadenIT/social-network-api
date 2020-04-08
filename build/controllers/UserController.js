@@ -46,13 +46,24 @@ var UserController = (function () {
     function UserController() {
     }
     UserController.isUsernameIsFree = function (username) {
-        return new Promise(function (resolve, reject) {
-            UserModel_1.default.findOne({ username: username }, function (error, doc) {
-                if (error)
-                    return reject(error);
-                if (doc)
-                    return resolve(false);
-                resolve(true);
+        return __awaiter(this, void 0, void 0, function () {
+            var isFree, e_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4, UserModel_1.default.findOne({ username: username })];
+                    case 1:
+                        isFree = _a.sent();
+                        if (isFree) {
+                            return [2, false];
+                        }
+                        return [2, true];
+                    case 2:
+                        e_1 = _a.sent();
+                        return [3, 3];
+                    case 3: return [2];
+                }
             });
         });
     };
@@ -64,39 +75,60 @@ var UserController = (function () {
         res.send({ status: 'ok' });
     };
     UserController.prototype.createUser = function (req, res) {
-        return new Promise(function (resolve, reject) {
-            var _a = req.body, fullName = _a.fullName, username = _a.username, password = _a.password;
-            if (!_.trim(username) || !_.trim(password) || !_.trim(fullName))
-                return res.send({ status: 'error', error: 'Не все поля заполнены' });
-            if (_.trim(username).length < 4)
-                return reject('Имя пользователя должно содержать более 3 символов');
-            if (_.trim(password).length < 4)
-                return reject('Пароль должен содержать более 3 символов');
-            if (_.trim(fullName).length < 2)
-                return reject('Имя и фамилия должны содержать более 1 символа');
-            UserController.isUsernameIsFree('username')
-                .then(function (isFree) {
-                if (!isFree)
-                    return reject('Имя занято');
-                bcrypt
-                    .hash(password, 10)
-                    .then(function (hash) {
-                    var userModelInstance = new UserModel_1.default({ fullname: fullName, username: username, password: hash });
-                    userModelInstance.save().then(function (doc) {
-                        jwt.sign({ user_id: doc._id, username: username }, config_1.default.JWT_KEY, function (err, token) {
-                            res.setHeader('Set-Cookie', cookie.serialize('token', token, {
-                                maxAge: 60 * 60 * 24 * 7,
-                                path: '/',
-                            }));
-                            resolve();
-                        });
-                    })
-                        .catch(function (err) { return reject(err); });
-                })
-                    .catch(function (err) { return reject(err); });
-            })
-                .catch(function (err) { return reject(err); });
-        }).then(function (response) { return res.send({ status: 'ok' }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
+        return __awaiter(this, void 0, void 0, function () {
+            var _a, fullName, username, password, isUsernameFree, hash, userModelInstance, doc, token, e_2;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _b.trys.push([0, 4, , 5]);
+                        _a = req.body, fullName = _a.fullName, username = _a.username, password = _a.password;
+                        if (!_.trim(username) || !_.trim(password) || !_.trim(fullName))
+                            return [2, res.send({
+                                    status: 'error',
+                                    error: 'Не все поля заполнены'
+                                })];
+                        if (_.trim(username).length < 4)
+                            return [2, res.send({
+                                    status: 'error',
+                                    error: 'Имя пользователя должно содержать более 3 символов'
+                                })];
+                        if (_.trim(password).length < 4)
+                            return [2, res.send({
+                                    status: 'error',
+                                    error: 'Пароль должен содержать более 3 символов'
+                                })];
+                        if (_.trim(fullName).length < 2)
+                            return [2, res.send({
+                                    status: 'error',
+                                    error: 'Имя и фамилия должны содержать более 1 символа'
+                                })];
+                        return [4, UserController.isUsernameIsFree(username)];
+                    case 1:
+                        isUsernameFree = _b.sent();
+                        if (!isUsernameFree)
+                            return [2, res.send({ status: 'error', error: 'Имя занято' })];
+                        return [4, bcrypt.hash(password, 10)];
+                    case 2:
+                        hash = _b.sent();
+                        userModelInstance = new UserModel_1.default({ fullname: fullName, username: username, password: hash });
+                        return [4, userModelInstance.save()];
+                    case 3:
+                        doc = _b.sent();
+                        token = jwt.sign({ user_id: doc._id, username: username }, config_1.default.JWT_KEY);
+                        res.setHeader('Set-Cookie', cookie.serialize('token', token, {
+                            maxAge: 60 * 60 * 24 * 7,
+                            path: '/',
+                        }));
+                        res.send({ status: 'ok' });
+                        return [3, 5];
+                    case 4:
+                        e_2 = _b.sent();
+                        res.send({ status: 'error', e: e_2 });
+                        return [3, 5];
+                    case 5: return [2];
+                }
+            });
+        });
     };
     UserController.prototype.updateUser = function (req, res) {
         var _this = this;
@@ -144,7 +176,10 @@ var UserController = (function () {
                             UserModel_1.default.updateOne({ _id: req.auth.user_id }, { $set: query }, function (error, result) {
                                 if (error)
                                     return reject(error);
-                                jwt.sign({ username: newUsername ? newUsername : oldUsername, user_id: req.auth.user_id }, config_1.default.JWT_KEY, function (err, token) {
+                                jwt.sign({
+                                    username: newUsername ? newUsername : oldUsername,
+                                    user_id: req.auth.user_id
+                                }, config_1.default.JWT_KEY, function (err, token) {
                                     res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                                         maxAge: 60 * 60 * 24 * 7,
                                         path: '/',
@@ -178,10 +213,22 @@ var UserController = (function () {
         }).then(function (user) { return res.send({ user: user }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
     };
     UserController.prototype.getUserIdByUsername = function (username) {
-        return new Promise(function (resolve, reject) {
-            UserModel_1.default.findOne({ username: username })
-                .then(function (res) { return resolve(res._id); })
-                .catch(function (err) { return reject('Error'); });
+        return __awaiter(this, void 0, void 0, function () {
+            var _id, e_3;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4, UserModel_1.default.findOne({ username: username })];
+                    case 1:
+                        _id = (_a.sent())._id;
+                        return [2, _id];
+                    case 2:
+                        e_3 = _a.sent();
+                        return [3, 3];
+                    case 3: return [2];
+                }
+            });
         });
     };
     UserController.prototype.subscribeToUser = function (req, res) {
@@ -227,7 +274,12 @@ var UserController = (function () {
                     reject(error);
                 if (!doc)
                     return resolve([]);
-                UserModel_1.default.find({ _id: { $in: doc.subscriptions } }, { username: 1, avatar: 1, fullname: 1, _id: 0 }, function (error, docs) {
+                UserModel_1.default.find({ _id: { $in: doc.subscriptions } }, {
+                    username: 1,
+                    avatar: 1,
+                    fullname: 1,
+                    _id: 0
+                }, function (error, docs) {
                     if (error)
                         reject(error);
                     resolve(docs);
@@ -241,7 +293,11 @@ var UserController = (function () {
             UserModel_1.default.findOne({ username: username }, { subscribers: 1, _id: 0 }, function (error, doc) {
                 if (!doc)
                     return resolve([]);
-                UserModel_1.default.find({ _id: { $in: doc.subscribers } }, { username: 1, avatar: 1, fullname: 1 }, function (error, docs) {
+                UserModel_1.default.find({ _id: { $in: doc.subscribers } }, {
+                    username: 1,
+                    avatar: 1,
+                    fullname: 1
+                }, function (error, docs) {
                     if (error)
                         return reject(error);
                     resolve(docs);

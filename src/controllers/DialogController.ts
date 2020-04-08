@@ -1,7 +1,6 @@
 import {Req, Res} from "../interfaces";
 
 const _ = require('lodash')
-const mongoose = require('mongoose')
 const {ObjectId} = require('mongodb');
 
 import UserModel from '../models/UserModel'
@@ -14,7 +13,6 @@ class DialogController {
         users = await users.map((el: any) => ObjectId(el))
         try {
             const doc = await DialogModel.findOne({users: users});
-            console.log(doc)
             if (doc) return res.send({dialogID: doc._id});
             await new DialogModel({
                 users: users,
@@ -74,29 +72,23 @@ class DialogController {
         }
     }
 
-    public getDialog(req: Req, res: Res) {
-        const {dialogID} = req.query
-        const {username} = req.auth
-        return new Promise((resolve, reject) => {
-            DialogModel.findOne({_id: dialogID}, {messages: 1, _id: 0, users: 1}, function (err: any, res: any) {
-                if (err) throw err
-                if (!res) return resolve([])
-                let newObj = {
-                    messages: res.messages,
-                    users: Array,
-                }
-                res.users = res.users.map((el: any) => ObjectId(el))
-                UserModel.find({_id: res.users}, function (err: any, docs: any) {
-                    newObj.users = docs
-                    return resolve(newObj)
-                })
-            })
-        }).then(dialog => res.send({dialog}))
-            .catch(error => res.send({error}))
+    public async getDialog(req: Req, res: Res) {
+        try {
+            const {dialogID} = req.query;
+            const docs = await DialogModel.findOne({_id: dialogID}, {messages: 1, _id: 0, users: 1});
+            if (!docs) return res.send({dialog: []});
+            let newObj = {
+                messages: docs.messages,
+                users: Array,
+            };
+            newObj.users = await UserModel.find({_id: docs.users});
+            res.send({dialog: newObj});
+        } catch (error) {
+            res.send({error});
+        }
     }
 }
 
-const
-    DialogControllerInstance: DialogController = new DialogController()
+const DialogControllerInstance: DialogController = new DialogController()
 
 export default DialogControllerInstance

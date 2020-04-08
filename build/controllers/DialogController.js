@@ -36,7 +36,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var _ = require('lodash');
-var mongoose = require('mongoose');
 var ObjectId = require('mongodb').ObjectId;
 var UserModel_1 = require("../models/UserModel");
 var DialogModel_1 = require("../models/DialogModel");
@@ -60,7 +59,6 @@ var DialogController = (function () {
                         return [4, DialogModel_1.default.findOne({ users: users })];
                     case 3:
                         doc = _a.sent();
-                        console.log(doc);
                         if (doc)
                             return [2, res.send({ dialogID: doc._id })];
                         return [4, new DialogModel_1.default({
@@ -162,26 +160,36 @@ var DialogController = (function () {
         });
     };
     DialogController.prototype.getDialog = function (req, res) {
-        var dialogID = req.query.dialogID;
-        var username = req.auth.username;
-        return new Promise(function (resolve, reject) {
-            DialogModel_1.default.findOne({ _id: dialogID }, { messages: 1, _id: 0, users: 1 }, function (err, res) {
-                if (err)
-                    throw err;
-                if (!res)
-                    return resolve([]);
-                var newObj = {
-                    messages: res.messages,
-                    users: Array,
-                };
-                res.users = res.users.map(function (el) { return ObjectId(el); });
-                UserModel_1.default.find({ _id: res.users }, function (err, docs) {
-                    newObj.users = docs;
-                    return resolve(newObj);
-                });
+        return __awaiter(this, void 0, void 0, function () {
+            var dialogID, docs, newObj, _a, error_1;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _b.trys.push([0, 3, , 4]);
+                        dialogID = req.query.dialogID;
+                        return [4, DialogModel_1.default.findOne({ _id: dialogID }, { messages: 1, _id: 0, users: 1 })];
+                    case 1:
+                        docs = _b.sent();
+                        if (!docs)
+                            return [2, res.send({ dialog: [] })];
+                        newObj = {
+                            messages: docs.messages,
+                            users: Array,
+                        };
+                        _a = newObj;
+                        return [4, UserModel_1.default.find({ _id: docs.users })];
+                    case 2:
+                        _a.users = _b.sent();
+                        res.send({ dialog: newObj });
+                        return [3, 4];
+                    case 3:
+                        error_1 = _b.sent();
+                        res.send({ error: error_1 });
+                        return [3, 4];
+                    case 4: return [2];
+                }
             });
-        }).then(function (dialog) { return res.send({ dialog: dialog }); })
-            .catch(function (error) { return res.send({ error: error }); });
+        });
     };
     return DialogController;
 }());
