@@ -2,39 +2,34 @@ import {Req, Res} from "../interfaces";
 
 const _ = require('lodash')
 const mongoose = require('mongoose')
-const ObjectId = mongoose.Types.ObjectId
+const {ObjectId} = require('mongodb');
 
 import UserModel from '../models/UserModel'
 import DialogModel from '../models/DialogModel'
 
 class DialogController {
-    public createDialog(req: Req, res: Res) {
-        const {users} = req.body
-        /* users is an array (2) of users in dialog */
-        return new Promise(function (resolve: any, reject: any) {
-            /* check if <users> is in some dialog */
-            DialogModel.findOne({users: users}, function (err: any, doc: any) {
-                if (err) throw err
-                if (doc) return resolve(doc._id)
-                /* Create dialog */
-                new DialogModel({
-                    users: users,
-                    messages: [],
-                    lastVisit: Date.now(),
-                }).save(function (err: any, res: any) {
-                    if (err) throw err
-                    const dialogID = res._id
-                    /* Add dialog ID to each user in this dialog (<users>) */
-                    UserModel.updateMany({_id: {$in: users}}, {$push: {messages: res._id}}, function (err: any, res: any) {
-                        if (err) throw err
-                        /* Send dialog ID */
-                        resolve(dialogID)
-                    })
-                })
+
+    public async createDialog(req: Req, res: Res) {
+        let {users} = req.body;
+        users = await users.map((el: any) => ObjectId(el))
+        try {
+            const doc = await DialogModel.findOne({users: users});
+            console.log(doc)
+            if (doc) return res.send({dialogID: doc._id});
+            await new DialogModel({
+                users: users,
+                messages: [],
+                lastVisit: Date.now(),
+            }).save(async (err: any, result: any) => {
+                const dialogID = result._id;
+                await UserModel.updateMany({_id: {$in: users}}, {$push: {messages: dialogID}});
+                res.send({dialogID: dialogID});
             })
-        }).then(dialogID => res.send({dialogID}))
-            .catch(e => res.end({error: e}))
+        } catch (e) {
+            res.end({error: e})
+        }
     }
+
 
     public async createMessage(roomID: any, message: any, username: any) {
         try {
@@ -50,60 +45,33 @@ class DialogController {
         }
     }
 
-    public getDialogsList(req: Req, res: Res) {
-        const username = req.auth.username
+    public async getDialogsList(req: Req, res: Res) {
+        const {user_id} = req.auth
         const query = req.query.query
-        return new Promise((resolve, reject) => {
-                UserModel.findOne({username}, {_id: 0}, function (err: any, doc: any) {
-                    if (err) throw err
-                    if (doc.messages.length == 0) return resolve([])
-                    let newArr: any = []
-                    DialogModel.find({_id: {$in: doc.messages}}, {messages: 0}, async function (err: any, docs: any) {
-                        if (err) throw err
-                        let i = 0
-                        await docs.map(async (el: any) => {
-                            el.users = el.users.map((el: any) => ObjectId(el))
-                            let documents;
-                            if (query) {
-                                documents = await UserModel.findOne(
-                                    {
-                                        $and: [{_id: {$in: el.users}}, {username: {$ne: username}}, {
-                                            username: {
-                                                $regex: query,
-                                                $options: 'i'
-                                            }
-                                        }]
-                                    },
-                                    {username: 1, avatar: 1, _id: 0})
-                            } else {
-                                documents = await UserModel.findOne({$and: [{_id: {$in: el.users}}, {username: {$ne: username}}]}, {
-                                    username: 1,
-                                    avatar: 1,
-                                    _id: 0
-                                })
-                            }
-                            if (documents) {
-                                newArr = await newArr.concat({
-                                    username: documents.username,
-                                    dialogID: el._id,
-                                    avatar: documents.avatar,
-                                    lastVisit: el.lastVisit
-                                })
-                            }
-                            if (i + 1 == docs.length) {
-                                /* Sort by lastVisit field to show newest dialogs */
-                                newArr.sort(function (a: any, b: any) {
-                                    if (a.lastVisit > b.lastVisit) return -1
-                                    return 1
-                                })
-                                return resolve(newArr)
-                            }
-                            i++;
-                        })
-                    })
-                })
-            }
-        ).then(dialogs => res.send({dialogs})).catch(error => res.send({error}))
+        try {
+            const {messages} = await UserModel.findOne({_id: user_id}, {_id: 0, messages: 1});
+            let aggregateParams = [
+                {$match: {_id: {$in: messages}}},
+                {$unwind: '$users'},
+                {$match: {users: {$not: {$eq: ObjectId(user_id)}}}},
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "users",
+                        foreignField: '_id',
+                        as: "userInfo"
+                    }
+                },
+                {$unwind: '$userInfo'},
+                {$match: {'userInfo.username': {$regex: query}}},
+                {$unset: ['users', 'messages', 'userInfo.posts', 'userInfo.messages', 'userInfo.password']},
+                {$sort: {lastVisit: -1}}
+            ]
+            const dialogs = await DialogModel.aggregate(aggregateParams);
+            res.send({dialogs: dialogs})
+        } catch (e) {
+            res.send({e})
+        }
     }
 
     public getDialog(req: Req, res: Res) {
@@ -128,6 +96,7 @@ class DialogController {
     }
 }
 
-const DialogControllerInstance: DialogController = new DialogController()
+const
+    DialogControllerInstance: DialogController = new DialogController()
 
 export default DialogControllerInstance
