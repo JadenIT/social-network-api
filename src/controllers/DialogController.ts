@@ -9,9 +9,9 @@ import DialogModel from '../models/DialogModel'
 class DialogController {
 
     public async createDialog(req: Req, res: Res) {
-        let {users} = req.body;
-        users = await users.map((el: any) => ObjectId(el))
         try {
+            let {users} = req.body;
+            users = await users.map((el: any) => ObjectId(el))
             const doc = await DialogModel.findOne({users: users});
             if (doc) return res.send({dialogID: doc._id});
             await new DialogModel({

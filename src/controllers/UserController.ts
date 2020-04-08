@@ -161,101 +161,80 @@ class UserController {
         }
     }
 
-    public subscribeToUser(req: Req, res: Res) {
-        return new Promise((resolve, reject) => {
-            /* user_id is username to subscriber */
+    public async subscribeToUser(req: Req, res: Res) {
+        try {
             const {user_id} = req.body
             const usernameID = req.auth.user_id
-            UserModel.findOne({_id: usernameID}, function (error: any, doc: any) {
-                const {subscriptions} = doc
-                if (subscriptions.includes(user_id)) return res.send({status: 'error', error: 'Already subscribed'})
-                UserModel.updateOne({_id: usernameID}, {$push: {subscriptions: user_id}}, (error: any) => {
-                    if (error) return res.send({status: 'error', error})
-                    UserModel.updateOne(
-                        {_id: user_id},
-                        {$push: {subscribers: usernameID,},}, (error: any) => {
-                            if (error) return reject(error)
-                            resolve()
-                        }
-                    )
-                })
-            })
-        }).then(response => res.send({status: 'ok'})).catch(error => res.send({status: 'error', error}))
+            const {subscriptions} = await UserModel.findOne({_id: usernameID});
+            if (subscriptions.includes(user_id)) return res.send({status: 'error', error: 'Already subscribed'})
+            await UserModel.updateOne({_id: usernameID}, {$push: {subscriptions: user_id}});
+            await UserModel.updateOne({_id: user_id}, {$push: {subscribers: usernameID,}});
+            res.send({status: 'ok'})
+        } catch (e) {
+            res.send({status: 'Error'})
+        }
     }
 
-    public unSubscribeFromUser(req: Req, res: Res) {
-        return new Promise((resolve, reject) => {
-            /* user_id is username to unsubscriber */
-            const {user_id} = req.body
-            const usernameID = req.auth.user_id
-            UserModel.updateOne(
-                {_id: usernameID},
-                {$pull: {subscriptions: user_id},},
-                (error: any) => {
-                    if (error) return reject(error)
-                    UserModel.updateOne(
-                        {_id: user_id},
-                        {$pull: {subscribers: usernameID,},},
-                        (error: any) => {
-                            if (error) return reject(error)
-                            resolve()
-                        }
-                    )
-                })
-        }).then(response => res.send({status: 'ok'})).catch(error => res.send({status: 'error', error}))
+    public async unSubscribeFromUser(req: Req, res: Res) {
+        try {
+            const {user_id} = req.body;
+            const usernameID = req.auth.user_id;
+            await UserModel.updateOne({_id: usernameID}, {$pull: {subscriptions: user_id},});
+            await UserModel.updateOne({_id: user_id}, {$pull: {subscribers: usernameID,},});
+            res.send({status: 'ok'});
+        } catch (e) {
+            res.send({status: 'Error'})
+        }
     }
 
-    public getSubscriptionsByUsername(req: Req, res: Res) {
-        return new Promise((resolve, reject) => {
+    public async getSubscriptionsByUsername(req: Req, res: Res) {
+        try {
             const {username} = req.params
-            UserModel.findOne({username}, {subscriptions: 1, _id: 0}, (error: any, doc: any) => {
-                if (error) reject(error)
-                if (!doc) return resolve([])
-                UserModel.find({_id: {$in: doc.subscriptions}}, {
-                    username: 1,
-                    avatar: 1,
-                    fullname: 1,
-                    _id: 0
-                }, (error: any, docs: any) => {
-                    if (error) reject(error)
-                    resolve(docs)
-                })
+            const doc = await UserModel.findOne({username}, {subscriptions: 1, _id: 0});
+            if (!doc) return res.send({subscriptions: []})
+            const docs = await UserModel.find({_id: {$in: doc.subscriptions}}, {
+                username: 1,
+                avatar: 1,
+                fullname: 1,
+                _id: 0
             })
-        }).then(Arr => res.send({status: 'ok', subscriptions: Arr})).catch(error => res.send({status: 'error', error}))
+            res.send({subscriptions: docs})
+        } catch (e) {
+            res.send({status: 'Error'})
+        }
     }
 
-    public getSubscribersByUsername(req: Req, res: Res) {
-        return new Promise((resolve, reject) => {
+    public async getSubscribersByUsername(req: Req, res: Res) {
+        try {
             const {username} = req.params
-            UserModel.findOne({username}, {subscribers: 1, _id: 0}, (error: any, doc: any) => {
-                if (!doc) return resolve([])
-                UserModel.find({_id: {$in: doc.subscribers}}, {
-                    username: 1,
-                    avatar: 1,
-                    fullname: 1
-                }, (error: any, docs: any) => {
-                    if (error) return reject(error)
-                    resolve(docs)
-                })
-            })
-        }).then(Arr => res.send({subscribers: Arr})).catch(error => res.send({status: 'error', error}))
+            const doc = await UserModel.findOne({username}, {subscribers: 1, _id: 0});
+            if (!doc) return res.send({subscribers: []})
+            const docs = await UserModel.find({_id: {$in: doc.subscribers}}, {
+                username: 1,
+                avatar: 1,
+                fullname: 1
+            });
+            res.send({subscribers: docs})
+        } catch (e) {
+            res.send({status: 'Error'})
+        }
     }
 
-    public suggestionsByUsername(req: Req, res: Res) {
-        return new Promise((resolve, reject) => {
+    public async suggestionsByUsername(req: Req, res: Res) {
+        try {
             const {username} = req.query
-            UserModel.find({username: {$not: {$eq: username}}}, (error: any, docs: any) => {
-                if (error) return reject(error)
-                if (docs.length === 0) return resolve([])
-                const newArr: any = []
-                docs.map((el: any, i: any) => {
-                    newArr.push({username: el.username, fullname: el.fullname, avatar: el.avatar})
-                    if (i + 1 == docs.length) {
-                        return resolve(newArr.sort(() => Math.random() - 0.5))
-                    }
-                })
-            }).limit(16)
-        }).then(Arr => res.send({suggestions: Arr})).catch(error => res.send({status: 'error', error}))
+            const docs = await UserModel.find({username: {$not: {$eq: username}}}).limit(16);
+            if (docs.length === 0) return res.send({suggestions: []})
+            const newArr: any = []
+            docs.map((el: any, i: any) => {
+                newArr.push({username: el.username, fullname: el.fullname, avatar: el.avatar})
+                if (i + 1 == docs.length) {
+                    return res.send({suggestions: newArr.sort(() => Math.random() - 0.5)})
+                }
+            })
+        } catch (e) {
+            res.send({status: 'Error'})
+        }
     }
 }
 

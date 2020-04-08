@@ -232,96 +232,154 @@ var UserController = (function () {
         });
     };
     UserController.prototype.subscribeToUser = function (req, res) {
-        return new Promise(function (resolve, reject) {
-            var user_id = req.body.user_id;
-            var usernameID = req.auth.user_id;
-            UserModel_1.default.findOne({ _id: usernameID }, function (error, doc) {
-                var subscriptions = doc.subscriptions;
-                if (subscriptions.includes(user_id))
-                    return res.send({ status: 'error', error: 'Already subscribed' });
-                UserModel_1.default.updateOne({ _id: usernameID }, { $push: { subscriptions: user_id } }, function (error) {
-                    if (error)
-                        return res.send({ status: 'error', error: error });
-                    UserModel_1.default.updateOne({ _id: user_id }, { $push: { subscribers: usernameID, }, }, function (error) {
-                        if (error)
-                            return reject(error);
-                        resolve();
-                    });
-                });
+        return __awaiter(this, void 0, void 0, function () {
+            var user_id, usernameID, subscriptions, e_4;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 4, , 5]);
+                        user_id = req.body.user_id;
+                        usernameID = req.auth.user_id;
+                        return [4, UserModel_1.default.findOne({ _id: usernameID })];
+                    case 1:
+                        subscriptions = (_a.sent()).subscriptions;
+                        if (subscriptions.includes(user_id))
+                            return [2, res.send({ status: 'error', error: 'Already subscribed' })];
+                        return [4, UserModel_1.default.updateOne({ _id: usernameID }, { $push: { subscriptions: user_id } })];
+                    case 2:
+                        _a.sent();
+                        return [4, UserModel_1.default.updateOne({ _id: user_id }, { $push: { subscribers: usernameID, } })];
+                    case 3:
+                        _a.sent();
+                        res.send({ status: 'ok' });
+                        return [3, 5];
+                    case 4:
+                        e_4 = _a.sent();
+                        res.send({ status: 'Error' });
+                        return [3, 5];
+                    case 5: return [2];
+                }
             });
-        }).then(function (response) { return res.send({ status: 'ok' }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
+        });
     };
     UserController.prototype.unSubscribeFromUser = function (req, res) {
-        return new Promise(function (resolve, reject) {
-            var user_id = req.body.user_id;
-            var usernameID = req.auth.user_id;
-            UserModel_1.default.updateOne({ _id: usernameID }, { $pull: { subscriptions: user_id }, }, function (error) {
-                if (error)
-                    return reject(error);
-                UserModel_1.default.updateOne({ _id: user_id }, { $pull: { subscribers: usernameID, }, }, function (error) {
-                    if (error)
-                        return reject(error);
-                    resolve();
-                });
+        return __awaiter(this, void 0, void 0, function () {
+            var user_id, usernameID, e_5;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 3, , 4]);
+                        user_id = req.body.user_id;
+                        usernameID = req.auth.user_id;
+                        return [4, UserModel_1.default.updateOne({ _id: usernameID }, { $pull: { subscriptions: user_id }, })];
+                    case 1:
+                        _a.sent();
+                        return [4, UserModel_1.default.updateOne({ _id: user_id }, { $pull: { subscribers: usernameID, }, })];
+                    case 2:
+                        _a.sent();
+                        res.send({ status: 'ok' });
+                        return [3, 4];
+                    case 3:
+                        e_5 = _a.sent();
+                        res.send({ status: 'Error' });
+                        return [3, 4];
+                    case 4: return [2];
+                }
             });
-        }).then(function (response) { return res.send({ status: 'ok' }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
+        });
     };
     UserController.prototype.getSubscriptionsByUsername = function (req, res) {
-        return new Promise(function (resolve, reject) {
-            var username = req.params.username;
-            UserModel_1.default.findOne({ username: username }, { subscriptions: 1, _id: 0 }, function (error, doc) {
-                if (error)
-                    reject(error);
-                if (!doc)
-                    return resolve([]);
-                UserModel_1.default.find({ _id: { $in: doc.subscriptions } }, {
-                    username: 1,
-                    avatar: 1,
-                    fullname: 1,
-                    _id: 0
-                }, function (error, docs) {
-                    if (error)
-                        reject(error);
-                    resolve(docs);
-                });
+        return __awaiter(this, void 0, void 0, function () {
+            var username, doc, docs, e_6;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 3, , 4]);
+                        username = req.params.username;
+                        return [4, UserModel_1.default.findOne({ username: username }, { subscriptions: 1, _id: 0 })];
+                    case 1:
+                        doc = _a.sent();
+                        if (!doc)
+                            return [2, res.send({ subscriptions: [] })];
+                        return [4, UserModel_1.default.find({ _id: { $in: doc.subscriptions } }, {
+                                username: 1,
+                                avatar: 1,
+                                fullname: 1,
+                                _id: 0
+                            })];
+                    case 2:
+                        docs = _a.sent();
+                        res.send({ subscriptions: docs });
+                        return [3, 4];
+                    case 3:
+                        e_6 = _a.sent();
+                        res.send({ status: 'Error' });
+                        return [3, 4];
+                    case 4: return [2];
+                }
             });
-        }).then(function (Arr) { return res.send({ status: 'ok', subscriptions: Arr }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
+        });
     };
     UserController.prototype.getSubscribersByUsername = function (req, res) {
-        return new Promise(function (resolve, reject) {
-            var username = req.params.username;
-            UserModel_1.default.findOne({ username: username }, { subscribers: 1, _id: 0 }, function (error, doc) {
-                if (!doc)
-                    return resolve([]);
-                UserModel_1.default.find({ _id: { $in: doc.subscribers } }, {
-                    username: 1,
-                    avatar: 1,
-                    fullname: 1
-                }, function (error, docs) {
-                    if (error)
-                        return reject(error);
-                    resolve(docs);
-                });
+        return __awaiter(this, void 0, void 0, function () {
+            var username, doc, docs, e_7;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 3, , 4]);
+                        username = req.params.username;
+                        return [4, UserModel_1.default.findOne({ username: username }, { subscribers: 1, _id: 0 })];
+                    case 1:
+                        doc = _a.sent();
+                        if (!doc)
+                            return [2, res.send({ subscribers: [] })];
+                        return [4, UserModel_1.default.find({ _id: { $in: doc.subscribers } }, {
+                                username: 1,
+                                avatar: 1,
+                                fullname: 1
+                            })];
+                    case 2:
+                        docs = _a.sent();
+                        res.send({ subscribers: docs });
+                        return [3, 4];
+                    case 3:
+                        e_7 = _a.sent();
+                        res.send({ status: 'Error' });
+                        return [3, 4];
+                    case 4: return [2];
+                }
             });
-        }).then(function (Arr) { return res.send({ subscribers: Arr }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
+        });
     };
     UserController.prototype.suggestionsByUsername = function (req, res) {
-        return new Promise(function (resolve, reject) {
-            var username = req.query.username;
-            UserModel_1.default.find({ username: { $not: { $eq: username } } }, function (error, docs) {
-                if (error)
-                    return reject(error);
-                if (docs.length === 0)
-                    return resolve([]);
-                var newArr = [];
-                docs.map(function (el, i) {
-                    newArr.push({ username: el.username, fullname: el.fullname, avatar: el.avatar });
-                    if (i + 1 == docs.length) {
-                        return resolve(newArr.sort(function () { return Math.random() - 0.5; }));
-                    }
-                });
-            }).limit(16);
-        }).then(function (Arr) { return res.send({ suggestions: Arr }); }).catch(function (error) { return res.send({ status: 'error', error: error }); });
+        return __awaiter(this, void 0, void 0, function () {
+            var username, docs_1, newArr_1, e_8;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        username = req.query.username;
+                        return [4, UserModel_1.default.find({ username: { $not: { $eq: username } } }).limit(16)];
+                    case 1:
+                        docs_1 = _a.sent();
+                        if (docs_1.length === 0)
+                            return [2, res.send({ suggestions: [] })];
+                        newArr_1 = [];
+                        docs_1.map(function (el, i) {
+                            newArr_1.push({ username: el.username, fullname: el.fullname, avatar: el.avatar });
+                            if (i + 1 == docs_1.length) {
+                                return res.send({ suggestions: newArr_1.sort(function () { return Math.random() - 0.5; }) });
+                            }
+                        });
+                        return [3, 3];
+                    case 2:
+                        e_8 = _a.sent();
+                        res.send({ status: 'Error' });
+                        return [3, 3];
+                    case 3: return [2];
+                }
+            });
+        });
     };
     return UserController;
 }());

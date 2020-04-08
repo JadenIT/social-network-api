@@ -44,25 +44,23 @@ var DialogController = (function () {
     }
     DialogController.prototype.createDialog = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var users, doc, e_1;
+            var users_1, doc, e_1;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        users = req.body.users;
-                        return [4, users.map(function (el) { return ObjectId(el); })];
+                        _a.trys.push([0, 4, , 5]);
+                        users_1 = req.body.users;
+                        return [4, users_1.map(function (el) { return ObjectId(el); })];
                     case 1:
-                        users = _a.sent();
-                        _a.label = 2;
+                        users_1 = _a.sent();
+                        return [4, DialogModel_1.default.findOne({ users: users_1 })];
                     case 2:
-                        _a.trys.push([2, 5, , 6]);
-                        return [4, DialogModel_1.default.findOne({ users: users })];
-                    case 3:
                         doc = _a.sent();
                         if (doc)
                             return [2, res.send({ dialogID: doc._id })];
                         return [4, new DialogModel_1.default({
-                                users: users,
+                                users: users_1,
                                 messages: [],
                                 lastVisit: Date.now(),
                             }).save(function (err, result) { return __awaiter(_this, void 0, void 0, function () {
@@ -71,7 +69,7 @@ var DialogController = (function () {
                                     switch (_a.label) {
                                         case 0:
                                             dialogID = result._id;
-                                            return [4, UserModel_1.default.updateMany({ _id: { $in: users } }, { $push: { messages: dialogID } })];
+                                            return [4, UserModel_1.default.updateMany({ _id: { $in: users_1 } }, { $push: { messages: dialogID } })];
                                         case 1:
                                             _a.sent();
                                             res.send({ dialogID: dialogID });
@@ -79,14 +77,14 @@ var DialogController = (function () {
                                     }
                                 });
                             }); })];
-                    case 4:
+                    case 3:
                         _a.sent();
-                        return [3, 6];
-                    case 5:
+                        return [3, 5];
+                    case 4:
                         e_1 = _a.sent();
                         res.end({ error: e_1 });
-                        return [3, 6];
-                    case 6: return [2];
+                        return [3, 5];
+                    case 5: return [2];
                 }
             });
         });
