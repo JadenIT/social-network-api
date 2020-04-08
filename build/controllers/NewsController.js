@@ -39,52 +39,9 @@ var UserModel_1 = require("../models/UserModel");
 var NewsController = (function () {
     function NewsController() {
     }
-    NewsController.getNewsByArrOfSubscriptions = function (arr) {
-        return __awaiter(this, void 0, void 0, function () {
-            var response, newArr_1, e_1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        if (arr.length <= 0)
-                            return [2, []];
-                        return [4, UserModel_1.default.find({ _id: { $in: arr } })];
-                    case 1:
-                        response = _a.sent();
-                        newArr_1 = [];
-                        response.map(function (el) {
-                            el.posts.map(function (el2) {
-                                delete el2.username;
-                                delete el2.avatar;
-                                newArr_1.push({
-                                    _id: el._id,
-                                    username: el.username,
-                                    fullname: el.fullname,
-                                    avatar: el.avatar,
-                                    post: el2,
-                                });
-                            });
-                        });
-                        newArr_1.sort(function (a, b) {
-                            if (a.post.timestamp > b.post.timestamp) {
-                                return -1;
-                            }
-                            else {
-                                return 1;
-                            }
-                        });
-                        return [2, newArr_1];
-                    case 2:
-                        e_1 = _a.sent();
-                        return [3, 3];
-                    case 3: return [2];
-                }
-            });
-        });
-    };
     NewsController.prototype.getNewsByUsername = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, page, perpage, username, end, start, doc, subscriptions, news, e_2;
+            var _a, page, perpage, username, end, start, doc, subscriptions, news, e_1;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -109,7 +66,7 @@ var NewsController = (function () {
                         res.send({ news: news.splice(start, perpage) });
                         return [3, 4];
                     case 3:
-                        e_2 = _b.sent();
+                        e_1 = _b.sent();
                         res.send({ status: 'Error' });
                         return [3, 4];
                     case 4: return [2];

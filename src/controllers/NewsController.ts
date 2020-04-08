@@ -2,40 +2,6 @@ import UserModel from '../models/UserModel'
 import {Res, Req} from '../interfaces/index'
 
 class NewsController {
-    static async getNewsByArrOfSubscriptions(arr: Array<String>) {
-        try {
-            if (arr.length <= 0) return []
-            const response = await UserModel.find({_id: {$in: arr}})
-            let newArr: Array<any> = []
-
-            response.map((el: any) => {
-                el.posts.map((el2: any) => {
-                    delete el2.username
-                    delete el2.avatar
-
-                    newArr.push({
-                        _id: el._id,
-                        username: el.username,
-                        fullname: el.fullname,
-                        avatar: el.avatar,
-                        post: el2,
-                    })
-                })
-            })
-            newArr.sort((a: any, b: any) => {
-                if (a.post.timestamp > b.post.timestamp) {
-                    return -1
-                } else {
-                    return 1
-                }
-            })
-
-            return newArr
-
-        } catch (e) {
-
-        }
-    }
 
     public async getNewsByUsername(req: Req, res: Res) {
         try {
