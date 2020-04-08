@@ -79,77 +79,82 @@ class UserController {
         }
     }
 
-    public updateUser(req: Req, res: Res) {
-        return new Promise((resolve, reject) => {
+    public async updateUser(req: Req, res: Res) {
+        try {
             upload(req, res, async (err: Error) => {
-                if (err) return reject('Произошла ошибка, скорее всего файл слишком большой')
+                if (err) return res.send({
+                    status: 'Error',
+                    error: 'Произошла ошибка, скорее всего файл слишком большой'
+                })
                 const {oldUsername, newUsername, newPassword, newAbout, newFullname} = req.body
                 const fileURL = req.files[0] ? req.files[0].location : null
-
                 let query: User = {}
-
                 if (fileURL) query.avatar = fileURL.toString('base64')
-
                 if (newFullname) {
-                    if (_.trim(newFullname).length < 2) return reject('Имя и фамилия должны содержать более 1 символа')
+                    if (_.trim(newFullname).length < 2) return res.send({
+                        status: "Error",
+                        error: 'Имя и фамилия должны содержать более 1 символа'
+                    })
                     query.fullname = newFullname
                 }
 
                 !newAbout ? (query.about = '') : (query.about = newAbout)
 
                 if (newUsername) {
-                    if (_.trim(newUsername).length < 4) return reject('Имя пользователя должно содержать более 3 символов')
-                    await UserController.isUsernameIsFree(newUsername)
-                        .then((onResolved: any) => {
-                            if (!onResolved) return reject('Имя занято')
-                            query.username = newUsername
-                        })
-                        .catch((err: any) => reject(err))
+                    if (_.trim(newUsername).length < 4) return res.send({
+                        status: 'Error',
+                        error: 'Имя пользователя должно содержать более 3 символов'
+                    })
+                    const isUsernameFree = await UserController.isUsernameIsFree(newUsername);
+                    if (!isUsernameFree) return res.send({status: "Error", error: 'Имя занято'});
+                    query.username = newUsername
                 }
 
                 if (newPassword) {
-                    if (_.trim(newPassword).length < 4) return reject('Пароль должен содержать более 3 символов')
-                    await bcrypt.hash(newPassword, 10).then(
-                        (hash: any) => (query.password = hash),
-                        (error: any) => res.send({status: 'error', error})
-                    )
-                }
-                UserModel.updateOne({_id: req.auth.user_id}, {$set: query}, (error: any, result: any) => {
-                    if (error) return reject(error)
-                    jwt.sign({
-                        username: newUsername ? newUsername : oldUsername,
-                        user_id: req.auth.user_id
-                    }, Config.JWT_KEY, (err: any, token: any) => {
-                        res.setHeader(
-                            'Set-Cookie',
-                            cookie.serialize('token', token, {
-                                maxAge: 60 * 60 * 24 * 7,
-                                path: '/',
-                            })
-                        )
-                        resolve()
+                    if (_.trim(newPassword).length < 4) return res.send({
+                        status: "Error",
+                        error: 'Пароль должен содержать более 3 символов'
                     })
-                })
+                    query.password = await bcrypt.hash(newPassword, 10);
+                }
+                await UserModel.updateOne({_id: req.auth.user_id}, {$set: query});
+
+
+                const token = jwt.sign({
+                    username: newUsername ? newUsername : oldUsername,
+                    user_id: req.auth.user_id
+                }, Config.JWT_KEY);
+
+                res.setHeader(
+                    'Set-Cookie',
+                    cookie.serialize('token', token, {
+                        maxAge: 60 * 60 * 24 * 7,
+                        path: '/',
+                    })
+                )
+                res.send({status: 'ok'})
             })
-        }).then(response => res.send({status: 'ok'})).catch(error => res.send({status: 'error', error}))
+        } catch
+            (e) {
+            res.send({status: 'Error'})
+        }
     }
 
-    public getUserByUsername(req: Req, res: Res) {
-        return new Promise((resolve, reject) => {
+    public async getUserByUsername(req: Req, res: Res) {
+        try {
             const {username} = req.params
-            UserModel.findOne({username: username}, {password: 0}, (error: any, doc: any) => {
-                if (error) return reject(error)
-                doc &&
-                doc.posts.sort((a: any, b: any) => {
-                    if (a.timestamp > b.timestamp) {
-                        return -1
-                    } else {
-                        return 1
-                    }
-                })
-                resolve(doc)
+            const doc = await UserModel.findOne({username: username}, {password: 0});
+            doc && doc.posts.sort((a: any, b: any) => {
+                if (a.timestamp > b.timestamp) {
+                    return -1
+                } else {
+                    return 1
+                }
             })
-        }).then(user => res.send({user: user})).catch(error => res.send({status: 'error', error}))
+            res.send({user: doc})
+        } catch (e) {
+            res.send({status: 'Error'})
+        }
     }
 
     public async getUserIdByUsername(username: String) {
