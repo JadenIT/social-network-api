@@ -68,11 +68,12 @@ var AuthController = (function () {
                         if (!hash)
                             return [2, res.send({ status: 'Error', error: 'Неверный пароль' })];
                         token = jwt.sign({ user_id: user._id, username: username }, config_1.default.JWT_KEY);
+                        console.log(token);
                         res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                             maxAge: 60 * 60 * 24 * 7,
                             path: '/',
                         }));
-                        res.send({ status: 'ok' });
+                        res.send({ status: 'ok', token: token });
                         return [3, 4];
                     case 3:
                         e_1 = _b.sent();
