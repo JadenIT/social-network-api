@@ -75,6 +75,8 @@ class UserController {
                 cookie.serialize('token', token, {
                     maxAge: 60 * 60 * 24 * 7,
                     path: '/',
+                    domain: 'vladislavkruglikov.com',
+                    sameSite: 'strict',
                 })
             );
 
