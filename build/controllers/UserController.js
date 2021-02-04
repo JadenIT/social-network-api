@@ -72,6 +72,8 @@ var UserController = (function () {
         res.setHeader('Set-Cookie', cookie.serialize('token', null, {
             maxAge: 0,
             path: '/',
+            domain: 'vladislavkruglikov.com',
+            sameSite: 'strict',
         }));
         res.send({ status: 'ok' });
     };
