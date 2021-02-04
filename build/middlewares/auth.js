@@ -51,6 +51,8 @@ function auth(req, res, next) {
                     return [4, jwt.verify(token, config_1.default.JWT_KEY)];
                 case 1:
                     decoded = _a.sent();
+                    if (!decoded)
+                        return [2, res.send({ status: 'error', error: 'Not authorized' })];
                     req.auth = {
                         user_id: decoded.user_id,
                         username: decoded.username
