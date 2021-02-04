@@ -26,9 +26,9 @@ class AuthController {
                 'Set-Cookie',
                 cookie.serialize('token', token, {
                     maxAge: 60 * 60 * 24 * 7,
-                    domain: 'vladislavkruglikov.com',
-                    path: '/',
+                    domain: process.env.DOMAIN,
                     sameSite: 'strict',
+                    path: '/',
                 })
             );
 

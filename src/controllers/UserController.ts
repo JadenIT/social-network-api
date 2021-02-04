@@ -29,7 +29,7 @@ class UserController {
             cookie.serialize('token', null, {
                 maxAge: 0,
                 path: '/',
-                domain: 'vladislavkruglikov.com',
+                domain: process.env.DOMAIN,
                 sameSite: 'strict',
             })
         )
@@ -75,7 +75,7 @@ class UserController {
                 cookie.serialize('token', token, {
                     maxAge: 60 * 60 * 24 * 7,
                     path: '/',
-                    domain: 'vladislavkruglikov.com',
+                    domain: process.env.DOMAIN,
                     sameSite: 'strict',
                 })
             );
@@ -139,6 +139,8 @@ class UserController {
                 cookie.serialize('token', token, {
                     maxAge: 60 * 60 * 24 * 7,
                     path: '/',
+                    domain: process.env.DOMAIN,
+                    sameSite: 'strict',
                 })
             )
             res.send({ status: 'ok' })

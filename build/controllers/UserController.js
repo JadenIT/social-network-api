@@ -72,7 +72,7 @@ var UserController = (function () {
         res.setHeader('Set-Cookie', cookie.serialize('token', null, {
             maxAge: 0,
             path: '/',
-            domain: 'vladislavkruglikov.com',
+            domain: process.env.DOMAIN,
             sameSite: 'strict',
         }));
         res.send({ status: 'ok' });
@@ -121,7 +121,7 @@ var UserController = (function () {
                         res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                             maxAge: 60 * 60 * 24 * 7,
                             path: '/',
-                            domain: 'vladislavkruglikov.com',
+                            domain: process.env.DOMAIN,
                             sameSite: 'strict',
                         }));
                         res.send({ status: 'ok' });
@@ -194,6 +194,8 @@ var UserController = (function () {
                         res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                             maxAge: 60 * 60 * 24 * 7,
                             path: '/',
+                            domain: process.env.DOMAIN,
+                            sameSite: 'strict',
                         }));
                         res.send({ status: 'ok' });
                         return [3, 7];
