@@ -39,6 +39,11 @@ var Server = (function () {
         this.app.use('/auth', AuthRouter_1.default);
         this.app.use('/messenger', DialogRouter_1.default);
         this.app.use('/news', NewsRouter_1.default);
+        this.app.get('/v', function (req, res) {
+            res.send({
+                version: 1
+            });
+        });
     };
     return Server;
 }());

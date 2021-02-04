@@ -49,6 +49,11 @@ class Server {
         this.app.use('/auth', AuthRouter);
         this.app.use('/messenger', DialogRouter);
         this.app.use('/news', NewsRouter);
+        this.app.get('/v', (req, res) => {
+            res.send({
+                version: 1
+            })
+        })
     }
 }
 
