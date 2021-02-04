@@ -22,7 +22,7 @@ class AuthController {
             if (!hash) return res.send({ status: 'Error', error: 'Неверный пароль' });
             const token = jwt.sign({ user_id: user._id, username: username }, Config.JWT_KEY);
 
-            console.log(token)
+            console.log('----+++++_---+++++ ',username, hash, token)
 
             res.setHeader(
                 'Set-Cookie',
