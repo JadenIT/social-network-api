@@ -41,7 +41,7 @@ var Server = (function () {
         this.app.use('/news', NewsRouter_1.default);
         this.app.get('/v', function (req, res) {
             res.send({
-                version: 1
+                version: 2
             });
         });
     };
