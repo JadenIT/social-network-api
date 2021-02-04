@@ -29,6 +29,7 @@ class AuthController {
                 cookie.serialize('token', token, {
                     maxAge: 60 * 60 * 24 * 7,
                     path: '/',
+                    domain:'vladislavkruglikov.com'
                 })
             );
             res.send({ status: 'ok', token: token });
