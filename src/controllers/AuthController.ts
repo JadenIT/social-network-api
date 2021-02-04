@@ -22,8 +22,6 @@ class AuthController {
             if (!hash) return res.send({ status: 'Error', error: 'Неверный пароль' });
             const token = jwt.sign({ user_id: user._id, username: username }, Config.JWT_KEY);
 
-            console.log('----+++++_---+++++ ',username, hash, token)
-
             res.setHeader(
                 'Set-Cookie',
                 cookie.serialize('token', token, {
@@ -32,6 +30,9 @@ class AuthController {
                     path: '/'
                 })
             );
+
+            console.log(req.cookies)
+
             res.send({ status: 'ok', token: token });
         } catch (e) {
             res.send({ status: 'error', e });

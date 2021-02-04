@@ -45,7 +45,6 @@ function auth(req, res, next) {
             switch (_a.label) {
                 case 0:
                     token = cookie.parse(req.headers.cookie || '').token;
-                    console.log('******', token, config_1.default.JWT_KEY);
                     if (!token) {
                         return [2, res.send({ status: 'error', error: 'Not authorized' })];
                     }

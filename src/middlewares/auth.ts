@@ -7,7 +7,6 @@ const cookie = require('cookie');
 
 export default async function auth(req: Request, res: Response, next: NextFunction) {
     const { token } = cookie.parse(req.headers.cookie || '');
-    console.log('******', token, Config.JWT_KEY)
     if (!token) {
         return res.send({ status: 'error', error: 'Not authorized' });
     }
