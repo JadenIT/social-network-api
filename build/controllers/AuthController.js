@@ -70,7 +70,7 @@ var AuthController = (function () {
                         token = jwt.sign({ user_id: user._id, username: username }, config_1.default.JWT_KEY);
                         res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                             maxAge: 60 * 60 * 24 * 7,
-                            domain: 'www.vladislavkruglikov.com',
+                            domain: 'vladislavkruglikov.com',
                             path: '/',
                             sameSite: 'strict',
                         }));

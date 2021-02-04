@@ -51,7 +51,7 @@ class Server {
         this.app.use('/news', NewsRouter);
         this.app.get('/v', (req, res) => {
             res.send({
-                version: 7
+                version: 8
             })
         })
     }
