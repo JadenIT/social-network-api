@@ -33,14 +33,12 @@ class Server {
     private socket = () => new Socket(this.server);
 
     private middlewares(): void {
-
+        this.app.use(cors);
         this.app.use(upload());
-
         this.app.use(cookies);
         this.app.use(bodyParser.urlencoded({ extended: true }));
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(bodyParser.json());
-        this.app.use(cors);
         this.app.use(express.static(__dirname));
     }
 

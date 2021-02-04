@@ -24,12 +24,12 @@ var Server = (function () {
         this.socket();
     }
     Server.prototype.middlewares = function () {
+        this.app.use(cors_1.default);
         this.app.use(upload());
         this.app.use(cookies_1.default);
         this.app.use(bodyParser.urlencoded({ extended: true }));
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(bodyParser.json());
-        this.app.use(cors_1.default);
         this.app.use(express.static(__dirname));
     };
     Server.prototype.routes = function () {
