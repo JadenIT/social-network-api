@@ -71,7 +71,8 @@ var AuthController = (function () {
                         res.setHeader('Set-Cookie', cookie.serialize('token', token, {
                             maxAge: 60 * 60 * 24 * 7,
                             domain: 'www.vladislavkruglikov.com',
-                            path: '/'
+                            path: '/',
+                            sameSite: 'strict',
                         }));
                         console.log(req.cookies);
                         res.send({ status: 'ok', token: token });
