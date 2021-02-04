@@ -45,11 +45,12 @@ function auth(req, res, next) {
             switch (_a.label) {
                 case 0:
                     token = cookie.parse(req.headers.cookie || '').token;
+                    if (!token) {
+                        return [2, res.send({ status: 'error', error: 'Not authorized' })];
+                    }
                     return [4, jwt.verify(token, config_1.default.JWT_KEY)];
                 case 1:
                     decoded = _a.sent();
-                    if (!decoded)
-                        return [2, res.send({ status: 'error', error: 'Not authorized' })];
                     req.auth = {
                         user_id: decoded.user_id,
                         username: decoded.username

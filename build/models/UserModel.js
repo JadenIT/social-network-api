@@ -20,7 +20,7 @@ var userSchema = new config_1.default.mongoose.Schema({
     posts: Array,
     avatar: {
         type: String,
-        default: '230-2301779_best-classified-apps-default-user-profile.png',
+        default: 'https://social-network-1601.s3.eu-north-1.amazonaws.com/default.jpg',
         required: true
     },
     subscribers: {
