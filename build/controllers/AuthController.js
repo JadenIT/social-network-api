@@ -87,7 +87,6 @@ var AuthController = (function () {
         return __awaiter(this, void 0, void 0, function () {
             var token, decoded;
             return __generator(this, function (_a) {
-                console.log(1);
                 try {
                     token = req.cookies.token;
                     if (!token)

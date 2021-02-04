@@ -36,7 +36,6 @@ class AuthController {
     }
 
     public async Authorize(req: Req, res: Res) {
-        console.log(1)
         try {
             const {token} = req.cookies;
             if (!token) return res.send({isAuthorized: false, token: null});

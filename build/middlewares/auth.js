@@ -53,6 +53,7 @@ function auth(req, res, next) {
                     decoded = _a.sent();
                     if (!decoded)
                         return [2, res.send({ status: 'error', error: 'Not authorized' })];
+                    console.log('******', decoded);
                     req.auth = {
                         user_id: decoded.user_id,
                         username: decoded.username
