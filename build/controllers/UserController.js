@@ -42,7 +42,7 @@ var _ = require('lodash');
 var ObjectId = require('mongodb').ObjectId;
 var UserModel_1 = require("../models/UserModel");
 var config_1 = require("../config");
-var storage_1 = require("../middlewares/storage");
+var GoogleCloud_1 = require("./GoogleCloud");
 var UserController = (function () {
     function UserController() {
     }
@@ -124,6 +124,7 @@ var UserController = (function () {
                         return [3, 5];
                     case 4:
                         e_2 = _b.sent();
+                        console.log(e_2);
                         res.send({ status: 'error', e: e_2 });
                         return [3, 5];
                     case 5: return [2];
@@ -133,85 +134,77 @@ var UserController = (function () {
     };
     UserController.prototype.updateUser = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                try {
-                    storage_1.default(req, res, function (err) { return __awaiter(_this, void 0, void 0, function () {
-                        var _a, oldUsername, newUsername, newPassword, newAbout, newFullname, fileURL, query, isUsernameFree, _b, token;
-                        return __generator(this, function (_c) {
-                            switch (_c.label) {
-                                case 0:
-                                    if (err)
-                                        return [2, res.send({
-                                                status: 'Error',
-                                                error: 'Произошла ошибка, скорее всего файл слишком большой'
-                                            })];
-                                    _a = req.body, oldUsername = _a.oldUsername, newUsername = _a.newUsername, newPassword = _a.newPassword, newAbout = _a.newAbout, newFullname = _a.newFullname;
-                                    fileURL = req.files[0] ? req.files[0].location : null;
-                                    query = {};
-                                    if (fileURL)
-                                        query.avatar = fileURL.toString('base64');
-                                    if (newFullname) {
-                                        if (_.trim(newFullname).length < 2)
-                                            return [2, res.send({
-                                                    status: "Error",
-                                                    error: 'Имя и фамилия должны содержать более 1 символа'
-                                                })];
-                                        query.fullname = newFullname;
-                                    }
-                                    !newAbout ? (query.about = '') : (query.about = newAbout);
-                                    if (!newUsername) return [3, 2];
-                                    if (_.trim(newUsername).length < 4)
-                                        return [2, res.send({
-                                                status: 'Error',
-                                                error: 'Имя пользователя должно содержать более 3 символов'
-                                            })];
-                                    return [4, UserController.isUsernameIsFree(newUsername)];
-                                case 1:
-                                    isUsernameFree = _c.sent();
-                                    if (!isUsernameFree)
-                                        return [2, res.send({ status: "Error", error: 'Имя занято' })];
-                                    query.username = newUsername;
-                                    _c.label = 2;
-                                case 2:
-                                    if (!newPassword) return [3, 4];
-                                    if (_.trim(newPassword).length < 4)
-                                        return [2, res.send({
-                                                status: "Error",
-                                                error: 'Пароль должен содержать более 3 символов'
-                                            })];
-                                    _b = query;
-                                    return [4, bcrypt.hash(newPassword, 10)];
-                                case 3:
-                                    _b.password = _c.sent();
-                                    _c.label = 4;
-                                case 4: return [4, UserModel_1.default.updateOne({ _id: req.auth.user_id }, { $set: query })];
-                                case 5:
-                                    _c.sent();
-                                    token = jwt.sign({
-                                        username: newUsername ? newUsername : oldUsername,
-                                        user_id: req.auth.user_id
-                                    }, config_1.default.JWT_KEY);
-                                    res.setHeader('Set-Cookie', cookie.serialize('token', token, {
-                                        maxAge: 60 * 60 * 24 * 7,
-                                        path: '/',
-                                    }));
-                                    res.send({ status: 'ok' });
-                                    return [2];
-                            }
-                        });
-                    }); });
+            var _a, oldUsername, newUsername, newPassword, newAbout, newFullname, query, time, isUsernameFree, _b, token, e_3;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        _c.trys.push([0, 6, , 7]);
+                        _a = req.body, oldUsername = _a.oldUsername, newUsername = _a.newUsername, newPassword = _a.newPassword, newAbout = _a.newAbout, newFullname = _a.newFullname;
+                        query = {};
+                        if (req.files['newAvatar']) {
+                            time = new Date().getTime();
+                            query.avatar = time.toString() + req.files['newAvatar']['name'];
+                            GoogleCloud_1.saveFile(req.files['newAvatar']['data'], query.avatar);
+                        }
+                        if (newFullname) {
+                            if (_.trim(newFullname).length < 2)
+                                return [2, res.send({
+                                        status: "Error",
+                                        error: 'Имя и фамилия должны содержать более 1 символа'
+                                    })];
+                            query.fullname = newFullname;
+                        }
+                        !newAbout ? (query.about = '') : (query.about = newAbout);
+                        if (!newUsername) return [3, 2];
+                        if (_.trim(newUsername).length < 4)
+                            return [2, res.send({
+                                    status: 'Error',
+                                    error: 'Имя пользователя должно содержать более 3 символов'
+                                })];
+                        return [4, UserController.isUsernameIsFree(newUsername)];
+                    case 1:
+                        isUsernameFree = _c.sent();
+                        if (!isUsernameFree)
+                            return [2, res.send({ status: "Error", error: 'Имя занято' })];
+                        query.username = newUsername;
+                        _c.label = 2;
+                    case 2:
+                        if (!newPassword) return [3, 4];
+                        if (_.trim(newPassword).length < 4)
+                            return [2, res.send({
+                                    status: "Error",
+                                    error: 'Пароль должен содержать более 3 символов'
+                                })];
+                        _b = query;
+                        return [4, bcrypt.hash(newPassword, 10)];
+                    case 3:
+                        _b.password = _c.sent();
+                        _c.label = 4;
+                    case 4: return [4, UserModel_1.default.updateOne({ _id: req.auth.user_id }, { $set: query })];
+                    case 5:
+                        _c.sent();
+                        token = jwt.sign({
+                            username: newUsername ? newUsername : oldUsername,
+                            user_id: req.auth.user_id
+                        }, config_1.default.JWT_KEY);
+                        res.setHeader('Set-Cookie', cookie.serialize('token', token, {
+                            maxAge: 60 * 60 * 24 * 7,
+                            path: '/',
+                        }));
+                        res.send({ status: 'ok' });
+                        return [3, 7];
+                    case 6:
+                        e_3 = _c.sent();
+                        res.send({ status: 'Error' });
+                        return [3, 7];
+                    case 7: return [2];
                 }
-                catch (e) {
-                    res.send({ status: 'Error' });
-                }
-                return [2];
             });
         });
     };
     UserController.prototype.getUserByUsername = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var username, doc, e_3;
+            var username, doc, e_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -231,7 +224,7 @@ var UserController = (function () {
                         res.send({ user: doc });
                         return [3, 3];
                     case 2:
-                        e_3 = _a.sent();
+                        e_4 = _a.sent();
                         res.send({ status: 'Error' });
                         return [3, 3];
                     case 3: return [2];
@@ -241,7 +234,7 @@ var UserController = (function () {
     };
     UserController.prototype.getUserIdByUsername = function (username) {
         return __awaiter(this, void 0, void 0, function () {
-            var _id, e_4;
+            var _id, e_5;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -251,7 +244,7 @@ var UserController = (function () {
                         _id = (_a.sent())._id;
                         return [2, _id];
                     case 2:
-                        e_4 = _a.sent();
+                        e_5 = _a.sent();
                         return [3, 3];
                     case 3: return [2];
                 }
@@ -260,7 +253,7 @@ var UserController = (function () {
     };
     UserController.prototype.subscribeToUser = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var user_id, usernameID, subscriptions, e_5;
+            var user_id, usernameID, subscriptions, e_6;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -281,7 +274,7 @@ var UserController = (function () {
                         res.send({ status: 'ok' });
                         return [3, 5];
                     case 4:
-                        e_5 = _a.sent();
+                        e_6 = _a.sent();
                         res.send({ status: 'Error' });
                         return [3, 5];
                     case 5: return [2];
@@ -291,7 +284,7 @@ var UserController = (function () {
     };
     UserController.prototype.unSubscribeFromUser = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var user_id, usernameID, e_6;
+            var user_id, usernameID, e_7;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -307,7 +300,7 @@ var UserController = (function () {
                         res.send({ status: 'ok' });
                         return [3, 4];
                     case 3:
-                        e_6 = _a.sent();
+                        e_7 = _a.sent();
                         res.send({ status: 'Error' });
                         return [3, 4];
                     case 4: return [2];
@@ -317,7 +310,7 @@ var UserController = (function () {
     };
     UserController.prototype.getSubscriptionsByUsername = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var username, doc, docs, e_7;
+            var username, doc, docs, e_8;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -339,7 +332,7 @@ var UserController = (function () {
                         res.send({ subscriptions: docs });
                         return [3, 4];
                     case 3:
-                        e_7 = _a.sent();
+                        e_8 = _a.sent();
                         res.send({ status: 'Error' });
                         return [3, 4];
                     case 4: return [2];
@@ -349,7 +342,7 @@ var UserController = (function () {
     };
     UserController.prototype.getSubscribersByUsername = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var username, doc, docs, e_8;
+            var username, doc, docs, e_9;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -370,7 +363,7 @@ var UserController = (function () {
                         res.send({ subscribers: docs });
                         return [3, 4];
                     case 3:
-                        e_8 = _a.sent();
+                        e_9 = _a.sent();
                         res.send({ status: 'Error' });
                         return [3, 4];
                     case 4: return [2];
@@ -380,7 +373,7 @@ var UserController = (function () {
     };
     UserController.prototype.suggestionsByUsername = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var username, docs_1, newArr_1, e_9;
+            var username, docs_1, newArr_1, e_10;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -400,7 +393,7 @@ var UserController = (function () {
                         });
                         return [3, 3];
                     case 2:
-                        e_9 = _a.sent();
+                        e_10 = _a.sent();
                         res.send({ status: 'Error' });
                         return [3, 3];
                     case 3: return [2];

@@ -37,58 +37,58 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var uniqid = require('uniqid');
 var ObjectId = require('mongodb').ObjectID;
-var storage_1 = require("../middlewares/storage");
 var UserController_1 = require("./UserController");
 var UserModel_1 = require("../models/UserModel");
+var GoogleCloud_1 = require("./GoogleCloud");
 var EntryController = (function () {
     function EntryController() {
     }
     EntryController.prototype.create = function (req, res) {
-        var _this = this;
-        try {
-            storage_1.default(req, res, function (err) { return __awaiter(_this, void 0, void 0, function () {
-                var username, fileURL, _id;
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            if (err)
-                                return [2, res.send({
-                                        status: "Error",
-                                        error: 'Произошла ошибка, скорее всего файл слишком большой'
-                                    })];
-                            username = req.auth.username;
-                            fileURL = req.files[0] ? req.files[0].location : null;
-                            return [4, UserController_1.default.getUserIdByUsername(username)];
-                        case 1:
-                            _id = _a.sent();
-                            return [4, UserModel_1.default.updateOne({ username: username }, {
-                                    $push: {
-                                        posts: {
-                                            author: _id,
-                                            _id: uniqid(),
-                                            text: req.body.text,
-                                            username: username,
-                                            timestamp: Date.now(),
-                                            likedBy: [],
-                                            fileURL: fileURL
-                                        }
+        return __awaiter(this, void 0, void 0, function () {
+            var fileURL, time, username, _id, e_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 3, , 4]);
+                        fileURL = null;
+                        if (req.files['file']) {
+                            time = new Date().getTime();
+                            fileURL = time.toString() + req.files['file']['name'];
+                            GoogleCloud_1.saveFile(req.files['file']['data'], fileURL);
+                        }
+                        username = req.auth.username;
+                        return [4, UserController_1.default.getUserIdByUsername(username)];
+                    case 1:
+                        _id = _a.sent();
+                        return [4, UserModel_1.default.updateOne({ username: username }, {
+                                $push: {
+                                    posts: {
+                                        author: _id,
+                                        _id: uniqid(),
+                                        text: req.body.text,
+                                        username: username,
+                                        timestamp: Date.now(),
+                                        likedBy: [],
+                                        fileURL: fileURL
                                     }
-                                })];
-                        case 2:
-                            _a.sent();
-                            res.send({ status: 'ok' });
-                            return [2];
-                    }
-                });
-            }); });
-        }
-        catch (e) {
-            res.send({ status: 'error', e: e });
-        }
+                                }
+                            })];
+                    case 2:
+                        _a.sent();
+                        res.send({ status: 'ok' });
+                        return [3, 4];
+                    case 3:
+                        e_1 = _a.sent();
+                        res.send({ status: 'error', e: e_1 });
+                        return [3, 4];
+                    case 4: return [2];
+                }
+            });
+        });
     };
     EntryController.prototype.like = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, usernamePostedPostId, postID, usernameID, doc, e_1;
+            var _a, usernamePostedPostId, postID, usernameID, doc, e_2;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -109,8 +109,8 @@ var EntryController = (function () {
                         res.send({ status: 'ok' });
                         return [3, 5];
                     case 4:
-                        e_1 = _b.sent();
-                        res.send({ status: 'error', e: e_1 });
+                        e_2 = _b.sent();
+                        res.send({ status: 'error', e: e_2 });
                         return [3, 5];
                     case 5: return [2];
                 }
@@ -119,7 +119,7 @@ var EntryController = (function () {
     };
     EntryController.prototype.dislike = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, usernamePostedPostID, postID, usernameID, e_2;
+            var _a, usernamePostedPostID, postID, usernameID, e_3;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -137,8 +137,8 @@ var EntryController = (function () {
                         _b.sent();
                         return [2, res.send({ status: 'ok' })];
                     case 3:
-                        e_2 = _b.sent();
-                        res.send({ status: 'error', e: e_2 });
+                        e_3 = _b.sent();
+                        res.send({ status: 'error', e: e_3 });
                         return [3, 4];
                     case 4: return [2];
                 }
@@ -147,7 +147,7 @@ var EntryController = (function () {
     };
     EntryController.prototype.delete = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var username, postID, e_3;
+            var username, postID, e_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -160,8 +160,8 @@ var EntryController = (function () {
                         res.send({ status: 'ok', deletedPost: postID });
                         return [3, 3];
                     case 2:
-                        e_3 = _a.sent();
-                        res.send({ status: 'error', e: e_3 });
+                        e_4 = _a.sent();
+                        res.send({ status: 'error', e: e_4 });
                         return [3, 3];
                     case 3: return [2];
                 }
@@ -170,7 +170,7 @@ var EntryController = (function () {
     };
     EntryController.prototype.favorites = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var user_id, doc, docs, e_4;
+            var user_id, doc, docs, e_5;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -185,8 +185,8 @@ var EntryController = (function () {
                         res.send({ status: 'ok', data: docs });
                         return [3, 4];
                     case 3:
-                        e_4 = _a.sent();
-                        res.send({ status: 'error', e: e_4 });
+                        e_5 = _a.sent();
+                        res.send({ status: 'error', e: e_5 });
                         return [3, 4];
                     case 4: return [2];
                 }

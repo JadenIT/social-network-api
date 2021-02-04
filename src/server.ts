@@ -13,6 +13,8 @@ import cookies from './middlewares/cookies'
 import cors from './middlewares/cors'
 import Socket from "./socket";
 
+const upload = require('express-fileupload')
+
 class Server {
     public app: express.Application;
     public server: any;
@@ -23,6 +25,7 @@ class Server {
         this.routes();
         this.httpServer();
         this.socket();
+
     }
 
     private httpServer = () => this.server = http.createServer(this.app);
@@ -30,8 +33,12 @@ class Server {
     private socket = () => new Socket(this.server);
 
     private middlewares(): void {
+
+        this.app.use(upload());
+
         this.app.use(cookies);
-        this.app.use(bodyParser.urlencoded({extended: true}));
+        this.app.use(bodyParser.urlencoded({ extended: true }));
+        this.app.use(express.urlencoded({ extended: true }));
         this.app.use(bodyParser.json());
         this.app.use(cors);
         this.app.use(express.static(__dirname));
