@@ -5,7 +5,7 @@ export const saveFile = (content, fileName) => {
 
     const storage = new Storage();
 
-    const myBucket = storage.bucket('example_bucket_16_01');
+    const myBucket = storage.bucket('example_bucket_16_01_2');
 
     const file = myBucket.file(fileName);
     const contents = content;
