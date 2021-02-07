@@ -36,6 +36,21 @@ class UserController {
         res.send({ status: 'ok' })
     }
 
+    public async getUsers(req, res) {
+        try {
+            const doc = await UserModel.find({});
+
+            res.send({
+                status: 'ok',
+                users: doc
+            })
+
+        }
+        catch (e) {
+            res.send({ status: 'error' })
+        }
+    }
+
     public async createUser(req: Req, res: Res) {
         try {
             const { fullName, username, password } = req.body
