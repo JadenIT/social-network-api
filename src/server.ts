@@ -43,7 +43,7 @@ class Server {
     }
 
     private routes(): void {
-        this.app.use('/user', UserRouter);
+        this.app.use('/users', UserRouter);
         this.app.use('/entry', EntryRouter);
         this.app.use('/search', SearchRouter);
         this.app.use('/auth', AuthRouter);

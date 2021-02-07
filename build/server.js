@@ -33,7 +33,7 @@ var Server = (function () {
         this.app.use(express.static(__dirname));
     };
     Server.prototype.routes = function () {
-        this.app.use('/user', UserRouter_1.default);
+        this.app.use('/users', UserRouter_1.default);
         this.app.use('/entry', EntryRouter_1.default);
         this.app.use('/search', SearchRouter_1.default);
         this.app.use('/auth', AuthRouter_1.default);
