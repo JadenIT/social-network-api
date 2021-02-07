@@ -77,9 +77,33 @@ var UserController = (function () {
         }));
         res.send({ status: 'ok' });
     };
+    UserController.prototype.getUsers = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var doc, e_2;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4, UserModel_1.default.find({})];
+                    case 1:
+                        doc = _a.sent();
+                        res.send({
+                            status: 'ok',
+                            users: doc
+                        });
+                        return [3, 3];
+                    case 2:
+                        e_2 = _a.sent();
+                        res.send({ status: 'error' });
+                        return [3, 3];
+                    case 3: return [2];
+                }
+            });
+        });
+    };
     UserController.prototype.createUser = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, fullName, username, password, isUsernameFree, hash, userModelInstance, doc, token, e_2;
+            var _a, fullName, username, password, isUsernameFree, hash, userModelInstance, doc, token, e_3;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -127,9 +151,9 @@ var UserController = (function () {
                         res.send({ status: 'ok' });
                         return [3, 5];
                     case 4:
-                        e_2 = _b.sent();
-                        console.log(e_2);
-                        res.send({ status: 'error', e: e_2 });
+                        e_3 = _b.sent();
+                        console.log(e_3);
+                        res.send({ status: 'error', e: e_3 });
                         return [3, 5];
                     case 5: return [2];
                 }
@@ -138,7 +162,7 @@ var UserController = (function () {
     };
     UserController.prototype.updateUser = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, oldUsername, newUsername, newPassword, newAbout, newFullname, query, time, isUsernameFree, _b, token, e_3;
+            var _a, oldUsername, newUsername, newPassword, newAbout, newFullname, query, time, isUsernameFree, _b, token, e_4;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
@@ -200,7 +224,7 @@ var UserController = (function () {
                         res.send({ status: 'ok' });
                         return [3, 7];
                     case 6:
-                        e_3 = _c.sent();
+                        e_4 = _c.sent();
                         res.send({ status: 'Error' });
                         return [3, 7];
                     case 7: return [2];
@@ -210,7 +234,7 @@ var UserController = (function () {
     };
     UserController.prototype.getUserByUsername = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var username, doc, e_4;
+            var username, doc, e_5;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -230,7 +254,7 @@ var UserController = (function () {
                         res.send({ user: doc });
                         return [3, 3];
                     case 2:
-                        e_4 = _a.sent();
+                        e_5 = _a.sent();
                         res.send({ status: 'Error' });
                         return [3, 3];
                     case 3: return [2];
@@ -240,7 +264,7 @@ var UserController = (function () {
     };
     UserController.prototype.getUserIdByUsername = function (username) {
         return __awaiter(this, void 0, void 0, function () {
-            var _id, e_5;
+            var _id, e_6;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -250,7 +274,7 @@ var UserController = (function () {
                         _id = (_a.sent())._id;
                         return [2, _id];
                     case 2:
-                        e_5 = _a.sent();
+                        e_6 = _a.sent();
                         return [3, 3];
                     case 3: return [2];
                 }
@@ -259,7 +283,7 @@ var UserController = (function () {
     };
     UserController.prototype.subscribeToUser = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var user_id, usernameID, subscriptions, e_6;
+            var user_id, usernameID, subscriptions, e_7;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -280,7 +304,7 @@ var UserController = (function () {
                         res.send({ status: 'ok' });
                         return [3, 5];
                     case 4:
-                        e_6 = _a.sent();
+                        e_7 = _a.sent();
                         res.send({ status: 'Error' });
                         return [3, 5];
                     case 5: return [2];
@@ -290,7 +314,7 @@ var UserController = (function () {
     };
     UserController.prototype.unSubscribeFromUser = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var user_id, usernameID, e_7;
+            var user_id, usernameID, e_8;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -306,7 +330,7 @@ var UserController = (function () {
                         res.send({ status: 'ok' });
                         return [3, 4];
                     case 3:
-                        e_7 = _a.sent();
+                        e_8 = _a.sent();
                         res.send({ status: 'Error' });
                         return [3, 4];
                     case 4: return [2];
@@ -316,7 +340,7 @@ var UserController = (function () {
     };
     UserController.prototype.getSubscriptionsByUsername = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var username, doc, docs, e_8;
+            var username, doc, docs, e_9;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -338,7 +362,7 @@ var UserController = (function () {
                         res.send({ subscriptions: docs });
                         return [3, 4];
                     case 3:
-                        e_8 = _a.sent();
+                        e_9 = _a.sent();
                         res.send({ status: 'Error' });
                         return [3, 4];
                     case 4: return [2];
@@ -348,7 +372,7 @@ var UserController = (function () {
     };
     UserController.prototype.getSubscribersByUsername = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var username, doc, docs, e_9;
+            var username, doc, docs, e_10;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -369,7 +393,7 @@ var UserController = (function () {
                         res.send({ subscribers: docs });
                         return [3, 4];
                     case 3:
-                        e_9 = _a.sent();
+                        e_10 = _a.sent();
                         res.send({ status: 'Error' });
                         return [3, 4];
                     case 4: return [2];
@@ -379,7 +403,7 @@ var UserController = (function () {
     };
     UserController.prototype.suggestionsByUsername = function (req, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var username, docs_1, newArr_1, e_10;
+            var username, docs_1, newArr_1, e_11;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -399,7 +423,7 @@ var UserController = (function () {
                         });
                         return [3, 3];
                     case 2:
-                        e_10 = _a.sent();
+                        e_11 = _a.sent();
                         res.send({ status: 'Error' });
                         return [3, 3];
                     case 3: return [2];

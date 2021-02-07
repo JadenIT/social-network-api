@@ -8,6 +8,7 @@ var UserRouter = (function () {
         this.routes();
     }
     UserRouter.prototype.routes = function () {
+        this.router.get('/', UserController_1.default.getUsers);
         this.router.post('/', UserController_1.default.createUser);
         this.router.get('/:username', auth_1.default, UserController_1.default.getUserByUsername);
         this.router.post('/update', auth_1.default, UserController_1.default.updateUser);
