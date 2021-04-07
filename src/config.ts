@@ -24,6 +24,7 @@ class Config {
         this.AWS_ACCESS_KEY_ID = process.env.AWSAccessKeyId;
         this.AWS_SECRET_KEY = process.env.AWSSecretKey;
         this.AWS_BUCKET = process.env.AWSBucket;
+        this.googleCloudCredentials = {}
         this.databaseSetUp();
     }
 }
